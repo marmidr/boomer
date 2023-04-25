@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "maptz.camelcasenavigation",
+        "kevinrose.vsc-python-indent",
+        "mechatroner.rainbow-csv",
+        "shardulm94.trailing-spaces",
+        "gruntfuggly.todo-tree"
+    ]
+}
