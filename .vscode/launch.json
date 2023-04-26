@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: bieżący plik",
+            "name": "Python: debug app",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "src\\app.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
         }
     ]
 }

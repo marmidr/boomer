@@ -20,19 +20,16 @@ The following checks are performed:
 
 ## Prerequisites
 
-* msys (Windows)\
-[Msys2 installer](https://msys2.org/)
-* Python and it's modules
+* [Python with addons (pip, tkinter)](https://www.python.org/)
 
-```sh
-# python3 + pip
-pacman -S python3
-pacman -S python-pip
-# .xls reader
-pip install xlrd
-# .xlsx  reader
-pip install openpyxl
+Open PowerShell and:
+
+```ps1
+# .xls reader, .xlsx reader, # UI lib
+pip install xlrd openpyxl customtkinter
 ```
+
+**OR** install Python as a regular Windows application from [here]).
 
 ## Examples
 
