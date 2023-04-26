@@ -4,6 +4,7 @@
         "kevinrose.vsc-python-indent",
         "mechatroner.rainbow-csv",
         "shardulm94.trailing-spaces",
-        "gruntfuggly.todo-tree"
+        "gruntfuggly.todo-tree",
+        "ms-python.vscode-pylance"
     ]
 }

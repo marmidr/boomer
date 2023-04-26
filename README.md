@@ -20,16 +20,15 @@ The following checks are performed:
 
 ## Prerequisites
 
-* [Python with addons (pip, tkinter)](https://www.python.org/)
+[Python for Windows with addons (pip, tkinter)](https://www.python.org/)
+Remember to check "Add Python to PATH".
 
 Open PowerShell and:
 
 ```ps1
-# .xls reader, .xlsx reader, # UI lib
+# .xls reader, .xlsx reader, UI lib
 pip install xlrd openpyxl customtkinter
 ```
-
-**OR** install Python as a regular Windows application from [here]).
 
 ## Examples
 
