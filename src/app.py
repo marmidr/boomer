@@ -5,22 +5,25 @@
 import customtkinter
 import xls_reader
 import xlsx_reader
+import csv_reader
+import logging
 
 class ScrollableCellGrid(customtkinter.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-    def load_bom(self, path: str):
+    def load_bom(self, path: str, **kwargs):
         if path.endswith("xls"):
-            text_grid = xls_reader.read_xls_sheet(path)
+            text_grid = xls_reader.read_xls_sheet(path, **kwargs)
         elif path.endswith("xlsx"):
-            text_grid = xlsx_reader.read_xlsx_sheet(path)
+            text_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
+        elif path.endswith("csv"):
+            text_grid = csv_reader.read_csv(path, **kwargs)
         else:
             raise RuntimeError("Unknown file type")
 
-        # list of CTkEntry
-        self.entries = []
-        self.radios=[]
+        logging.info("Read BOM: {} rows x {} cols".format(text_grid.nrows, text_grid.ncols))
+        logging.info('Preparing UI...')
 
         for c in range(text_grid.ncols):
             chbox = customtkinter.CTkCheckBox(self, text=chr(ord('A') + c),
@@ -28,26 +31,16 @@ class ScrollableCellGrid(customtkinter.CTkScrollableFrame):
                                               border_width=2)
             chbox.grid(row=0, column=c+1, sticky="")
 
-        # first row with nonempty column A
-        nonempty_row_found = False
         # keeps id of selected radio
         self.var_first_row = customtkinter.IntVar(value=0)
 
         for r in range(text_grid.nrows):
-            if not text_grid.rows[r][0] is None:
-                # iterate until the first column is empty
-                nonempty_row_found = True
-
-            if nonempty_row_found and text_grid.rows[r][0] is None:
-                # column A is empty? ignore remaining rows
-                break
-
             for c in range(text_grid.ncols):
                 radiobtn = customtkinter.CTkRadioButton(self, text="{}".format(r+1), width=25,
                                                         radiobutton_width=18, radiobutton_height=18,
                                                         variable=self.var_first_row,
                                                         value=r)
-                radiobtn.grid(row=r+1, column=0, pady=5, padx=5, sticky="n")
+                radiobtn.grid(row=r+1, column=0, pady=5, padx=5, sticky="w")
 
                 entry = customtkinter.CTkEntry(self)
                 entry.insert(0, text_grid.rows[r][c] or "")
@@ -57,6 +50,12 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        # logger config with dimmed time
+        logging.basicConfig(format='\033[30m%(asctime)s\033[39m %(levelname)s: %(message)s',
+                            datefmt='%H:%M:%S',
+                            level=logging.DEBUG,)
+        logging.info('Ctk app is starting')
+
         self.title("BOM vs PnP -> Fight!")
         self.geometry("900x600")
         self.grid_columnconfigure(0, weight=1)
@@ -64,22 +63,11 @@ class App(customtkinter.CTk):
 
         self.cellgrid = ScrollableCellGrid(self)
         self.cellgrid.grid(row=0, column=0, padx=10, pady=(10, 0), sticky="nswe")
-        # self.cellgrid.load_bom("example1/Kaseta_2v1 BOM.xls")
-        self.cellgrid.load_bom("example1/Kaseta_2v1 BOM.xlsx")
-
-        # create radiobutton frame
-        self.radiobutton_frame = customtkinter.CTkFrame(self)
-        self.radiobutton_frame.grid(row=0, column=1, padx=(20, 20), pady=(20, 0), sticky="nsew")
-        self.radio_var = customtkinter.IntVar(value=0)
-        self.label_radio_group = customtkinter.CTkLabel(master=self.radiobutton_frame, text="CTkRadioButton Group:")
-        self.label_radio_group.grid(row=0, column=2, columnspan=1, padx=10, pady=10, sticky="")
-        self.radio_button_1 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=0)
-        self.radio_button_1.grid(row=1, column=2, pady=10, padx=20, sticky="n")
-        self.radio_button_2 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=1)
-        self.radio_button_2.grid(row=2, column=2, pady=10, padx=20, sticky="n")
-        self.radio_button_3 = customtkinter.CTkRadioButton(master=self.radiobutton_frame, variable=self.radio_var, value=2)
-        self.radio_button_3.grid(row=3, column=2, pady=10, padx=20, sticky="n")
-
+        self.cellgrid.load_bom("example1/Kaseta_2v1 BOM.xls")
+        # self.cellgrid.load_bom("example1/Kaseta_2v1 BOM.xlsx")
+        # self.cellgrid.load_bom("example1/Kaseta_2v1 BOM.csv", delim="\t")
+        # self.cellgrid.load_bom("example3/Pick Place for TCC-FLOOR2-V3.csv", delim=",")
+        logging.info('Ready')
 
 # -----------------------------------------------
 
