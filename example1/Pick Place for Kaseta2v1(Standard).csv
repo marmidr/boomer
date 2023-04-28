@@ -118,7 +118,7 @@ R61        REZ_MIFON_1206        1030mil       2070mil       1030mil       2070m
 Q8         INF-SOT23_M           2045mil       2815mil       2045mil       2815mil   1997.756mil   2777.598mil  B        360.00 MMBT2222A      
 R52        REZ_MIFON_1206        1570mil       3000mil       1570mil       3000mil       1570mil       2940mil  B        270.00 10k            
 R54        REZ_MIFON_1206        1116mil       2699mil       1116mil       2699mil       1116mil       2759mil  B         90.00 10k            
-C32        CAP_12,5X25_LE¿¹CY    590.551mil   2523.772mil    590.551mil   2425.347mil    590.551mil   2425.347mil  T        270.00 1000u          
+C32        CAP_12,5X25_LEÅ¼Ä…CY    590.551mil   2523.772mil    590.551mil   2425.347mil    590.551mil   2425.347mil  T        270.00 1000u          
 L3         3225[1210]             443mil        509mil        443mil        509mil    387.882mil        509mil  B        180.00 22uH           
 P13        JTAG                  1530mil       4260mil       1330mil       4210mil       1330mil       4210mil  T        360.00 JTAG           
 R45        REZ_MIFON_1206         880mil       1765mil        880mil       1765mil        940mil       1765mil  B        360.00 1k             
@@ -139,7 +139,7 @@ D4         DIODE_NIFON_1206_MELF       2220mil       2670mil       2220mil      
 D5         DIODE_NIFON_1206_MELF       2220mil       2815mil       2220mil       2815mil       2280mil       2815mil  B        180.00 LL4148         
 D6         DIODE_NIFON_1206_MELF       2220mil       2520mil       2220mil       2520mil       2280mil       2520mil  B        180.00 LL4148         
 R18        REZ_MIFON_1206        2410mil   2935.347mil       2410mil   2935.347mil       2350mil   2935.347mil  B        180.00 1k             
-C33        CAP_12,5X25_LE¿¹CY    590.551mil   1803.425mil    590.551mil       1705mil    590.551mil       1705mil  T        270.00 1000u          
+C33        CAP_12,5X25_LEÅ¼Ä…CY    590.551mil   1803.425mil    590.551mil       1705mil    590.551mil       1705mil  T        270.00 1000u          
 Q10        micro3                 845mil       1895mil        845mil       1895mil     798.74mil   1857.598mil  B         90.00 BC848B         
 Q6         micro3                2190mil       3020mil       2190mil       3020mil    2143.74mil   2982.598mil  B         90.00 BC848B         
 Q12        MICRO3                1895mil       3015mil       1895mil       3015mil   1932.402mil    2968.74mil  B        180.00 2N7002         

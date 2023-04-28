@@ -3,14 +3,16 @@
 # https://github.com/marmidr/boomer
 
 import customtkinter
+import tkinter
+import logging
+
 import xls_reader
 import xlsx_reader
 import csv_reader
-import logging
 
 # -----------------------------------------------------------------------------
 
-class ConfigFrame(customtkinter.CTkFrame):
+class ProjectConfigFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -27,6 +29,7 @@ class ConfigFrame(customtkinter.CTkFrame):
 
         btn_save_as = customtkinter.CTkButton(self, text="Save as...", command=self.button_save_event)
         btn_save_as.grid(row=0, column=3, pady=5, padx=5)
+        btn_save_as.configure(state="disabled")
 
         btn_delete = customtkinter.CTkButton(self, text="Delete config", command=self.button_del_event)
         btn_delete.grid(row=0, column=4, pady=5, padx=5)
@@ -45,19 +48,59 @@ class ConfigFrame(customtkinter.CTkFrame):
 
 # -----------------------------------------------------------------------------
 
-class BOMConfig(customtkinter.CTkFrame):
+class ProjectFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        lbl_separator = customtkinter.CTkLabel(self, text="CSV Separator:")
-        lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
-
-        opt_separator = customtkinter.CTkOptionMenu(self, values=["COMMA", "SEMICOLON", "TAB", "SPACE"], command=self.opt_separator_event)
-        opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
         self.grid_columnconfigure(1, weight=1)
+        # self.grid_rowconfigure(0, weight=1)
 
-    def opt_separator_event(self, new_sep: str):
-        logging.debug(f"Separator: '{new_sep}")
+        boms = [
+            "",
+            "example1/Kaseta_2v1 BOM.xls",
+            "example1/Kaseta_2v1 BOM.xlsx",
+            "example1/Kaseta_2v1 BOM.csv",
+            "example3/Pick Place for TCC-FLOOR2-V3.csv"
+        ]
+
+        lbl_proj_path = customtkinter.CTkLabel(self, text="Project (BOM) path:")
+        lbl_proj_path.grid(row=0, column=0, pady=5, padx=5, sticky="w")
+        self.cbx_bom_path = customtkinter.CTkComboBox(self, values=boms, command=self.cbx_bom_event)
+        self.cbx_bom_path.grid(row=0, column=1, pady=5, padx=5, sticky="we")
+
+        btn_browse = customtkinter.CTkButton(self, text="Browse...", command=self.button_browse_event)
+        btn_browse.grid(row=0, column=2, pady=5, padx=5, sticky="e")
+
+        lbl_pnp_path = customtkinter.CTkLabel(self, text="Pick'n'Place path:")
+        lbl_pnp_path.grid(row=1, column=0, pady=5, padx=5, sticky="w")
+        self.cbx_pnp_path = customtkinter.CTkComboBox(self, values=["", "..."], command=self.cbx_pnp_event)
+        self.cbx_pnp_path.grid(row=1, column=1, pady=5, padx=5, sticky="we")
+
+        self.config_frame = ProjectConfigFrame(self)
+        self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=3, sticky="we")
+
+    def cbx_bom_event(self, new_path: str):
+        logging.debug(f"Open BOM: '{new_path}")
+
+    def cbx_pnp_event(self, new_path: str):
+        logging.debug(f"Open PnP: '{new_path}")
+
+    def button_browse_event(self):
+        logging.debug("Browse BOM")
+        # https://docs.python.org/3/library/dialog.html
+
+        # TODO: get the initial dir from the proj settings
+        path = tkinter.filedialog.askopenfilename(
+                                                 title="Select BOM file",
+                                                 initialdir=None,
+                                                 filetypes=(
+                                                    ("Supported (*.xls; *.xlsx; *.csv)", "*.xls; *.xlsx; *.csv"),
+                                                    ("All (*.*)", "*.*")),
+                                                 )
+        logging.debug(f"Selected path: {path}")
+
+
+# -----------------------------------------------------------------------------
 
 class BOMView(customtkinter.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
@@ -99,29 +142,82 @@ class BOMView(customtkinter.CTkScrollableFrame):
 
 # -----------------------------------------------------------------------------
 
+class BOMConfig(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        lbl_separator = customtkinter.CTkLabel(self, text="CSV Separator:")
+        lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
+
+        opt_separator = customtkinter.CTkOptionMenu(self, values=["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH"], command=self.opt_separator_event)
+        opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        self.grid_columnconfigure(1, weight=1)
+
+    def opt_separator_event(self, new_sep: str):
+        logging.debug(f"Separator: '{new_sep}")
+
+# -----------------------------------------------------------------------------
+
+class PnPView(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        self.textbox = customtkinter.CTkTextbox(self,
+                                                font=customtkinter.CTkFont(size=12, family="Consolas"),
+                                                activate_scrollbars=True)
+        self.textbox.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.textbox.insert("0.0", "𝐓𝐞𝐱𝐭 𝐄𝐝𝐢𝐭𝐨𝐫, 𝕋𝕖𝕩𝕥 𝔼𝕕𝕚𝕥𝕠𝕣")
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+    def load_pnp(self, path: str, **kwargs):
+        text_grid = csv_reader.read_csv(path, **kwargs)
+        logging.info("Read PNP: {} rows x {} cols".format(text_grid.nrows, text_grid.ncols))
+        # logging.info('Preparing UI...')
+
+# -----------------------------------------------------------------------------
+
+class PnPConfig(customtkinter.CTkFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        lbl_separator = customtkinter.CTkLabel(self, text="CSV Separator:")
+        lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
+
+        opt_separator = customtkinter.CTkOptionMenu(self, values=["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH"], command=self.opt_separator_event)
+        opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        self.grid_columnconfigure(1, weight=1)
+
+    def opt_separator_event(self, new_sep: str):
+        logging.debug(f"Separator: '{new_sep}")
+
+# -----------------------------------------------------------------------------
+
 class App(customtkinter.CTk):
     def __init__(self):
         logging.info('Ctk app is starting')
         super().__init__()
 
         self.title("BOM vs PnP -> Fight!")
-        self.geometry("900x600")
+        self.geometry("1200x600")
         self.grid_columnconfigure(0, weight=1)
 
-        # panel with predefined configs
-        config_frame = ConfigFrame(self)
-        config_frame.grid(row=0, column=0, padx=5, pady=5, sticky="we")
-
-        # panel with BOM/PnP/Result
+        # panel with Proj/BOM/PnP/Result
         tabview = customtkinter.CTkTabview(self)
         tabview.grid(row=1, column=0, padx=5, pady=5, sticky="wens")
         self.grid_rowconfigure(1, weight=1) # set row 1 height to all remaining space
-
-        tab_bom = tabview.add("BOM")
-        tab_pnp = tabview.add("PnP")
+        tab_prj = tabview.add("Project")
+        tab_bom = tabview.add("Bill Of Materials")
+        tab_pnp = tabview.add("Pick And Place")
         tab_summary = tabview.add("Comparison Summary")
+        tabview.set("Project")  # set currently visible tab
 
-        tabview.set("BOM")  # set currently visible tab
+        # panel with predefined configs
+        proj_frame = ProjectFrame(tab_prj)
+        proj_frame.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
+        tab_prj.grid_columnconfigure(0, weight=1)
+        tab_prj.grid_rowconfigure(0, weight=1)
 
         # panel with the BOM
         bom_view = BOMView(tab_bom)
@@ -130,12 +226,22 @@ class App(customtkinter.CTk):
         # bom_view.load_bom("example1/Kaseta_2v1 BOM.xlsx")
         # bom_view.load_bom("example1/Kaseta_2v1 BOM.csv", delim="\t")
         # bom_view.load_bom("example3/Pick Place for TCC-FLOOR2-V3.csv", delim=",")
-
         bom_config = BOMConfig(tab_bom)
         bom_config.grid(row=1, column=0, pady=5, padx=5, sticky="we")
 
         tab_bom.grid_columnconfigure(0, weight=1)
         tab_bom.grid_rowconfigure(0, weight=1)
+
+        # panel with the PnP
+        pnp_view = PnPView(tab_pnp)
+        pnp_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
+        pnp_view.load_pnp("example1/Pick Place for Kaseta2v1(Standard).csv", delim="cw")
+
+        pnp_config = PnPConfig(tab_pnp)
+        pnp_config.grid(row=1, column=0, padx=5, pady=5, sticky="we")
+
+        tab_pnp.grid_columnconfigure(0, weight=1)
+        tab_pnp.grid_rowconfigure(0, weight=1)
 
         # UI ready
         logging.info('Ready')
