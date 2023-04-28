@@ -5,6 +5,8 @@
 import customtkinter
 import tkinter
 import logging
+import os
+import configparser
 
 import xls_reader
 import xlsx_reader
@@ -12,16 +14,74 @@ import csv_reader
 
 # -----------------------------------------------------------------------------
 
-class ProjectConfigFrame(customtkinter.CTkFrame):
+class Proj:
+    project_path: str
+    pnp_path: str
+    profile: str
+    __config: configparser.ConfigParser
+
+    def __init__(self):
+        self.project_path = ""
+        self.pnp_path = ""
+        self.profile = "---"
+
+        # https://docs.python.org/3/library/configparser.html
+        self.__config = configparser.ConfigParser()
+        if os.path.isfile("boomer.ini"):
+            self.__config.read('boomer.ini')
+        else:
+            self.__config['common'] = {
+                "initial_dir": "",
+            }
+            self.__config['profile.altium'] = {
+                "bom_first_row": 0,
+                "pnp_first_row": 0,
+                "pnp_separator": ";",
+            }
+            self.__config['profile.pads'] = {
+                "bom_first_row": 0,
+                "pnp_first_row": 0,
+                "pnp_separator": ";",
+            }
+
+    def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
+        try:
+            self.__config[sect_name]
+        except:
+            self.__config[sect_name] = {}
+
+        return self.__config[sect_name]
+
+    def cfg_get_profiles(self) -> list[str]:
+        profiles = [""]
+        for sect in self.__config.sections():
+            if sect.startswith("profile."):
+                profiles.append(sect.removeprefix("profile."))
+
+        return profiles
+
+    def cfg_save(self):
+        section = self.cfg_get_section("project." + self.project_path)
+        section["pnp"] = os.path.basename(self.pnp_path)
+        section["profile"] = self.profile
+
+        with open('boomer.ini', 'w') as configfile:
+            self.__config.write(configfile)
+
+
+proj = Proj()
+
+# -----------------------------------------------------------------------------
+
+class ProjectProfileFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        lbl_config = customtkinter.CTkLabel(self, text="BOM+PnP configurations:")
+        lbl_config = customtkinter.CTkLabel(self, text="BOM+PnP profile:")
         lbl_config.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
-        # TODO: load configs from file
-        opt_config = customtkinter.CTkOptionMenu(self, values=["---", "Altium", "Pads", "Eagle"], command=self.opt_config_event)
-        opt_config.grid(row=0, column=1, pady=5, padx=5, sticky="we")
+        opt_profile = customtkinter.CTkOptionMenu(self, values=proj.cfg_get_profiles(), command=self.opt_profile_event)
+        opt_profile.grid(row=0, column=1, pady=5, padx=5, sticky="we")
         self.grid_columnconfigure(1, weight=1)
 
         btn_load = customtkinter.CTkButton(self, text="Load", command=self.button_load_event)
@@ -31,7 +91,7 @@ class ProjectConfigFrame(customtkinter.CTkFrame):
         btn_save_as.grid(row=0, column=3, pady=5, padx=5)
         btn_save_as.configure(state="disabled")
 
-        btn_delete = customtkinter.CTkButton(self, text="Delete config", command=self.button_del_event)
+        btn_delete = customtkinter.CTkButton(self, text="Delete profile", command=self.button_del_event)
         btn_delete.grid(row=0, column=4, pady=5, padx=5)
 
     def button_load_event(self):
@@ -43,8 +103,10 @@ class ProjectConfigFrame(customtkinter.CTkFrame):
     def button_del_event(self):
         logging.debug("Del")
 
-    def opt_config_event(self, new_config: str):
-        logging.debug(f"Load config: '{new_config}")
+    def opt_profile_event(self, new_profile: str):
+        logging.debug(f"Load profile: {new_profile}")
+        proj.profile = new_profile
+        proj.cfg_save()
 
 # -----------------------------------------------------------------------------
 
@@ -55,50 +117,73 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.grid_columnconfigure(1, weight=1)
         # self.grid_rowconfigure(0, weight=1)
 
-        boms = [
-            "",
-            "example1/Kaseta_2v1 BOM.xls",
-            "example1/Kaseta_2v1 BOM.xlsx",
-            "example1/Kaseta_2v1 BOM.csv",
-            "example3/Pick Place for TCC-FLOOR2-V3.csv"
-        ]
-
         lbl_proj_path = customtkinter.CTkLabel(self, text="Project (BOM) path:")
         lbl_proj_path.grid(row=0, column=0, pady=5, padx=5, sticky="w")
-        self.cbx_bom_path = customtkinter.CTkComboBox(self, values=boms, command=self.cbx_bom_event)
+
+        self.bom_paths = []
+        self.cbx_bom_var = customtkinter.StringVar(value="")
+        self.cbx_bom_path = customtkinter.CTkComboBox(self, values=self.bom_paths, command=self.cbx_bom_event,
+                                                      variable=self.cbx_bom_var)
         self.cbx_bom_path.grid(row=0, column=1, pady=5, padx=5, sticky="we")
 
         btn_browse = customtkinter.CTkButton(self, text="Browse...", command=self.button_browse_event)
         btn_browse.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
+        # ---
+
         lbl_pnp_path = customtkinter.CTkLabel(self, text="Pick'n'Place path:")
         lbl_pnp_path.grid(row=1, column=0, pady=5, padx=5, sticky="w")
-        self.cbx_pnp_path = customtkinter.CTkComboBox(self, values=["", "..."], command=self.cbx_pnp_event)
+
+        self.pnp_paths = []
+        self.cbx_pnp_var = customtkinter.StringVar(value="")
+        self.cbx_pnp_path = customtkinter.CTkComboBox(self, values=self.pnp_paths, command=self.cbx_pnp_event,
+                                                      variable=self.cbx_pnp_var)
         self.cbx_pnp_path.grid(row=1, column=1, pady=5, padx=5, sticky="we")
 
-        self.config_frame = ProjectConfigFrame(self)
+        self.config_frame = ProjectProfileFrame(self)
         self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=3, sticky="we")
 
     def cbx_bom_event(self, new_path: str):
         logging.debug(f"Open BOM: '{new_path}")
+        # TODO: if known project, set the PnP file path
 
-    def cbx_pnp_event(self, new_path: str):
-        logging.debug(f"Open PnP: '{new_path}")
+    def cbx_pnp_event(self, pnp_path: str):
+        logging.debug(f"Change PnP: '{pnp_path}")
+        # update config
+        proj.pnp_path = pnp_path
+        section = proj.cfg_get_section("project." + proj.project_path)
+        proj.cfg_save()
 
     def button_browse_event(self):
         logging.debug("Browse BOM")
         # https://docs.python.org/3/library/dialog.html
 
         # TODO: get the initial dir from the proj settings
-        path = tkinter.filedialog.askopenfilename(
-                                                 title="Select BOM file",
-                                                 initialdir=None,
-                                                 filetypes=(
-                                                    ("Supported (*.xls; *.xlsx; *.csv)", "*.xls; *.xlsx; *.csv"),
-                                                    ("All (*.*)", "*.*")),
-                                                 )
-        logging.debug(f"Selected path: {path}")
+        bom_path = tkinter.filedialog.askopenfilename(
+            title="Select BOM file",
+            initialdir=None,
+            filetypes=(
+            ("Supported (*.xls; *.xlsx; *.csv)", "*.xls; *.xlsx; *.csv"),
+            ("All (*.*)", "*.*")),
+        )
+        logging.debug(f"Selected path: {bom_path}")
 
+        if os.path.isfile(bom_path):
+            self.bom_paths.append(bom_path)
+            self.cbx_bom_path.configure(values=self.bom_paths)
+            self.cbx_bom_var.set(bom_path)
+
+            # load all files from the BOM directory to the PnP list
+            self.cbx_pnp_var.set("")
+            bom_dir = os.path.dirname(bom_path)
+            self.pnp_paths = []
+            for de in os.scandir(bom_dir):
+                self.pnp_paths.append(de.path)
+            self.cbx_pnp_path.configure(values=self.pnp_paths)
+
+            # update config
+            proj.project_path = bom_path
+            proj.cfg_save()
 
 # -----------------------------------------------------------------------------
 
