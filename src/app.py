@@ -15,16 +15,56 @@ import csv_reader
 
 # -----------------------------------------------------------------------------
 
-class Project:
-    project_path: str
-    pnp_fname: str
-    profile: str
+class Profile:
+    name: str
+    bom_first_row: int
+    bom_separator: str
+    pnp_first_row: int
+    pnp_separator: str
     __config: configparser.ConfigParser
 
+    def __init__(self, config: configparser.ConfigParser):
+        self.name = "noname"
+        self.bom_first_row = 1
+        self.bom_separator = "COMMA"
+        self.pnp_first_row = 1
+        self.pnp_separator = "COMMA"
+        self.__config = config
+
+    def load(self, name: str):
+        if os.path.isfile("boomer.ini"):
+            logging.debug(f"Load profile {name}")
+            self.name = name
+            section = self.__config['profile.' + self.name]
+            self.bom_first_row = section["bom_first_row"]
+            self.bom_separator = section["bom_separator"]
+            self.pnp_first_row = section["pnp_first_row"]
+            self.pnp_separator = section["pnp_separator"]
+        else:
+            logging.warning("Config file not found")
+
+    def save(self):
+        logging.debug(f"Save profile: {self.name}")
+        self.__config["profile." + self.name] = {
+            "bom_first_row": self.bom_first_row,
+            "bom_separator": self.bom_separator,
+            "pnp_first_row": self.pnp_first_row,
+            "pnp_separator": self.pnp_separator
+        }
+        with open('boomer.ini', 'w') as f:
+            self.__config.write(f)
+
+# -----------------------------------------------------------------------------
+
+class Project:
+    bom_path: str
+    pnp_fname: str
+    __config: configparser.ConfigParser
+    profile: Profile
+
     def __init__(self):
-        self.project_path = ""
-        self.pnp_fname = ""
-        self.profile = "---"
+        self.bom_path = "bom_path"
+        self.pnp_fname = "pnp_fname"
 
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
@@ -34,16 +74,8 @@ class Project:
             self.__config['common'] = {
                 "initial_dir": "",
             }
-            self.__config['profile.altium'] = {
-                "bom_first_row": 0,
-                "pnp_first_row": 0,
-                "pnp_separator": ";",
-            }
-            self.__config['profile.pads'] = {
-                "bom_first_row": 0,
-                "pnp_first_row": 0,
-                "pnp_separator": ";",
-            }
+
+        self.profile = Profile(config=self.__config)
 
     def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
         try:
@@ -69,19 +101,12 @@ class Project:
 
         return profiles
 
-    def cfg_save_profile(self):
-        section = self.cfg_get_section("profile." + self.profile)
-        # TODO: save profile details
-        with open('boomer.ini', 'w') as configfile:
-            self.__config.write(configfile)
-
     def cfg_save_project(self):
-        section = self.cfg_get_section("project." + self.project_path)
-        section["pnp"] = os.path.basename(self.pnp_fname)
-        section["profile"] = self.profile
-        with open('boomer.ini', 'w') as configfile:
-            self.__config.write(configfile)
-
+        section = self.cfg_get_section("project." + self.bom_path)
+        section["pnp"] = self.pnp_fname
+        section["profile"] = self.profile.name
+        with open('boomer.ini', 'w') as f:
+            self.__config.write(f)
 
 
 # global instance
@@ -105,24 +130,23 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 
         btn_save_as = customtkinter.CTkButton(self, text="Save as...", command=self.button_save_event)
         btn_save_as.grid(row=0, column=3, pady=5, padx=5)
-        # btn_save_as.configure(state="disabled")
 
         btn_delete = customtkinter.CTkButton(self, text="Delete profile", command=self.button_del_event)
         btn_delete.grid(row=0, column=4, pady=5, padx=5)
+        btn_delete.configure(state="disabled")
 
     def button_save_event(self):
         logging.debug("Save as...")
-        dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile")
+        dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
         new_profile_name = dialog.get_input().strip()
         if len(new_profile_name) >= 3:
-            logging.debug(f"Saving new profile: {new_profile_name}")
-            proj.profile = new_profile_name
-            proj.cfg_save_profile()
+            proj.profile.name = new_profile_name
+            proj.profile.save()
             proj.cfg_save_project()
             self.opt_profile.configure(values=proj.cfg_get_profiles())
-            self.opt_profile_var = proj.profile
+            self.opt_profile_var = proj.profile.name
         else:
-            logging.error("Profile name must have length 3 or more")
+            logging.error("Profile name length must be 3 or more")
 
     def button_del_event(self):
         logging.debug("Del")
@@ -130,7 +154,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 
     def opt_profile_event(self, new_profile: str):
         logging.debug(f"Select profile: {new_profile}")
-        proj.profile = new_profile
+        proj.profile.load(new_profile)
         proj.cfg_save_project()
 
 # -----------------------------------------------------------------------------
@@ -166,9 +190,11 @@ class ProjectFrame(customtkinter.CTkFrame):
                                                         command=self.opt_pnp_event,
                                                         variable=self.opt_pnp_var)
         self.opt_pnp_fname.grid(row=1, column=1, pady=5, padx=5, sticky="we")
+        self.opt_pnp_fname.configure(state="disabled")
 
         self.config_frame = ProjectProfileFrame(self)
         self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=3, sticky="we")
+        # self.config_frame.configure(state="disabled")
 
     def find_pnp_files(self, bom_path: str):
         if os.path.isfile(bom_path):
@@ -182,18 +208,23 @@ class ProjectFrame(customtkinter.CTkFrame):
                     # take only the file name
                     pnp_path = os.path.basename(de.path)
                     self.pnp_names.append(pnp_path)
-            self.opt_pnp_fname.configure(values=self.pnp_names)
+            self.opt_pnp_fname.configure(values=self.pnp_names, state="enabled")
+            # self.config_frame.configure(state="enabled")
 
     def opt_bom_event(self, bom_path: str):
         logging.debug(f"Open BOM: {bom_path}")
+        self.opt_pnp_var.set("")
         if os.path.isfile(bom_path):
+            proj.bom_path = bom_path
             self.opt_bom_var.set(bom_path)
             # set pnp
             self.find_pnp_files(bom_path)
-            pnp_path = proj.cfg_get_section("project." + proj.project_path)["pnp"] or "???"
-            self.opt_pnp_var.set(pnp_path)
+            section = proj.cfg_get_section("project." + proj.bom_path)
+            pnp_fname = section["pnp"] or "???"
+            proj.pnp_fname = pnp_fname
+            self.opt_pnp_var.set(pnp_fname)
             # set profile
-            profile = proj.cfg_get_section("project." + proj.project_path)["profile"] or "???"
+            profile = section["profile"] or "???"
             self.config_frame.opt_profile_var.set(profile)
 
     def opt_pnp_event(self, pnp_fname: str):
@@ -224,7 +255,7 @@ class ProjectFrame(customtkinter.CTkFrame):
 
         self.find_pnp_files(bom_path)
         # update config
-        proj.project_path = bom_path
+        proj.bom_path = bom_path
         proj.cfg_save_project()
 
 # -----------------------------------------------------------------------------
@@ -289,8 +320,8 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"BOM separator: '{new_sep}")
+        proj.profile.bom_separator = new_sep
         self.btn_save.configure(state="enabled")
-        # TODO: reload the BOM
 
     def button_save_event(self):
         logging.debug("BOM config saved")
