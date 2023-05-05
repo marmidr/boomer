@@ -3,9 +3,10 @@ import csv
 import logging
 
 def read_csv(path: str, delim: str) -> TextGrid:
-    """Reads entire CSV/text file.
+    """
+    Reads entire CSV/text file.
 
-    Delim may be: ' '  ','  ';'  '\t'  "cw"  "re"
+    Delim may be: ' '  ','  ';'  '\t'  '*fw'  '*re'
     """
 
     logging.info(f"Reading file '{path}'")
@@ -14,12 +15,12 @@ def read_csv(path: str, delim: str) -> TextGrid:
     max_cols = 0
 
     with open(path, 'r', encoding="utf-8") as f:
-        if delim == "cw":
-            # TODO: add reader for constant-width
-            pass
-        elif delim == "re":
+        if delim == "*fw":
+            # TODO: add reader for fixed-width
+            raise ValueError("delimiter *fw not yet supported")
+        elif delim == "*re":
             # TODO: add reader for reg-ex
-            pass
+            raise ValueError("delimiter *re not yet supported")
         else:
             reader = csv.reader(f, delimiter=delim)
             for row in reader:
