@@ -7,7 +7,6 @@ import tkinter
 import logging
 import os
 import configparser
-import textwrap
 
 import xls_reader
 import xlsx_reader
@@ -36,9 +35,9 @@ class Profile:
             logging.debug(f"Load profile {name}")
             self.name = name
             section = self.__config['profile.' + self.name]
-            self.bom_first_row = section["bom_first_row"]
+            self.bom_first_row = int(section["bom_first_row"])
             self.bom_separator = section["bom_separator"]
-            self.pnp_first_row = section["pnp_first_row"]
+            self.pnp_first_row = int(section["pnp_first_row"])
             self.pnp_separator = section["pnp_separator"]
         else:
             logging.warning("Config file not found")
@@ -55,11 +54,11 @@ class Profile:
             self.__config.write(f)
 
     @staticmethod
-    def get_sepatators() -> list[str]:
+    def get_separator_names() -> list[str]:
         return ["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH", "REGEX"]
 
     @staticmethod
-    def translate_sepatator(sep: str) -> str:
+    def translate_separator(sep: str) -> str:
         # Python 3.10+
         match sep:
             case "COMMA":
@@ -73,13 +72,13 @@ class Profile:
             case "REGEX":
                 return "*re"
             case _:
-                assert not "Unknown BOM separator"
+                raise RuntimeError("Unknown CSV separator")
 
     def get_bom_delimiter(self) -> str:
-        return Profile.translate_sepatator(self.bom_separator)
+        return Profile.translate_separator(self.bom_separator)
 
     def get_pnp_delimiter(self) -> str:
-        return Profile.translate_sepatator(self.pnp_separator)
+        return Profile.translate_separator(self.pnp_separator)
 
 # -----------------------------------------------------------------------------
 
@@ -287,11 +286,23 @@ class ProjectFrame(customtkinter.CTkFrame):
 
 # -----------------------------------------------------------------------------
 
-class BOMView(customtkinter.CTkScrollableFrame):
+class BOMView(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
+        self.textbox = customtkinter.CTkTextbox(self,
+                                                font=customtkinter.CTkFont(size=12, family="Consolas"),
+                                                activate_scrollbars=True,
+                                                wrap='none')
+        self.textbox.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
     def load_bom(self, path: str, **kwargs):
+        if not os.path.isfile(path):
+            logging.error(f"File '{path}' does not exists")
+            return
+
         if path.endswith("xls"):
             logging.debug(f"Read BOM: {path}")
             text_grid = xls_reader.read_xls_sheet(path, **kwargs)
@@ -300,34 +311,24 @@ class BOMView(customtkinter.CTkScrollableFrame):
             text_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
         elif path.endswith("csv"):
             delim = proj.profile.get_bom_delimiter()
-            logging.debug(f"Read BOM: {path}, delim={delim}")
+            logging.debug(f"Read BOM: {path}, delim='{delim}'")
             text_grid = csv_reader.read_csv(path, delim)
         else:
             raise RuntimeError("Unknown file type")
 
         logging.info("Read BOM: {} rows x {} cols".format(text_grid.nrows, text_grid.ncols))
-        logging.info('Preparing UI...')
 
-        for c in range(text_grid.ncols):
-            chbox = customtkinter.CTkCheckBox(self, text=chr(ord('A') + c),
-                                              checkbox_width=18, checkbox_height=18,
-                                              border_width=2)
-            chbox.grid(row=0, column=c+1, sticky="")
+        # TODO: add columns to compare selector
+        # for c in range(text_grid.ncols):
+        #     chbox = customtkinter.CTkCheckBox(self, text=chr(ord('A') + c),
+        #                                       checkbox_width=18, checkbox_height=18,
+        #                                       border_width=2)
+        #     chbox.grid(row=0, column=c+1, sticky="")
 
-        # keeps id of selected radio
-        self.var_first_row = customtkinter.IntVar(value=0)
-
-        for r in range(text_grid.nrows):
-            for c in range(text_grid.ncols):
-                radiobtn = customtkinter.CTkRadioButton(self, text="{}".format(r+1), width=25,
-                                                        radiobutton_width=18, radiobutton_height=18,
-                                                        variable=self.var_first_row,
-                                                        value=r)
-                radiobtn.grid(row=r+1, column=0, pady=5, padx=5, sticky="w")
-
-                entry = customtkinter.CTkEntry(self)
-                entry.insert(0, text_grid.rows[r][c] or "")
-                entry.grid(row=r+1, column=c+1, padx=1, pady=1, sticky="")
+        bom_text_grid = text_grid.format_grid(proj.profile.bom_first_row)
+        self.textbox.delete("0.0", tkinter.END)
+        self.textbox.insert("0.0", bom_text_grid)
+        logging.info("BOM ready")
 
 # -----------------------------------------------------------------------------
 
@@ -391,32 +392,12 @@ class PnPView(customtkinter.CTkFrame):
             return
 
         delim = proj.profile.get_pnp_delimiter()
-        logging.debug(f"Read PnP: {path}, delim={delim}")
+        logging.debug(f"Read PnP: {path}, delim='{delim}'")
         text_grid = csv_reader.read_csv(path, delim)
         logging.info("Read PnP: {} rows x {} cols".format(text_grid.nrows, text_grid.ncols))
 
-        col_max_w = [0 for _ in range(text_grid.ncols)]
-        for r, row in enumerate(text_grid.rows):
-            if r >= proj.profile.pnp_first_row:
-                for c, cell in enumerate(row):
-                    max_w = col_max_w[c]
-                    cell_w = len(cell)
-                    if cell_w > max_w:
-                        col_max_w[c] = cell_w
-
-        # logging.debug("Max col width: {}".format(col_max_w))
-
-        pnp_text_grid = ""
-        for r, row in enumerate(text_grid.rows):
-            if r >= proj.profile.pnp_first_row:
-                pnp_row = "{:0>3} | ".format(r+1)
-                for c, cell in enumerate(row):
-                    to_fill = col_max_w[c] - len(cell)
-                    fill = " " * to_fill if to_fill > 0 else ""
-                    cell = cell + fill + " | "
-                    pnp_row = pnp_row + cell
-                pnp_text_grid = pnp_text_grid + pnp_row + "\n"
-
+        # TODO: add columns to compare selector
+        pnp_text_grid = text_grid.format_grid(proj.profile.pnp_first_row)
         self.textbox.delete("0.0", tkinter.END)
         self.textbox.insert("0.0", pnp_text_grid)
         logging.info("PnP ready")
@@ -436,7 +417,7 @@ class PnPConfig(customtkinter.CTkFrame):
         lbl_separator = customtkinter.CTkLabel(self, text="CSV Separator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
-        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_sepatators(), command=self.opt_separator_event)
+        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(), command=self.opt_separator_event)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
         # self.grid_columnconfigure(1, weight=1)
 
