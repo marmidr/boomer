@@ -11,6 +11,7 @@ import configparser
 import xls_reader
 import xlsx_reader
 import csv_reader
+import text_grid
 
 # -----------------------------------------------------------------------------
 
@@ -75,10 +76,10 @@ class Profile:
                 raise RuntimeError("Unknown CSV separator")
 
     def get_bom_delimiter(self) -> str:
-        return Profile.translate_separator(self.bom_separator)
+        return self.translate_separator(self.bom_separator)
 
     def get_pnp_delimiter(self) -> str:
-        return Profile.translate_separator(self.pnp_separator)
+        return self.translate_separator(self.pnp_separator)
 
 # -----------------------------------------------------------------------------
 
@@ -133,7 +134,6 @@ class Project:
         section["profile"] = self.profile.name
         with open('boomer.ini', 'w') as f:
             self.__config.write(f)
-
 
 # global instance
 proj = Project()
@@ -205,6 +205,9 @@ class ProjectFrame(customtkinter.CTkFrame):
         btn_browse = customtkinter.CTkButton(self, text="Browse...", command=self.button_browse_event)
         btn_browse.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
+        btn_browse = customtkinter.CTkButton(self, text="Remove\nfrom list", command=self.button_remove_event)
+        btn_browse.grid(row=0, column=3, pady=5, padx=5, sticky="e")
+
         # ---
 
         lbl_pnp_path = customtkinter.CTkLabel(self, text="Pick'n'Place file:")
@@ -219,7 +222,7 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.opt_pnp_fname.configure(state="disabled")
 
         self.config_frame = ProjectProfileFrame(self)
-        self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=3, sticky="we")
+        self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=2, sticky="we")
         # self.config_frame.configure(state="disabled")
 
     def find_pnp_files(self, bom_path: str):
@@ -240,6 +243,7 @@ class ProjectFrame(customtkinter.CTkFrame):
     def opt_bom_event(self, bom_path: str):
         logging.debug(f"Open BOM: {bom_path}")
         self.opt_pnp_var.set("")
+        # TODO: clear BOM and PnP view
         if os.path.isfile(bom_path):
             proj.bom_path = bom_path
             self.opt_bom_var.set(bom_path)
@@ -284,9 +288,38 @@ class ProjectFrame(customtkinter.CTkFrame):
         proj.bom_path = bom_path
         proj.cfg_save_project()
 
+    def button_remove_event(self):
+        logging.debug("Remove project from list")
+        # TODO: remove from list and the config file
+
+# -----------------------------------------------------------------------------
+
+class ColumnsSelectorWindow(customtkinter.CTkToplevel):
+    def __init__(self, *args, **kwargs):
+        assert "columns" in kwargs
+        self.columns = kwargs.pop("columns")
+        assert type(self.columns) is list
+        # logging.debug("columns: {}".format(self.columns))
+
+        super().__init__(*args, **kwargs)
+        self.geometry("250x350")
+
+        frame = customtkinter.CTkScrollableFrame(self)
+        frame.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        for c, col in enumerate(self.columns):
+            chbox = customtkinter.CTkCheckBox(frame, text=col,
+                                              checkbox_width=18, checkbox_height=18,
+                                              border_width=2)
+            chbox.grid(row=c, column=0, sticky="w")
+
 # -----------------------------------------------------------------------------
 
 class BOMView(customtkinter.CTkFrame):
+    txt_grid: text_grid.TextGrid = None
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -305,35 +338,32 @@ class BOMView(customtkinter.CTkFrame):
 
         if path.endswith("xls"):
             logging.debug(f"Read BOM: {path}")
-            text_grid = xls_reader.read_xls_sheet(path, **kwargs)
+            self.txt_grid = xls_reader.read_xls_sheet(path, **kwargs)
         elif path.endswith("xlsx"):
             logging.debug(f"Read BOM: {path}")
-            text_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
+            self.txt_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
         elif path.endswith("csv"):
             delim = proj.profile.get_bom_delimiter()
             logging.debug(f"Read BOM: {path}, delim='{delim}'")
-            text_grid = csv_reader.read_csv(path, delim)
+            self.txt_grid = csv_reader.read_csv(path, delim)
         else:
             raise RuntimeError("Unknown file type")
 
-        logging.info("Read BOM: {} rows x {} cols".format(text_grid.nrows, text_grid.ncols))
+        logging.info("Read BOM: {} rows x {} cols".format(self.txt_grid.nrows, self.txt_grid.ncols))
 
-        # TODO: add columns to compare selector
-        # for c in range(text_grid.ncols):
-        #     chbox = customtkinter.CTkCheckBox(self, text=chr(ord('A') + c),
-        #                                       checkbox_width=18, checkbox_height=18,
-        #                                       border_width=2)
-        #     chbox.grid(row=0, column=c+1, sticky="")
-
-        bom_text_grid = text_grid.format_grid(proj.profile.bom_first_row)
-        self.textbox.delete("0.0", tkinter.END)
-        self.textbox.insert("0.0", bom_text_grid)
+        bom_txt_grid = self.txt_grid.format_grid(proj.profile.bom_first_row)
+        self.clear_grid()
+        self.textbox.insert("0.0", bom_txt_grid)
         logging.info("BOM ready")
+
+    def clear_grid(self):
+        self.textbox.delete("0.0", tkinter.END)
 
 # -----------------------------------------------------------------------------
 
 class BOMConfig(customtkinter.CTkFrame):
-    bom_view: BOMView
+    bom_view: BOMView = None
+    wnd_column_selector: ColumnsSelectorWindow = None
 
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
@@ -342,24 +372,53 @@ class BOMConfig(customtkinter.CTkFrame):
 
         super().__init__(master, **kwargs)
 
-        lbl_separator = customtkinter.CTkLabel(self, text="CSV Separator:")
+        lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
-        opt_separator = customtkinter.CTkOptionMenu(self, values=["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH"], command=self.opt_separator_event)
+        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(), command=self.opt_separator_event)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-        self.btn_save = customtkinter.CTkButton(self, text="Save", command=self.button_save_event)
-        self.btn_save.grid(row=0, column=2, pady=5, padx=5, sticky="")
-        self.btn_save.configure(state="disabled")
-
         self.btn_load = customtkinter.CTkButton(self, text="Load BOM", command=self.button_load_event)
-        self.btn_load.grid(row=0, column=3, pady=5, padx=5, columnspan=2, sticky="e")
-        self.grid_columnconfigure(3, weight=1)
+        self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
+
+        lbl_first_row = customtkinter.CTkLabel(self, text="Columns\nheader row:")
+        lbl_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="")
+
+        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)], command=self.opt_first_row_event)
+        opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
+
+        self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...", command=self.button_columns_event)
+        self.btn_columns.grid(row=0, column=5, pady=5, padx=5, sticky="")
+        # self.btn_columns.configure(state="disabled")
+
+        self.btn_save = customtkinter.CTkButton(self, text="Save profile", command=self.button_save_event)
+        self.btn_save.grid(row=0, column=6, pady=5, padx=5, sticky="e")
+        self.btn_save.configure(state="disabled")
+        self.grid_columnconfigure(6, weight=1)
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"BOM separator: {new_sep}")
         proj.profile.bom_separator = new_sep
         self.btn_save.configure(state="enabled")
+        self.button_load_event()
+
+    def opt_first_row_event(self, new_first_row: str):
+        logging.debug(f"BOM 1st row: {new_first_row}")
+        proj.profile.bom_first_row = int(new_first_row.strip()) - 1
+        self.btn_save.configure(state="enabled")
+        self.button_load_event()
+
+    def button_columns_event(self):
+        logging.debug("Select BOM columns...")
+        if self.bom_view.txt_grid and len(self.bom_view.txt_grid.rows) >= proj.profile.bom_first_row:
+            columns = self.bom_view.txt_grid.rows[proj.profile.bom_first_row]
+        else:
+            columns = ["..."]
+
+        if self.wnd_column_selector:
+            self.wnd_column_selector.destroy()
+        self.wnd_column_selector = ColumnsSelectorWindow(self, columns=columns)
+        # self.wnd_column_selector.focusmodel(model="active")
 
     def button_save_event(self):
         self.btn_save.configure(state="disabled")
@@ -373,6 +432,8 @@ class BOMConfig(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class PnPView(customtkinter.CTkFrame):
+    txt_grid: text_grid.TextGrid = None
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -393,19 +454,22 @@ class PnPView(customtkinter.CTkFrame):
 
         delim = proj.profile.get_pnp_delimiter()
         logging.debug(f"Read PnP: {path}, delim='{delim}'")
-        text_grid = csv_reader.read_csv(path, delim)
-        logging.info("Read PnP: {} rows x {} cols".format(text_grid.nrows, text_grid.ncols))
+        self.txt_grid = csv_reader.read_csv(path, delim)
+        logging.info("Read PnP: {} rows x {} cols".format(self.txt_grid.nrows, self.txt_grid.ncols))
 
-        # TODO: add columns to compare selector
-        pnp_text_grid = text_grid.format_grid(proj.profile.pnp_first_row)
-        self.textbox.delete("0.0", tkinter.END)
-        self.textbox.insert("0.0", pnp_text_grid)
+        pnp_txt_grid = self.txt_grid.format_grid(proj.profile.pnp_first_row)
+        self.clear_grid()
+        self.textbox.insert("0.0", pnp_txt_grid)
         logging.info("PnP ready")
+
+    def clear_grid(self):
+        self.textbox.delete("0.0", tkinter.END)
 
 # -----------------------------------------------------------------------------
 
 class PnPConfig(customtkinter.CTkFrame):
-    pnp_view: PnPView
+    pnp_view: PnPView = None
+    wnd_column_selector: ColumnsSelectorWindow = None
 
     def __init__(self, master, **kwargs):
         assert "pnp_view" in kwargs
@@ -414,35 +478,53 @@ class PnPConfig(customtkinter.CTkFrame):
 
         super().__init__(master, **kwargs)
 
-        lbl_separator = customtkinter.CTkLabel(self, text="CSV Separator:")
+        lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
         opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(), command=self.opt_separator_event)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
-        # self.grid_columnconfigure(1, weight=1)
 
-        self.btn_save = customtkinter.CTkButton(self, text="Save", command=self.button_save_event)
-        self.btn_save.grid(row=0, column=2, pady=5, padx=5, sticky="")
-        self.btn_save.configure(state="disabled")
+        self.btn_load = customtkinter.CTkButton(self, text="Load PnP", command=self.button_load_event)
+        self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
-        lbl_first_row = customtkinter.CTkLabel(self, text="1st row:")
+        lbl_first_row = customtkinter.CTkLabel(self, text="Columns\nheader row:")
         lbl_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="")
 
         opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)], command=self.opt_first_row_event)
         opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
 
-        self.btn_load = customtkinter.CTkButton(self, text="Load PnP", command=self.button_load_event)
-        self.btn_load.grid(row=0, column=5, pady=5, padx=5, columnspan=2, sticky="e")
-        self.grid_columnconfigure(5, weight=1)
+        self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...", command=self.button_columns_event)
+        self.btn_columns.grid(row=0, column=5, pady=5, padx=5, sticky="")
+        # self.btn_columns.configure(state="disabled")
+
+        self.btn_save = customtkinter.CTkButton(self, text="Save profile", command=self.button_save_event)
+        self.btn_save.grid(row=0, column=6, pady=5, padx=5, sticky="e")
+        self.btn_save.configure(state="disabled")
+        self.grid_columnconfigure(6, weight=1)
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"PnP separator: {new_sep}")
         proj.profile.pnp_separator = new_sep
         self.btn_save.configure(state="enabled")
+        self.button_load_event()
 
     def opt_first_row_event(self, new_first_row: str):
         logging.debug(f"PnP 1st row: {new_first_row}")
         proj.profile.pnp_first_row = int(new_first_row.strip()) - 1
+        self.btn_save.configure(state="enabled")
+        self.button_load_event()
+
+    def button_columns_event(self):
+        logging.debug("Select PnP columns...")
+        if self.pnp_view.txt_grid and len(self.pnp_view.txt_grid.rows) >= proj.profile.pnp_first_row:
+            columns = self.pnp_view.txt_grid.rows[proj.profile.pnp_first_row]
+        else:
+            columns = ["..."]
+
+        if self.wnd_column_selector:
+            self.wnd_column_selector.destroy()
+        self.wnd_column_selector = ColumnsSelectorWindow(self, columns=columns)
+        # self.wnd_column_selector.focusmodel(model="active")
 
     def button_save_event(self):
         self.btn_save.configure(state="disabled")

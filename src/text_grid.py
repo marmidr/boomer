@@ -13,9 +13,10 @@ class TextGrid:
 
     @staticmethod
     def format_cell(cell) -> str:
+        # https://stackoverflow.com/questions/2184955/test-if-a-variable-is-a-list-or-tuple
         if cell is None:
             cell = "---"
-        elif isinstance(cell, str):
+        elif type(cell) is str:
             pass
         else:
             cell = repr(cell)
