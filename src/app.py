@@ -186,6 +186,9 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class ProjectFrame(customtkinter.CTkFrame):
+    # bom_config: BOMConfig = None
+    # pnp_config: PnPConfig = None
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -254,8 +257,12 @@ class ProjectFrame(customtkinter.CTkFrame):
             proj.pnp_fname = pnp_fname
             self.opt_pnp_var.set(pnp_fname)
             # set profile
-            profile = section["profile"] or "???"
-            self.config_frame.opt_profile_var.set(profile)
+            profile_name = section["profile"] or "???"
+            self.config_frame.opt_profile_var.set(profile_name)
+            # load profile
+            proj.profile.load(profile_name)
+            self.bom_config.load_profile()
+            self.pnp_config.load_profile()
 
     def opt_pnp_event(self, pnp_fname: str):
         logging.debug(f"Select PnP: {pnp_fname}")
@@ -311,7 +318,8 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
 
         for c, col in enumerate(self.columns):
             chbox = customtkinter.CTkCheckBox(frame, text=col,
-                                              checkbox_width=18, checkbox_height=18,
+                                              checkbox_width=18,
+                                              checkbox_height=18,
                                               border_width=2)
             chbox.grid(row=c, column=0, sticky="w")
 
@@ -375,26 +383,39 @@ class BOMConfig(customtkinter.CTkFrame):
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
-        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(), command=self.opt_separator_event)
+        self.opt_separator_var = customtkinter.StringVar(value="")
+        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(),
+                                                    command=self.opt_separator_event,
+                                                    variable=self.opt_separator_var)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-        self.btn_load = customtkinter.CTkButton(self, text="Load BOM", command=self.button_load_event)
+        self.btn_load = customtkinter.CTkButton(self, text="Load BOM",
+                                                command=self.button_load_event)
         self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
         lbl_first_row = customtkinter.CTkLabel(self, text="Columns\nheader row:")
         lbl_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="")
 
-        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)], command=self.opt_first_row_event)
+        self.opt_first_row_var = customtkinter.IntVar(value=0)
+        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)],
+                                                    command=self.opt_first_row_event,
+                                                    variable=self.opt_first_row_var)
         opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
 
-        self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...", command=self.button_columns_event)
+        self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
+                                                   command=self.button_columns_event)
         self.btn_columns.grid(row=0, column=5, pady=5, padx=5, sticky="")
         # self.btn_columns.configure(state="disabled")
 
-        self.btn_save = customtkinter.CTkButton(self, text="Save profile", command=self.button_save_event)
+        self.btn_save = customtkinter.CTkButton(self, text="Save profile",
+                                                command=self.button_save_event)
         self.btn_save.grid(row=0, column=6, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state="disabled")
         self.grid_columnconfigure(6, weight=1)
+
+    def load_profile(self):
+        self.opt_separator_var.set(proj.profile.bom_separator)
+        self.opt_first_row_var.set(proj.profile.bom_first_row)
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"BOM separator: {new_sep}")
@@ -481,26 +502,39 @@ class PnPConfig(customtkinter.CTkFrame):
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
-        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(), command=self.opt_separator_event)
+        self.opt_separator_var = customtkinter.StringVar(value="")
+        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(),
+                                                    command=self.opt_separator_event,
+                                                    variable=self.opt_separator_var)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-        self.btn_load = customtkinter.CTkButton(self, text="Load PnP", command=self.button_load_event)
+        self.btn_load = customtkinter.CTkButton(self, text="Load PnP",
+                                                command=self.button_load_event)
         self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
         lbl_first_row = customtkinter.CTkLabel(self, text="Columns\nheader row:")
         lbl_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="")
 
-        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)], command=self.opt_first_row_event)
+        self.opt_first_row_var = customtkinter.IntVar(value=0)
+        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)],
+                                                    command=self.opt_first_row_event,
+                                                    variable=self.opt_first_row_var)
         opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
 
-        self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...", command=self.button_columns_event)
+        self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
+                                                   command=self.button_columns_event)
         self.btn_columns.grid(row=0, column=5, pady=5, padx=5, sticky="")
         # self.btn_columns.configure(state="disabled")
 
-        self.btn_save = customtkinter.CTkButton(self, text="Save profile", command=self.button_save_event)
+        self.btn_save = customtkinter.CTkButton(self, text="Save profile",
+                                                command=self.button_save_event)
         self.btn_save.grid(row=0, column=6, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state="disabled")
         self.grid_columnconfigure(6, weight=1)
+
+    def load_profile(self):
+        self.opt_separator_var.set(proj.profile.pnp_separator)
+        self.opt_first_row_var.set(proj.profile.pnp_first_row)
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"PnP separator: {new_sep}")
@@ -568,6 +602,7 @@ class CtkApp(customtkinter.CTk):
         self.bom_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
         self.bom_config = BOMConfig(tab_bom, bom_view=self.bom_view)
         self.bom_config.grid(row=1, column=0, pady=5, padx=5, sticky="we")
+        proj_frame.bom_config = self.bom_config
 
         tab_bom.grid_columnconfigure(0, weight=1)
         tab_bom.grid_rowconfigure(0, weight=1)
@@ -577,6 +612,7 @@ class CtkApp(customtkinter.CTk):
         self.pnp_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
         self.pnp_config = PnPConfig(tab_pnp, pnp_view=self.pnp_view)
         self.pnp_config.grid(row=1, column=0, padx=5, pady=5, sticky="we")
+        proj_frame.pnp_config = self.pnp_config
 
         tab_pnp.grid_columnconfigure(0, weight=1)
         tab_pnp.grid_rowconfigure(0, weight=1)
