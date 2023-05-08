@@ -12,6 +12,7 @@ import xls_reader
 import xlsx_reader
 import csv_reader
 import text_grid
+from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
 
 # -----------------------------------------------------------------------------
 
@@ -21,16 +22,24 @@ class Profile:
     name: str
     bom_first_row: int # 0-based
     bom_separator: str
+    bom_designator_col: str
+    bom_comment_col: str
     pnp_first_row: int # 0-based
     pnp_separator: str
+    pnp_designator_col: str
+    pnp_comment_col: str
     __config: configparser.ConfigParser
 
     def __init__(self, config: configparser.ConfigParser):
         self.name = "noname"
         self.bom_first_row = 0
         self.bom_separator = "COMMA"
+        self.bom_designator_col = "?"
+        self.bom_comment_col = "?"
         self.pnp_first_row = 0
         self.pnp_separator = "COMMA"
+        self.pnp_designator_col = "?"
+        self.pnp_comment_col = "?"
         self.__config = config
 
     def load(self, name: str):
@@ -38,10 +47,16 @@ class Profile:
             logging.debug(f"Load profile {name}")
             self.name = name
             section = self.__config['profile.' + self.name]
-            self.bom_first_row = int(section["bom_first_row"])
-            self.bom_separator = section["bom_separator"]
-            self.pnp_first_row = int(section["pnp_first_row"])
-            self.pnp_separator = section["pnp_separator"]
+
+            self.bom_first_row = int(section.get("bom_first_row", "0"))
+            self.bom_separator = section.get("bom_separator", "COMMA")
+            self.bom_designator_col = section.get("bom_designator_col", "?")
+            self.bom_comment_col = section.get("bom_comment_col", "?")
+
+            self.pnp_first_row = int(section.get("pnp_first_row", "0"))
+            self.pnp_separator = section.get("pnp_separator", "COMMA")
+            self.pnp_designator_col = section.get("pnp_designator_col", "?")
+            self.pnp_comment_col = section.get("pnp_comment_col", "?")
         else:
             logging.warning("Config file not found")
 
@@ -50,15 +65,20 @@ class Profile:
         self.__config["profile." + self.name] = {
             "bom_first_row": self.bom_first_row,
             "bom_separator": self.bom_separator,
+            "bom_designator_col": self.bom_designator_col,
+            "bom_comment_col": self.bom_comment_col,
+
             "pnp_first_row": self.pnp_first_row,
-            "pnp_separator": self.pnp_separator
+            "pnp_separator": self.pnp_separator,
+            "pnp_designator_col": self.pnp_designator_col,
+            "pnp_comment_col": self.pnp_comment_col
         }
         with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
 
     @staticmethod
     def get_separator_names() -> list[str]:
-        return ["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH", "REGEX"]
+        return ["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH", "REGEX"].copy()
 
     @staticmethod
     def translate_separator(sep: str) -> str:
@@ -315,30 +335,6 @@ class ProjectFrame(customtkinter.CTkFrame):
 
 # -----------------------------------------------------------------------------
 
-class ColumnsSelectorWindow(customtkinter.CTkToplevel):
-    def __init__(self, *args, **kwargs):
-        assert "columns" in kwargs
-        self.columns = kwargs.pop("columns")
-        assert type(self.columns) is list
-        # logging.debug("columns: {}".format(self.columns))
-
-        super().__init__(*args, **kwargs)
-        self.geometry("250x350")
-
-        frame = customtkinter.CTkScrollableFrame(self)
-        frame.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-        for c, col in enumerate(self.columns):
-            chbox = customtkinter.CTkCheckBox(frame, text=col,
-                                              checkbox_width=18,
-                                              checkbox_height=18,
-                                              border_width=2)
-            chbox.grid(row=c, column=0, sticky="w")
-
-# -----------------------------------------------------------------------------
-
 class BOMView(customtkinter.CTkFrame):
     txt_grid: text_grid.TextGrid = None
 
@@ -385,7 +381,7 @@ class BOMView(customtkinter.CTkFrame):
 
 class BOMConfig(customtkinter.CTkFrame):
     bom_view: BOMView = None
-    wnd_column_selector: ColumnsSelectorWindow = None
+    column_selector: ColumnsSelectorWindow = None
 
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
@@ -429,7 +425,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.bom_separator)
-        self.opt_first_row_var.set(proj.profile.bom_first_row)
+        self.opt_first_row_var.set(proj.profile.bom_first_row + 1)
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"BOM separator: {new_sep}")
@@ -450,10 +446,16 @@ class BOMConfig(customtkinter.CTkFrame):
         else:
             columns = ["..."]
 
-        if self.wnd_column_selector:
-            self.wnd_column_selector.destroy()
-        self.wnd_column_selector = ColumnsSelectorWindow(self, columns=columns)
+        if self.column_selector:
+            self.column_selector.destroy()
+        self.column_selector = ColumnsSelectorWindow(self, columns=columns, callback=self.column_selector_callback)
         # self.wnd_column_selector.focusmodel(model="active")
+
+    def column_selector_callback(self, result: ColumnsSelectorResult):
+        logging.info(f"Selected BOM columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
+        proj.profile.bom_designator_col = result.designator_col
+        proj.profile.bom_comment_col = result.comment_col
+        self.btn_save.configure(state="enabled")
 
     def button_save_event(self):
         self.btn_save.configure(state="disabled")
@@ -508,7 +510,7 @@ class PnPView(customtkinter.CTkFrame):
 
 class PnPConfig(customtkinter.CTkFrame):
     pnp_view: PnPView = None
-    wnd_column_selector: ColumnsSelectorWindow = None
+    column_selector: ColumnsSelectorWindow = None
 
     def __init__(self, master, **kwargs):
         assert "pnp_view" in kwargs
@@ -552,7 +554,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.pnp_separator)
-        self.opt_first_row_var.set(proj.profile.pnp_first_row)
+        self.opt_first_row_var.set(proj.profile.pnp_first_row+1)
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"PnP separator: {new_sep}")
@@ -573,10 +575,16 @@ class PnPConfig(customtkinter.CTkFrame):
         else:
             columns = ["..."]
 
-        if self.wnd_column_selector:
-            self.wnd_column_selector.destroy()
-        self.wnd_column_selector = ColumnsSelectorWindow(self, columns=columns)
+        if self.column_selector:
+            self.column_selector.destroy()
+        self.column_selector = ColumnsSelectorWindow(self, columns=columns, callback=self.column_selector_callback)
         # self.wnd_column_selector.focusmodel(model="active")
+
+    def column_selector_callback(self, result: ColumnsSelectorResult):
+        logging.info(f"Selected PnP columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
+        proj.profile.pnp_designator_col = result.designator_col
+        proj.profile.pnp_comment_col = result.comment_col
+        self.btn_save.configure(state="enabled")
 
     def button_save_event(self):
         self.btn_save.configure(state="disabled")

@@ -18,10 +18,16 @@ def read_xls_sheet(path: str) -> TextGrid:
     for r in range(sheet.nrows):
         row_cells = []
         for c in range(sheet.ncols):
-            list.append(row_cells, sheet.cell_value(r, c))
+            cell = sheet.cell_value(r, c)
+            if cell is None:
+                cell = ""
+            elif type(cell) is float or type(cell) is int:
+                cell = repr(cell)
+            row_cells.append(cell)
+
         # ignore rows with empty cell 'A'
-        if len(row_cells) > 0 and not row_cells[0] is None and row_cells[0] != "":
-            list.append(tg.rows, row_cells)
+        if len(row_cells) > 0 and row_cells[0] != "":
+            tg.rows.append(row_cells)
 
     tg.nrows = len(tg.rows)
     tg.ncols = sheet.ncols

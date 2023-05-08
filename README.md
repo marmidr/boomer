@@ -4,7 +4,9 @@ The purpose of this project is to help an electronic manufacturer in preparation
 
 It reads the <abbr title="Bill Of Materials">BOM</abbr> and the accompanying <abbr title="Pick And Place">PnP</abbr> files, performing cross-checking to ensure if those files contents matches.
 
-The following checks are performed:
+![sshot1](doc/sshot1.png)
+
+The following checks are performed: (TBD)
 
 * BOM contains some element that is missing in the PnP file
 * PnP contains reference to element that is not present in the BOM
@@ -30,6 +32,9 @@ Open PowerShell and:
 pip install xlrd openpyxl customtkinter
 ```
 
-## Examples
+## How to run
 
-TBD
+From PowerShell:
+```ps1
+python.exe src/app.py
+```

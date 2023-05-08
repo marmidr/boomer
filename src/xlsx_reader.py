@@ -19,11 +19,15 @@ def read_xlsx_sheet(path: str) -> TextGrid:
     for row in sheet.iter_rows(min_row=1, max_col=sheet.max_column, max_row=sheet.max_row, values_only=True):
         row_cells = []
         for cell in row:
-            list.append(row_cells, cell)
+            if cell is None:
+                cell = ""
+            elif type(cell) is float or type(cell) is int:
+                cell = repr(cell)
+            row_cells.append(cell)
 
         # ignore rows with empty cell 'A'
-        if len(row_cells) > 0 and not row_cells[0] is None and row_cells[0] != "":
-            list.append(tg.rows, row_cells)
+        if len(row_cells) > 0 and row_cells[0] != "":
+            tg.rows.append(row_cells)
 
     tg.nrows = len(tg.rows)
     tg.ncols = sheet.max_column
