@@ -10,17 +10,26 @@ def read_csv(path: str, delim: str) -> TextGrid:
     """
 
     logging.info(f"Reading file '{path}'")
-
     tg = TextGrid()
     max_cols = 0
 
     with open(path, 'r', encoding="utf-8") as f:
-        if delim == "*fw":
+        if delim == "*sp":
+            rows = f.read().splitlines()
+            for row in rows:
+                # split row by any number of following whitespaces
+                row_cells = row.split()
+                max_cols = max(max_cols, len(row_cells))
+                # ignore rows with empty cell 'A'
+                if len(row_cells) > 0 and row_cells[0] != "":
+                    tg.rows.append(row_cells)
+
+        elif delim == "*fw":
             # TODO: add reader for fixed-width
-            raise ValueError("delimiter *fw not yet supported")
+            raise ValueError("delimiter *fw not yet implemented")
         elif delim == "*re":
             # TODO: add reader for reg-ex
-            raise ValueError("delimiter *re not yet supported")
+            raise ValueError("delimiter *re not yet implemented")
         else:
             reader = csv.reader(f, delimiter=delim)
             for row in reader:
@@ -28,10 +37,10 @@ def read_csv(path: str, delim: str) -> TextGrid:
                 if len(row) > 0 and row[0] != "":
                     row_cells = []
                     for cell in row:
-                        list.append(row_cells, cell.strip())
+                        row_cells.append(cell.strip())
 
-                    if len(row_cells) > max_cols: max_cols = len(row_cells)
-                    list.append(tg.rows, row_cells)
+                    max_cols = max(max_cols, len(row_cells))
+                    tg.rows.append(row_cells)
 
     tg.nrows = len(tg.rows)
     tg.ncols = max_cols
@@ -40,7 +49,7 @@ def read_csv(path: str, delim: str) -> TextGrid:
     for row in tg.rows:
         cols_to_add = tg.ncols - len(row)
         while cols_to_add > 0:
-            list.append(row, "")
+            row.append("")
             cols_to_add -= 1
 
     return tg

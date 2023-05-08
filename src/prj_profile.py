@@ -66,7 +66,7 @@ class Profile:
 
     @staticmethod
     def get_separator_names() -> list[str]:
-        return ["COMMA", "SEMICOLON", "TAB", "FIXED-WIDTH", "REGEX"].copy()
+        return ["COMMA", "SEMICOLON", "TAB", "SPACES", "FIXED-WIDTH", "REGEX"].copy()
 
     @staticmethod
     def translate_separator(sep: str) -> str:
@@ -78,6 +78,8 @@ class Profile:
                 return ";"
             case "TAB":
                 return "\t"
+            case "SPACES":
+                return "*sp"
             case "FIXED-WIDTH":
                 return "*fw"
             case "REGEX":
