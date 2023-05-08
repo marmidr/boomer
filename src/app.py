@@ -462,7 +462,11 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def button_load_event(self):
         logging.debug("Load BOM...")
-        self.bom_view.load_bom(proj.bom_path)
+        try:
+            self.bom_view.load_bom(proj.bom_path)
+        except Exception as e:
+            logging.error(f"Cannot load BOM: {e}")
+
 
 # -----------------------------------------------------------------------------
 
@@ -582,7 +586,10 @@ class PnPConfig(customtkinter.CTkFrame):
     def button_load_event(self):
         logging.debug("Load PnP...")
         pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
-        self.pnp_view.load_pnp(pnp_path)
+        try:
+            self.pnp_view.load_pnp(pnp_path)
+        except Exception as e:
+            logging.error(f"Cannot load PnP: {e}")
 
 # -----------------------------------------------------------------------------
 
@@ -639,10 +646,15 @@ class CtkApp(customtkinter.CTk):
 if __name__ == "__main__":
     # logger config with dimmed time
     # https://docs.python.org/3/howto/logging.html
-    # TODO: colors https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
     logging.basicConfig(format='\033[30m%(asctime)s\033[39m %(levelname)s: %(message)s',
                         datefmt='%H:%M:%S',
                         level=logging.DEBUG)
+    # https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
+    # logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % logging.getLevelName(logging.INFO))
+    logging.addLevelName(logging.DEBUG,   "%s"                    % "DEBUG")
+    logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % "INFO ")
+    logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % "WARN ")
+    logging.addLevelName(logging.ERROR,   "\033[1;31m%s\033[1;0m" % "ERROR")
 
     # https://customtkinter.tomschimansky.com/documentation/appearancemode
     customtkinter.set_appearance_mode("light")
