@@ -84,6 +84,8 @@ proj = Project()
 # -----------------------------------------------------------------------------
 
 class ProjectProfileFrame(customtkinter.CTkFrame):
+    # project_frame: ProjectFrame = None
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -125,6 +127,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         logging.debug(f"Select profile: {new_profile}")
         proj.profile.load(new_profile)
         proj.cfg_save_project()
+        self.project_frame.config_frames_load_profile()
 
 # -----------------------------------------------------------------------------
 
@@ -169,6 +172,7 @@ class ProjectFrame(customtkinter.CTkFrame):
 
         self.config_frame = ProjectProfileFrame(self)
         self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=2, sticky="we")
+        self.config_frame.project_frame = self
         # self.config_frame.configure(state="disabled")
 
     def find_pnp_files(self, bom_path: str):
@@ -204,8 +208,7 @@ class ProjectFrame(customtkinter.CTkFrame):
             self.config_frame.opt_profile_var.set(profile_name)
             # load profile
             proj.profile.load(profile_name)
-            self.bom_config.load_profile()
-            self.pnp_config.load_profile()
+            self.config_frames_load_profile()
 
     def opt_pnp_event(self, pnp_fname: str):
         logging.debug(f"Select PnP: {pnp_fname}")
@@ -222,8 +225,9 @@ class ProjectFrame(customtkinter.CTkFrame):
             title="Select BOM file",
             initialdir=None,
             filetypes=(
-            ("Supported (*.xls; *.xlsx; *.csv)", "*.xls; *.xlsx; *.csv"),
-            ("All (*.*)", "*.*")),
+                ("Supported (*.xls; *.xlsx; *.csv)", "*.xls; *.xlsx; *.csv"),
+                ("All (*.*)", "*.*")
+            ),
         )
         logging.debug(f"Selected path: {bom_path}")
 
@@ -244,6 +248,10 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.opt_bom_var.set("")
         self.bom_paths = proj.get_projects()
         self.opt_bom_path.configure(values=self.bom_paths)
+
+    def config_frames_load_profile(self):
+        self.bom_config.load_profile()
+        self.pnp_config.load_profile()
 
 # -----------------------------------------------------------------------------
 
@@ -311,7 +319,7 @@ class BOMConfig(customtkinter.CTkFrame):
                                                     variable=self.opt_separator_var)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-        self.btn_load = customtkinter.CTkButton(self, text="Load BOM",
+        self.btn_load = customtkinter.CTkButton(self, text="Reload BOM",
                                                 command=self.button_load_event)
         self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
@@ -324,20 +332,28 @@ class BOMConfig(customtkinter.CTkFrame):
                                                     variable=self.opt_first_row_var)
         opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
 
+        self.lbl_columns = customtkinter.CTkLabel(self, text="", justify="left")
+        self.lbl_columns.grid(row=0, column=5, pady=5, padx=(15,5), sticky="w")
+        self.update_lbl_columns()
+
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
                                                    command=self.button_columns_event)
-        self.btn_columns.grid(row=0, column=5, pady=5, padx=5, sticky="")
-        # self.btn_columns.configure(state="disabled")
+        self.btn_columns.grid(row=0, column=6, pady=5, padx=5, sticky="")
 
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
-        self.btn_save.grid(row=0, column=6, pady=5, padx=5, sticky="e")
+        self.btn_save.grid(row=0, column=7, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state="disabled")
-        self.grid_columnconfigure(6, weight=1)
+        self.grid_columnconfigure(7, weight=1)
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.bom_separator)
         self.opt_first_row_var.set(proj.profile.bom_first_row + 1)
+        self.bom_view.clear_grid()
+        self.update_lbl_columns()
+
+    def update_lbl_columns(self):
+        self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.bom_designator_col}\n• {proj.profile.bom_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"BOM separator: {new_sep}")
@@ -367,6 +383,7 @@ class BOMConfig(customtkinter.CTkFrame):
         logging.info(f"Selected BOM columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.bom_designator_col = result.designator_col
         proj.profile.bom_comment_col = result.comment_col
+        self.update_lbl_columns()
         self.btn_save.configure(state="enabled")
 
     def button_save_event(self):
@@ -440,7 +457,7 @@ class PnPConfig(customtkinter.CTkFrame):
                                                     variable=self.opt_separator_var)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-        self.btn_load = customtkinter.CTkButton(self, text="Load PnP",
+        self.btn_load = customtkinter.CTkButton(self, text="Reload PnP",
                                                 command=self.button_load_event)
         self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
 
@@ -453,20 +470,28 @@ class PnPConfig(customtkinter.CTkFrame):
                                                     variable=self.opt_first_row_var)
         opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
 
+        self.lbl_columns = customtkinter.CTkLabel(self, text="", justify="left")
+        self.lbl_columns.grid(row=0, column=5, pady=5, padx=(15,5), sticky="w")
+        self.update_lbl_columns()
+
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
                                                    command=self.button_columns_event)
-        self.btn_columns.grid(row=0, column=5, pady=5, padx=5, sticky="")
-        # self.btn_columns.configure(state="disabled")
+        self.btn_columns.grid(row=0, column=6, pady=5, padx=5, sticky="")
 
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
-        self.btn_save.grid(row=0, column=6, pady=5, padx=5, sticky="e")
+        self.btn_save.grid(row=0, column=7, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state="disabled")
-        self.grid_columnconfigure(6, weight=1)
+        self.grid_columnconfigure(7, weight=1)
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.pnp_separator)
         self.opt_first_row_var.set(proj.profile.pnp_first_row+1)
+        self.pnp_view.clear_grid()
+        self.update_lbl_columns()
+
+    def update_lbl_columns(self):
+        self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.pnp_designator_col}\n• {proj.profile.pnp_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"PnP separator: {new_sep}")
@@ -496,6 +521,7 @@ class PnPConfig(customtkinter.CTkFrame):
         logging.info(f"Selected PnP columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
+        self.update_lbl_columns()
         self.btn_save.configure(state="enabled")
 
     def button_save_event(self):
