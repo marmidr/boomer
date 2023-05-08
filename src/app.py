@@ -16,6 +16,8 @@ import text_grid
 # -----------------------------------------------------------------------------
 
 class Profile:
+    CONFIG_FILE_NAME: str = "boomer.ini"
+
     name: str
     bom_first_row: int # 0-based
     bom_separator: str
@@ -32,7 +34,7 @@ class Profile:
         self.__config = config
 
     def load(self, name: str):
-        if os.path.isfile("boomer.ini"):
+        if os.path.isfile(self.CONFIG_FILE_NAME):
             logging.debug(f"Load profile {name}")
             self.name = name
             section = self.__config['profile.' + self.name]
@@ -51,7 +53,7 @@ class Profile:
             "pnp_first_row": self.pnp_first_row,
             "pnp_separator": self.pnp_separator
         }
-        with open('boomer.ini', 'w') as f:
+        with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
 
     @staticmethod
@@ -95,8 +97,8 @@ class Project:
 
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
-        if os.path.isfile("boomer.ini"):
-            self.__config.read('boomer.ini')
+        if os.path.isfile(Profile.CONFIG_FILE_NAME):
+            self.__config.read(Profile.CONFIG_FILE_NAME)
         else:
             self.__config['common'] = {
                 "initial_dir": "",
@@ -120,6 +122,15 @@ class Project:
 
         return projects
 
+    def del_project(self, name: str):
+        sect_name = "project." + name
+        if sect_name in self.__config.sections():
+            self.__config.remove_section(sect_name)
+            with open(Profile.CONFIG_FILE_NAME, 'w') as f:
+                self.__config.write(f)
+        else:
+            logging.warning(f"Project '{name}' not found")
+
     def cfg_get_profiles(self) -> list[str]:
         profiles = []
         for sect in self.__config.sections():
@@ -132,7 +143,7 @@ class Project:
         section = self.cfg_get_section("project." + self.bom_path)
         section["pnp"] = self.pnp_fname
         section["profile"] = self.profile.name
-        with open('boomer.ini', 'w') as f:
+        with open(Profile.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
 
 # global instance
@@ -175,7 +186,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
             logging.error("Profile name length must be 3 or more")
 
     def button_del_event(self):
-        logging.debug("Del")
+        logging.debug("Del profile")
         # TODO:
 
     def opt_profile_event(self, new_profile: str):
@@ -297,7 +308,10 @@ class ProjectFrame(customtkinter.CTkFrame):
 
     def button_remove_event(self):
         logging.debug("Remove project from list")
-        # TODO: remove from list and the config file
+        proj.del_project(self.opt_bom_var.get())
+        self.opt_bom_var.set("")
+        self.bom_paths = proj.get_projects()
+        self.opt_bom_path.configure(values=self.bom_paths)
 
 # -----------------------------------------------------------------------------
 
@@ -567,7 +581,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def button_load_event(self):
         logging.debug("Load PnP...")
-        pnp_path = os.path.dirname(proj.bom_path) + "/" + proj.pnp_fname
+        pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
         self.pnp_view.load_pnp(pnp_path)
 
 # -----------------------------------------------------------------------------
@@ -625,6 +639,7 @@ class CtkApp(customtkinter.CTk):
 if __name__ == "__main__":
     # logger config with dimmed time
     # https://docs.python.org/3/howto/logging.html
+    # TODO: colors https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
     logging.basicConfig(format='\033[30m%(asctime)s\033[39m %(levelname)s: %(message)s',
                         datefmt='%H:%M:%S',
                         level=logging.DEBUG)

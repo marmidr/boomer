@@ -28,10 +28,8 @@ class TextGrid:
             if r >= first_row:
                 for c, cell in enumerate(row):
                     cell = self.format_cell(cell)
-                    max_w = col_max_w[c]
                     cell_w = len(cell)
-                    if cell_w > max_w:
-                        col_max_w[c] = cell_w
+                    col_max_w[c] = max(col_max_w[c], cell_w)
         return col_max_w
 
     def format_grid(self, first_row: int) -> str:
