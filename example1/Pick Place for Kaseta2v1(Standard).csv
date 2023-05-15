@@ -1,4 +1,4 @@
-Designator Footprint               Mid X         Mid Y         Ref X         Ref Y         Pad X         Pad Y TB      Rotation Comment        
+Designator Footprint               Mid-X         Mid-Y         Ref-X         Ref-Y         Pad-X         Pad-Y TB      Rotation Comment        
 
 R51        REZ_MIFON_1206    2407.992mil       2390mil   2407.992mil       2390mil   2347.992mil       2390mil  B        180.00 470            
 R40        REZ_MIFON_1206        2465mil       2520mil       2465mil       2520mil       2525mil       2520mil  B        360.00 100R           

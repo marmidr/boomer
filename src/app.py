@@ -14,6 +14,7 @@ import csv_reader
 import text_grid
 from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
 from prj_profile import Profile
+import ui_helpers
 
 # -----------------------------------------------------------------------------
 
@@ -265,9 +266,20 @@ class BOMView(customtkinter.CTkFrame):
                                                 font=customtkinter.CTkFont(size=12, family="Consolas"),
                                                 activate_scrollbars=True,
                                                 wrap='none')
-        self.textbox.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.textbox.grid(row=0, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
+        # self.textbox.tag_config('highlight', background='white', foreground='red')
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
+
+        self.entry_search = customtkinter.CTkEntry(self, placeholder_text="search...")
+        self.entry_search.grid(row=1, column=0, padx=5, pady=5, sticky="wens")
+
+        self.btn_search = customtkinter.CTkButton(self, text="Find", command=self.button_find_event)
+        self.btn_search.grid(row=1, column=1, pady=5, padx=5, sticky="we")
+
+        self.lbl_occurences = customtkinter.CTkLabel(self, text="Found: 0")
+        self.lbl_occurences.grid(row=1, column=2, pady=5, padx=5, sticky="")
 
     def load_bom(self, path: str, **kwargs):
         if not os.path.isfile(path):
@@ -296,6 +308,13 @@ class BOMView(customtkinter.CTkFrame):
 
     def clear_grid(self):
         self.textbox.delete("0.0", tkinter.END)
+
+    def button_find_event(self):
+        txt = self.entry_search.get()
+        logging.info(f"Find '{txt}'")
+        cnt = ui_helpers.textbox_find_text(self.textbox, txt)
+        self.lbl_occurences.configure(text=f"Found: {cnt}")
+        # logging.debug(f"Found {cnt} occurences")
 
 # -----------------------------------------------------------------------------
 
@@ -398,7 +417,6 @@ class BOMConfig(customtkinter.CTkFrame):
         except Exception as e:
             logging.error(f"Cannot load BOM: {e}")
 
-
 # -----------------------------------------------------------------------------
 
 class PnPView(customtkinter.CTkFrame):
@@ -411,11 +429,20 @@ class PnPView(customtkinter.CTkFrame):
                                                 font=customtkinter.CTkFont(size=12, family="Consolas"),
                                                 activate_scrollbars=True,
                                                 wrap='none')
-        self.textbox.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.textbox.grid(row=0, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
         # self.textbox.insert("0.0", "𝐓𝐞𝐱𝐭 𝐄𝐝𝐢𝐭𝐨𝐫, 𝕋𝕖𝕩𝕥 𝔼𝕕𝕚𝕥𝕠𝕣")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
+
+        self.entry_search = customtkinter.CTkEntry(self, placeholder_text="search...")
+        self.entry_search.grid(row=1, column=0, padx=5, pady=5, sticky="wens")
+
+        self.btn_search = customtkinter.CTkButton(self, text="Find", command=self.button_find_event)
+        self.btn_search.grid(row=1, column=1, pady=5, padx=5, sticky="we")
+
+        self.lbl_occurences = customtkinter.CTkLabel(self, text="Found: 0")
+        self.lbl_occurences.grid(row=1, column=2, pady=5, padx=5, sticky="")
 
     def load_pnp(self, path: str):
         if not os.path.isfile(path):
@@ -434,6 +461,13 @@ class PnPView(customtkinter.CTkFrame):
 
     def clear_grid(self):
         self.textbox.delete("0.0", tkinter.END)
+
+    def button_find_event(self):
+        txt = self.entry_search.get()
+        logging.info(f"Find '{txt}'")
+        cnt = ui_helpers.textbox_find_text(self.textbox, txt)
+        self.lbl_occurences.configure(text=f"Found: {cnt}")
+        # logging.debug(f"Found {cnt} occurences")
 
 # -----------------------------------------------------------------------------
 

@@ -42,7 +42,7 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         self.grid_columnconfigure(1, weight=1)
 
         if self.comment_active:
-            lbl_comment = customtkinter.CTkLabel(self, text="Part comment/value column:")
+            lbl_comment = customtkinter.CTkLabel(self, text="Part comment (value) column:")
             lbl_comment.grid(row=1, column=0, pady=5, padx=5, sticky="w")
 
             self.opt_comment_var = customtkinter.StringVar(value="")
