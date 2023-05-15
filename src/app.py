@@ -196,6 +196,10 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.opt_pnp_var.set("")
         # TODO: clear BOM and PnP view
         if os.path.isfile(bom_path):
+            # TOOD:
+            # self.bom_view.clear_grid()
+            # self.pnp_view.clear_grid()
+
             proj.bom_path = bom_path
             self.opt_bom_var.set(bom_path)
             # set pnp

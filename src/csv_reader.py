@@ -22,7 +22,26 @@ def read_csv(path: str, delim: str) -> TextGrid:
                 max_cols = max(max_cols, len(row_cells))
                 # ignore rows with empty cell 'A'
                 if len(row_cells) > 0 and row_cells[0] != "":
-                    tg.rows.append(row_cells)
+                    row_cells_processed = []
+
+                    # merge quoted cells into single one,
+                    # like this: "5k1 5% 0603"
+                    quoted_cell = ""
+                    for cell in row_cells:
+                        if cell.startswith('"'):
+                            quoted_cell = cell
+                        elif len(quoted_cell) > 0:
+                            quoted_cell += ' '
+                            quoted_cell += cell
+                            if cell.endswith('"'):
+                                # drop the quotes
+                                quoted_cell = quoted_cell[1:-1]
+                                row_cells_processed.append(quoted_cell)
+                                quoted_cell = ""
+                        else:
+                            row_cells_processed.append(cell)
+
+                    tg.rows.append(row_cells_processed)
 
         elif delim == "*fw":
             # TODO: add reader for fixed-width
