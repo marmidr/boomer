@@ -399,7 +399,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self, columns=columns, comment_active=True, callback=self.column_selector_callback)
+        self.column_selector = ColumnsSelectorWindow(self, columns=columns, callback=self.column_selector_callback)
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
@@ -529,7 +529,7 @@ class PnPConfig(customtkinter.CTkFrame):
         self.update_lbl_columns()
 
     def update_lbl_columns(self):
-        self.lbl_columns.configure(text=f"COLUMN:\n• {proj.profile.pnp_designator_col}\n")
+        self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.pnp_designator_col}\n• {proj.profile.pnp_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
         logging.debug(f"PnP separator: {new_sep}")
@@ -544,7 +544,7 @@ class PnPConfig(customtkinter.CTkFrame):
         self.button_load_event()
 
     def button_columns_event(self):
-        logging.debug("Select PnP designator column...")
+        logging.debug("Select PnP columns...")
         if self.pnp_view.txt_grid and len(self.pnp_view.txt_grid.rows) >= proj.profile.pnp_first_row:
             columns = self.pnp_view.txt_grid.rows[proj.profile.pnp_first_row]
         else:
@@ -552,12 +552,14 @@ class PnPConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self, columns=columns, comment_active=False, callback=self.column_selector_callback)
+        self.column_selector = ColumnsSelectorWindow(self, columns=columns, callback=self.column_selector_callback)
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
         logging.info(f"Selected PnP designator column: '{result.designator_col}'")
+
         proj.profile.pnp_designator_col = result.designator_col
+        proj.profile.pnp_comment_col = result.comment_col
         self.update_lbl_columns()
         self.btn_save.configure(state="enabled")
 

@@ -15,6 +15,7 @@ class Profile:
     pnp_first_row: int # 0-based
     pnp_separator: str
     pnp_designator_col: str
+    pnp_comment_col: str
     __config: configparser.ConfigParser
 
     def __init__(self, config: configparser.ConfigParser):
@@ -26,6 +27,7 @@ class Profile:
         self.pnp_first_row = 0
         self.pnp_separator = "COMMA"
         self.pnp_designator_col = "?"
+        self.pnp_comment_col = "?"
         self.__config = config
 
     def load(self, name: str):
@@ -42,6 +44,7 @@ class Profile:
             self.pnp_first_row = int(section.get("pnp_first_row", "0"))
             self.pnp_separator = section.get("pnp_separator", "COMMA")
             self.pnp_designator_col = section.get("pnp_designator_col", "?")
+            self.pnp_comment_col = section.get("pnp_comment_col", "?")
         else:
             logging.warning("Config file not found")
 
@@ -56,6 +59,7 @@ class Profile:
             "pnp_first_row": self.pnp_first_row,
             "pnp_separator": self.pnp_separator,
             "pnp_designator_col": self.pnp_designator_col,
+            "pnp_comment_col": self.pnp_comment_col,
         }
         with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
