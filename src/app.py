@@ -544,8 +544,8 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def button_columns_event(self):
         logging.debug("Select PnP columns...")
-        if self.pnp_view.pnp_grid and len(self.pnp_view.pnp_grid.rows) >= proj.profile.pnp_first_row:
-            columns = self.pnp_view.pnp_grid.rows[proj.profile.pnp_first_row]
+        if proj.pnp_grid and len(proj.pnp_grid.rows) >= proj.profile.pnp_first_row:
+            columns = proj.pnp_grid.rows[proj.profile.pnp_first_row]
         else:
             columns = ["..."]
 
