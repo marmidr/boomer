@@ -47,7 +47,9 @@ class TextGrid:
                 grid_formatted = grid_formatted + row_formatted + "\n"
         return grid_formatted
 
-class TextGridConfig:
+class ConfiguredTextGrid:
     """Determines data range to be imported"""
-    columns: list[str]
+    text_grid: TextGrid
+    designator_col: str
+    comment_col: str
     first_row: int

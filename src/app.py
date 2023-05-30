@@ -12,6 +12,7 @@ import xls_reader
 import xlsx_reader
 import csv_reader
 import text_grid
+import report_generator
 from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
 from prj_profile import Profile
 import ui_helpers
@@ -23,6 +24,8 @@ class Project:
     pnp_fname: str
     __config: configparser.ConfigParser
     profile: Profile
+    bom_grid: text_grid.TextGrid = None
+    pnp_grid: text_grid.TextGrid = None
 
     def __init__(self):
         self.bom_path = "bom_path"
@@ -261,8 +264,6 @@ class ProjectFrame(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class BOMView(customtkinter.CTkFrame):
-    txt_grid: text_grid.TextGrid = None
-
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -292,20 +293,20 @@ class BOMView(customtkinter.CTkFrame):
 
         if path.endswith("xls"):
             logging.debug(f"Read BOM: {path}")
-            self.txt_grid = xls_reader.read_xls_sheet(path, **kwargs)
+            proj.bom_grid = xls_reader.read_xls_sheet(path, **kwargs)
         elif path.endswith("xlsx"):
             logging.debug(f"Read BOM: {path}")
-            self.txt_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
+            proj.bom_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
         elif path.endswith("csv"):
             delim = proj.profile.get_bom_delimiter()
             logging.debug(f"Read BOM: {path}, delim='{delim}'")
-            self.txt_grid = csv_reader.read_csv(path, delim)
+            proj.bom_grid = csv_reader.read_csv(path, delim)
         else:
             raise RuntimeError("Unknown file type")
 
-        logging.info("Read BOM: {} rows x {} cols".format(self.txt_grid.nrows, self.txt_grid.ncols))
+        logging.info("Read BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
 
-        bom_txt_grid = self.txt_grid.format_grid(proj.profile.bom_first_row)
+        bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row)
         self.clear_grid()
         self.textbox.insert("0.0", bom_txt_grid)
         logging.info("BOM ready")
@@ -392,8 +393,8 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def button_columns_event(self):
         logging.debug("Select BOM columns...")
-        if self.bom_view.txt_grid and len(self.bom_view.txt_grid.rows) >= proj.profile.bom_first_row:
-            columns = self.bom_view.txt_grid.rows[proj.profile.bom_first_row]
+        if self.bom_view.bom_grid and len(self.bom_view.bom_grid.rows) >= proj.profile.bom_first_row:
+            columns = self.bom_view.bom_grid.rows[proj.profile.bom_first_row]
         else:
             columns = ["..."]
 
@@ -424,8 +425,6 @@ class BOMConfig(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class PnPView(customtkinter.CTkFrame):
-    txt_grid: text_grid.TextGrid = None
-
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -455,10 +454,10 @@ class PnPView(customtkinter.CTkFrame):
 
         delim = proj.profile.get_pnp_delimiter()
         logging.debug(f"Read PnP: {path}, delim='{delim}'")
-        self.txt_grid = csv_reader.read_csv(path, delim)
-        logging.info("Read PnP: {} rows x {} cols".format(self.txt_grid.nrows, self.txt_grid.ncols))
+        proj.pnp_grid = csv_reader.read_csv(path, delim)
+        logging.info("Read PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
 
-        pnp_txt_grid = self.txt_grid.format_grid(proj.profile.pnp_first_row)
+        pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row)
         self.clear_grid()
         self.textbox.insert("0.0", pnp_txt_grid)
         logging.info("PnP ready")
@@ -545,8 +544,8 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def button_columns_event(self):
         logging.debug("Select PnP columns...")
-        if self.pnp_view.txt_grid and len(self.pnp_view.txt_grid.rows) >= proj.profile.pnp_first_row:
-            columns = self.pnp_view.txt_grid.rows[proj.profile.pnp_first_row]
+        if self.pnp_view.pnp_grid and len(self.pnp_view.pnp_grid.rows) >= proj.profile.pnp_first_row:
+            columns = self.pnp_view.pnp_grid.rows[proj.profile.pnp_first_row]
         else:
             columns = ["..."]
 
@@ -578,6 +577,68 @@ class PnPConfig(customtkinter.CTkFrame):
 
 # -----------------------------------------------------------------------------
 
+class ReportView(customtkinter.CTkFrame):
+    txt_grid: text_grid.TextGrid = None
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        self.textbox = customtkinter.CTkTextbox(self,
+                                                font=customtkinter.CTkFont(size=12, family="Consolas"),
+                                                activate_scrollbars=True,
+                                                wrap='none')
+        self.textbox.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+        # self.textbox.insert("0.0", "𝐓𝐞𝐱𝐭 𝐄𝐝𝐢𝐭𝐨𝐫, 𝕋𝕖𝕩𝕥 𝔼𝕕𝕚𝕥𝕠𝕣")
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        self.btn_analyze = customtkinter.CTkButton(self, text="Analyze documents", command=self.button_analyze_event)
+        self.btn_analyze.grid(row=1, column=0, pady=5, padx=5, sticky="we")
+
+        self.entry_search = customtkinter.CTkEntry(self, placeholder_text="search...")
+        self.entry_search.grid(row=1, column=1, padx=5, pady=5, sticky="wens")
+
+        self.btn_search = customtkinter.CTkButton(self, text="Find", command=self.button_find_event)
+        self.btn_search.grid(row=1, column=2, pady=5, padx=5, sticky="we")
+
+        self.lbl_occurences = customtkinter.CTkLabel(self, text="Found: 0")
+        self.lbl_occurences.grid(row=1, column=3, pady=5, padx=5, sticky="")
+
+    def clear_report(self):
+        self.textbox.delete("0.0", tkinter.END)
+
+    def button_analyze_event(self):
+        self.clear_report()
+
+        bom_cfg = text_grid.ConfiguredTextGrid()
+        bom_cfg.text_grid = proj.bom_grid
+        bom_cfg.designator_col = proj.profile.bom_designator_col
+        bom_cfg.comment_col = proj.profile.bom_comment_col
+        bom_cfg.first_row = proj.profile.bom_first_row
+
+        pnp_cfg = text_grid.ConfiguredTextGrid()
+        pnp_cfg.text_grid = proj.pnp_grid
+        pnp_cfg.designator_col = proj.profile.pnp_designator_col
+        pnp_cfg.comment_col = proj.profile.pnp_comment_col
+        pnp_cfg.first_row = proj.profile.pnp_first_row
+
+        rg = report_generator.ReportGenerator(bom_cfg, pnp_cfg)
+        try:
+            report = rg.analyze()
+            self.textbox.insert("0.0", report)
+        except Exception as e:
+            logging.error(f"Report error: {e}")
+
+    def button_find_event(self):
+        txt = self.entry_search.get()
+        logging.info(f"Find '{txt}'")
+        cnt = ui_helpers.textbox_find_text(self.textbox, txt)
+        self.lbl_occurences.configure(text=f"Found: {cnt}")
+        # logging.debug(f"Found {cnt} occurences")
+
+# -----------------------------------------------------------------------------
+
 class CtkApp(customtkinter.CTk):
     def __init__(self):
         logging.info('Ctk app is starting')
@@ -594,7 +655,7 @@ class CtkApp(customtkinter.CTk):
         tab_prj = tabview.add("Project")
         tab_bom = tabview.add("Bill Of Materials")
         tab_pnp = tabview.add("Pick And Place")
-        tab_summary = tabview.add("Comparison Summary")
+        tab_report = tabview.add("Comparison Report")
         tabview.set("Project")  # set currently visible tab
 
         # panel with predefined configs
@@ -622,6 +683,13 @@ class CtkApp(customtkinter.CTk):
 
         tab_pnp.grid_columnconfigure(0, weight=1)
         tab_pnp.grid_rowconfigure(0, weight=1)
+
+        # panel with the report
+        self.report_view = ReportView(tab_report)
+        self.report_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
+
+        tab_report.grid_columnconfigure(0, weight=1)
+        tab_report.grid_rowconfigure(0, weight=1)
 
         # UI ready
         logging.info('Ready')
