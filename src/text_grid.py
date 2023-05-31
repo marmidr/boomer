@@ -32,11 +32,12 @@ class TextGrid:
                     col_max_w[c] = max(col_max_w[c], cell_w)
         return col_max_w
 
-    def format_grid(self, first_row: int) -> str:
+    def format_grid(self, first_row: int, last_row: int) -> str:
         columns_width = self.get_columns_width(first_row)
         grid_formatted = ""
+        last_row = len(self.rows) if last_row == -1 else last_row
         for r, row in enumerate(self.rows):
-            if r >= first_row:
+            if r >= first_row and r <= last_row:
                 row_formatted = "{:0>3} | ".format(r+1)
                 for c, cell in enumerate(row):
                     cell = self.format_cell(cell)
@@ -53,3 +54,4 @@ class ConfiguredTextGrid:
     designator_col: str
     comment_col: str
     first_row: int
+    last_row: int

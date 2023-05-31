@@ -1,5 +1,5 @@
 import logging
-import itertools
+# import itertools
 
 from text_grid import *
 
@@ -36,12 +36,14 @@ class ReportGenerator:
         if not isinstance(grid.comment_col, str):
             raise Exception(f"{grid_name} comment column id must be a string")
 
+        # find part designator column index
         designator_col_idx = -1
         for i in range(0, grid.text_grid.ncols):
             if grid.text_grid.rows[grid.first_row][i] == grid.designator_col:
                 designator_col_idx = i
                 break
 
+        # find part comment column index
         comment_col_idx = -1
         for i in range(0, grid.text_grid.ncols):
             if grid.text_grid.rows[grid.first_row][i] == grid.comment_col:
@@ -57,7 +59,11 @@ class ReportGenerator:
         logging.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
 
         output = {}
-        for row in range(grid.first_row+1, grid.text_grid.nrows):
+        last_row = grid.text_grid.nrows if grid.last_row == -1 else grid.last_row
+        if last_row > grid.text_grid.nrows:
+            raise Exception(f"{grid_name} last row > number of rows")
+
+        for row in range(grid.first_row+1, last_row):
             dsgn = grid.text_grid.rows[row][designator_col_idx]
             cmnt = grid.text_grid.rows[row][comment_col_idx]
             dsgn = dsgn.split(',')

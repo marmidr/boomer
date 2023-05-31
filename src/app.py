@@ -28,8 +28,8 @@ class Project:
     pnp_grid: text_grid.TextGrid = None
 
     def __init__(self):
-        self.bom_path = "bom_path"
-        self.pnp_fname = "pnp_fname"
+        self.bom_path = "<bom_path>"
+        self.pnp_fname = "<pnp_fname>"
 
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
@@ -119,7 +119,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
             proj.profile.save()
             proj.cfg_save_project()
             self.opt_profile.configure(values=proj.cfg_get_profiles())
-            self.opt_profile_var = proj.profile.name
+            self.opt_profile_var.set(proj.profile.name)
         else:
             logging.error("Profile name length must be 3 or more")
 
@@ -306,7 +306,7 @@ class BOMView(customtkinter.CTkFrame):
 
         logging.info("Read BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
 
-        bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row)
+        bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
         self.clear_grid()
         self.textbox.insert("0.0", bom_txt_grid)
         logging.info("BOM ready")
@@ -457,7 +457,7 @@ class PnPView(customtkinter.CTkFrame):
         proj.pnp_grid = csv_reader.read_csv(path, delim)
         logging.info("Read PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
 
-        pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row)
+        pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row, proj.profile.pnp_last_row)
         self.clear_grid()
         self.textbox.insert("0.0", pnp_txt_grid)
         logging.info("PnP ready")
@@ -616,12 +616,14 @@ class ReportView(customtkinter.CTkFrame):
         bom_cfg.designator_col = proj.profile.bom_designator_col
         bom_cfg.comment_col = proj.profile.bom_comment_col
         bom_cfg.first_row = proj.profile.bom_first_row
+        bom_cfg.last_row = proj.profile.bom_last_row
 
         pnp_cfg = text_grid.ConfiguredTextGrid()
         pnp_cfg.text_grid = proj.pnp_grid
         pnp_cfg.designator_col = proj.profile.pnp_designator_col
         pnp_cfg.comment_col = proj.profile.pnp_comment_col
         pnp_cfg.first_row = proj.profile.pnp_first_row
+        pnp_cfg.last_row = proj.profile.pnp_last_row
 
         rg = report_generator.ReportGenerator(bom_cfg, pnp_cfg)
         try:

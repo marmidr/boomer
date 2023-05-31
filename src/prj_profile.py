@@ -9,10 +9,12 @@ class Profile:
 
     name: str
     bom_first_row: int # 0-based
+    bom_last_row: int # 0-based
     bom_separator: str
     bom_designator_col: str
     bom_comment_col: str
     pnp_first_row: int # 0-based
+    pnp_last_row: int # 0-based
     pnp_separator: str
     pnp_designator_col: str
     pnp_comment_col: str
@@ -21,10 +23,12 @@ class Profile:
     def __init__(self, config: configparser.ConfigParser):
         self.name = "noname"
         self.bom_first_row = 0
+        self.bom_last_row = -1
         self.bom_separator = "COMMA"
         self.bom_designator_col = "?"
         self.bom_comment_col = "?"
         self.pnp_first_row = 0
+        self.pnp_last_row = -1
         self.pnp_separator = "COMMA"
         self.pnp_designator_col = "?"
         self.pnp_comment_col = "?"
@@ -37,11 +41,13 @@ class Profile:
             section = self.__config['profile.' + self.name]
 
             self.bom_first_row = int(section.get("bom_first_row", "0"))
+            self.bom_last_row = int(section.get("bom_last_row", "-1"))
             self.bom_separator = section.get("bom_separator", "COMMA")
             self.bom_designator_col = section.get("bom_designator_col", "?")
             self.bom_comment_col = section.get("bom_comment_col", "?")
 
             self.pnp_first_row = int(section.get("pnp_first_row", "0"))
+            self.pnp_last_row = int(section.get("pnp_last_row", "-1"))
             self.pnp_separator = section.get("pnp_separator", "COMMA")
             self.pnp_designator_col = section.get("pnp_designator_col", "?")
             self.pnp_comment_col = section.get("pnp_comment_col", "?")
@@ -52,11 +58,13 @@ class Profile:
         logging.debug(f"Save profile: {self.name}")
         self.__config["profile." + self.name] = {
             "bom_first_row": self.bom_first_row,
+            "bom_last_row": self.bom_last_row,
             "bom_separator": self.bom_separator,
             "bom_designator_col": self.bom_designator_col,
             "bom_comment_col": self.bom_comment_col,
 
             "pnp_first_row": self.pnp_first_row,
+            "pnp_last_row": self.pnp_last_row,
             "pnp_separator": self.pnp_separator,
             "pnp_designator_col": self.pnp_designator_col,
             "pnp_comment_col": self.pnp_comment_col,
