@@ -22,6 +22,7 @@ import ui_helpers
 class Project:
     bom_path: str
     pnp_fname: str
+    pnp2_fname: str
     __config: configparser.ConfigParser
     profile: Profile
     bom_grid: text_grid.TextGrid = None
@@ -30,6 +31,7 @@ class Project:
     def __init__(self):
         self.bom_path = "<bom_path>"
         self.pnp_fname = "<pnp_fname>"
+        self.pnp2_fname = ""
 
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
@@ -78,6 +80,7 @@ class Project:
     def cfg_save_project(self):
         section = self.cfg_get_section("project." + self.bom_path)
         section["pnp"] = self.pnp_fname
+        section["pnp2"] = self.pnp2_fname or ""
         section["profile"] = self.profile.name
         with open(Profile.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
@@ -174,8 +177,19 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.opt_pnp_fname.grid(row=1, column=1, pady=5, padx=5, sticky="we")
         self.opt_pnp_fname.configure(state="disabled")
 
+
+        lbl_pnp2_path = customtkinter.CTkLabel(self, text="PnP2 (optional):")
+        lbl_pnp2_path.grid(row=2, column=0, pady=5, padx=5, sticky="w")
+
+        self.opt_pnp2_var = customtkinter.StringVar(value="")
+        self.opt_pnp2_fname = customtkinter.CTkOptionMenu(self, values=self.pnp_names,
+                                                        command=self.opt_pnp2_event,
+                                                        variable=self.opt_pnp2_var)
+        self.opt_pnp2_fname.grid(row=2, column=1, pady=5, padx=5, sticky="we")
+        self.opt_pnp2_fname.configure(state="disabled")
+
         self.config_frame = ProjectProfileFrame(self)
-        self.config_frame.grid(row=2, column=0, padx=5, pady=5, columnspan=2, sticky="we")
+        self.config_frame.grid(row=3, column=0, padx=5, pady=5, columnspan=2, sticky="we")
         self.config_frame.project_frame = self
         # self.config_frame.configure(state="disabled")
 
@@ -185,32 +199,37 @@ class ProjectFrame(customtkinter.CTkFrame):
             bom_dir = os.path.dirname(bom_path)
             logging.debug("Search PnP in: {}".format(bom_dir))
             self.opt_pnp_var.set("")
-            self.pnp_names = []
+            self.pnp_names = [""]
             for de in os.scandir(bom_dir):
-                if de.path != bom_path:
-                    # take only the file name
-                    pnp_path = os.path.basename(de.path)
-                    self.pnp_names.append(pnp_path)
+                logging.debug("PnP path: " + de.path)
+                # take only the file name
+                pnp_fname = os.path.basename(de.path)
+                if pnp_fname != os.path.basename(bom_path):
+                    self.pnp_names.append(pnp_fname)
             self.opt_pnp_fname.configure(values=self.pnp_names, state="enabled")
+            self.opt_pnp2_fname.configure(values=self.pnp_names, state="enabled")
             # self.config_frame.configure(state="enabled")
 
     def opt_bom_event(self, bom_path: str):
         logging.debug(f"Open BOM: {bom_path}")
         self.opt_pnp_var.set("")
-        # TODO: clear BOM and PnP view
+        self.opt_pnp2_var.set("")
+
         if os.path.isfile(bom_path):
-            # TOOD:
+            # TODO:
             # self.bom_view.clear_grid()
             # self.pnp_view.clear_grid()
+            # self.report_view.clear_report()
 
             proj.bom_path = bom_path
             self.opt_bom_var.set(bom_path)
             # set pnp
             self.find_pnp_files(bom_path)
             section = proj.cfg_get_section("project." + proj.bom_path)
-            pnp_fname = section["pnp"] or "???"
-            proj.pnp_fname = pnp_fname
-            self.opt_pnp_var.set(pnp_fname)
+            proj.pnp_fname = section.get("pnp", "???")
+            self.opt_pnp_var.set(proj.pnp_fname)
+            proj.pnp2_fname = section.get("pnp2", "")
+            self.opt_pnp2_var.set(proj.pnp2_fname)
             # set profile
             profile_name = section["profile"] or "???"
             self.config_frame.opt_profile_var.set(profile_name)
@@ -222,6 +241,12 @@ class ProjectFrame(customtkinter.CTkFrame):
         logging.debug(f"Select PnP: {pnp_fname}")
         # update config
         proj.pnp_fname = pnp_fname
+        proj.cfg_save_project()
+
+    def opt_pnp2_event(self, pnp_fname: str):
+        logging.debug(f"Select PnP2: {pnp_fname}")
+        # update config
+        proj.pnp2_fname = pnp_fname
         proj.cfg_save_project()
 
     def button_browse_event(self):
@@ -393,8 +418,8 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def button_columns_event(self):
         logging.debug("Select BOM columns...")
-        if self.bom_view.bom_grid and len(self.bom_view.bom_grid.rows) >= proj.profile.bom_first_row:
-            columns = self.bom_view.bom_grid.rows[proj.profile.bom_first_row]
+        if proj.bom_grid and len(proj.bom_grid.rows) >= proj.profile.bom_first_row:
+            columns = proj.bom_grid.rows[proj.profile.bom_first_row]
         else:
             columns = ["..."]
 
@@ -447,15 +472,28 @@ class PnPView(customtkinter.CTkFrame):
         self.lbl_occurences = customtkinter.CTkLabel(self, text="Found: 0")
         self.lbl_occurences.grid(row=1, column=2, pady=5, padx=5, sticky="")
 
-    def load_pnp(self, path: str):
+    def load_pnp(self, path: str, path2: str):
         if not os.path.isfile(path):
-            logging.error(f"File '{path}' does not exists")
-            return
+            raise Exception(f"File '{path}' does not exists")
+
+        # optional second PnP file
+        if path2 != "" and not os.path.isfile(path2):
+            raise Exception(f"File '{path2}' does not exists")
 
         delim = proj.profile.get_pnp_delimiter()
         logging.debug(f"Read PnP: {path}, delim='{delim}'")
         proj.pnp_grid = csv_reader.read_csv(path, delim)
         logging.info("Read PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
+
+        if path2 != "":
+            logging.debug(f"Read PnP2: {path2}, delim='{delim}'")
+            pnp2_grid = csv_reader.read_csv(path2, delim)
+            logging.info("Read PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
+            # merge
+            if pnp2_grid.ncols != proj.pnp_grid.ncols:
+                raise Exception("PnP has {} columns, but PnP2 has {} columns".format(proj.pnp_grid.ncols, pnp2_grid.ncols))
+            proj.pnp_grid.nrows += pnp2_grid.nrows
+            proj.pnp_grid.rows.extend(pnp2_grid.rows)
 
         pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row, proj.profile.pnp_last_row)
         self.clear_grid()
@@ -570,8 +608,9 @@ class PnPConfig(customtkinter.CTkFrame):
     def button_load_event(self):
         logging.debug("Load PnP...")
         pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
+        pnp2_path = "" if proj.pnp2_fname == "" else os.path.join(os.path.dirname(proj.bom_path), proj.pnp2_fname)
         try:
-            self.pnp_view.load_pnp(pnp_path)
+            self.pnp_view.load_pnp(pnp_path, pnp2_path)
         except Exception as e:
             logging.error(f"Cannot load PnP: {e}")
 
