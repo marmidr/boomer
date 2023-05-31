@@ -120,19 +120,22 @@ class ReportGenerator:
 
         output = ""
 
-        output += f"=== MISSING PARTS IN PNP: {len(missing_pnp_parts)} ===\n"
+        output += f"ＭＩＳＳＩＮＧ ＰＡＲＴＳ ＩＮ ＰＮＰ: {len(missing_pnp_parts)}\n"
+        output += "====================================\n"
         for item in missing_pnp_parts:
             output += "{name:{w}}: {cmnt}\n".format(
                 name=item[0], w=longest_part_name, cmnt=item[1])
         output += "\n"
 
-        output += f"=== MISSING PARTS IN BOM: {len(missing_bom_parts)} ===\n"
+        output += f"ＭＩＳＳＩＮＧ ＰＡＲＴＳ ＩＮ ＢＯＭ: {len(missing_bom_parts)}\n"
+        output += "====================================\n"
         for item in missing_bom_parts:
             output += "{name:{w}}: {cmnt}\n".format(
                 name=item[0], w=longest_part_name, cmnt=item[1])
         output += "\n"
 
-        output += f"=== BOM AND PNP COMMENT MISMATCH: {len(comment_mismatch_parts)} ===\n"
+        output += f"ＢＯＭ ＡＮＤ ＰＮＰ ＣＯＭＭＥＮＴ ＭＩＳＭＡＴＣＨ: {len(comment_mismatch_parts)}\n"
+        output += "=================================================\n"
         for item in comment_mismatch_parts:
             output += "{name:{w}}: BOM={bom_cmnt:{bw}}, PnP={pnp_cmnt}\n".format(
                 name=item[0], w=longest_part_name, bom_cmnt=item[1], bw=longest_bom_comment, pnp_cmnt=item[2])

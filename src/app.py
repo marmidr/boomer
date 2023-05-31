@@ -118,11 +118,11 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
         new_profile_name = dialog.get_input().strip()
         if len(new_profile_name) >= 3:
+            old_name = proj.profile.name
             proj.profile.name = new_profile_name
             proj.profile.save()
-            proj.cfg_save_project()
-            self.opt_profile.configure(values=proj.cfg_get_profiles())
-            self.opt_profile_var.set(proj.profile.name)
+            # restore original profile name, not touching the project configuration
+            proj.profile.name = old_name
         else:
             logging.error("Profile name length must be 3 or more")
 
@@ -141,6 +141,14 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 class ProjectFrame(customtkinter.CTkFrame):
     # bom_config: BOMConfig = None
     # pnp_config: PnPConfig = None
+    # bom_view: BOMView = None
+    # pnp_view: PnPView = None
+    # report_view: ReportView = None
+    bom_config = None
+    pnp_config = None
+    bom_view = None
+    pnp_view = None
+    report_view = None
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
@@ -216,10 +224,9 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.opt_pnp2_var.set("")
 
         if os.path.isfile(bom_path):
-            # TODO:
-            # self.bom_view.clear_grid()
-            # self.pnp_view.clear_grid()
-            # self.report_view.clear_report()
+            self.bom_view.clear_preview()
+            self.pnp_view.clear_preview()
+            self.report_view.clear_preview()
 
             proj.bom_path = bom_path
             self.opt_bom_var.set(bom_path)
@@ -332,11 +339,11 @@ class BOMView(customtkinter.CTkFrame):
         logging.info("Read BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
 
         bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
-        self.clear_grid()
+        self.clear_preview()
         self.textbox.insert("0.0", bom_txt_grid)
         logging.info("BOM ready")
 
-    def clear_grid(self):
+    def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)
 
     def button_find_event(self):
@@ -398,7 +405,7 @@ class BOMConfig(customtkinter.CTkFrame):
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.bom_separator)
         self.opt_first_row_var.set(proj.profile.bom_first_row + 1)
-        self.bom_view.clear_grid()
+        self.bom_view.clear_preview()
         self.update_lbl_columns()
 
     def update_lbl_columns(self):
@@ -496,11 +503,11 @@ class PnPView(customtkinter.CTkFrame):
             proj.pnp_grid.rows.extend(pnp2_grid.rows)
 
         pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row, proj.profile.pnp_last_row)
-        self.clear_grid()
+        self.clear_preview()
         self.textbox.insert("0.0", pnp_txt_grid)
         logging.info("PnP ready")
 
-    def clear_grid(self):
+    def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)
 
     def button_find_event(self):
@@ -562,7 +569,7 @@ class PnPConfig(customtkinter.CTkFrame):
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.pnp_separator)
         self.opt_first_row_var.set(proj.profile.pnp_first_row+1)
-        self.pnp_view.clear_grid()
+        self.pnp_view.clear_preview()
         self.update_lbl_columns()
 
     def update_lbl_columns(self):
@@ -644,11 +651,11 @@ class ReportView(customtkinter.CTkFrame):
         self.lbl_occurences = customtkinter.CTkLabel(self, text="Found: 0")
         self.lbl_occurences.grid(row=1, column=3, pady=5, padx=5, sticky="")
 
-    def clear_report(self):
+    def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)
 
     def button_analyze_event(self):
-        self.clear_report()
+        self.clear_preview()
 
         bom_cfg = text_grid.ConfiguredTextGrid()
         bom_cfg.text_grid = proj.bom_grid
@@ -685,7 +692,7 @@ class CtkApp(customtkinter.CTk):
         logging.info('Ctk app is starting')
         super().__init__()
 
-        self.title("BOM + PnP verifier")
+        self.title("BOM & PnP verifier")
         self.geometry("1200x600")
         self.grid_columnconfigure(0, weight=1)
 
@@ -711,6 +718,7 @@ class CtkApp(customtkinter.CTk):
         self.bom_config = BOMConfig(tab_bom, bom_view=self.bom_view)
         self.bom_config.grid(row=1, column=0, pady=5, padx=5, sticky="we")
         proj_frame.bom_config = self.bom_config
+        proj_frame.bom_view = self.bom_view
 
         tab_bom.grid_columnconfigure(0, weight=1)
         tab_bom.grid_rowconfigure(0, weight=1)
@@ -721,6 +729,7 @@ class CtkApp(customtkinter.CTk):
         self.pnp_config = PnPConfig(tab_pnp, pnp_view=self.pnp_view)
         self.pnp_config.grid(row=1, column=0, padx=5, pady=5, sticky="we")
         proj_frame.pnp_config = self.pnp_config
+        proj_frame.pnp_view = self.pnp_view
 
         tab_pnp.grid_columnconfigure(0, weight=1)
         tab_pnp.grid_rowconfigure(0, weight=1)
@@ -728,6 +737,7 @@ class CtkApp(customtkinter.CTk):
         # panel with the report
         self.report_view = ReportView(tab_report)
         self.report_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
+        proj_frame.report_view = self.report_view
 
         tab_report.grid_columnconfigure(0, weight=1)
         tab_report.grid_rowconfigure(0, weight=1)
