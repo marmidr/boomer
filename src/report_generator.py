@@ -114,7 +114,7 @@ class ReportGenerator:
 
         longest_bom_comment = 0
         for bom_part in bom_parts:
-            l = len(bom_parts[bom_part])
+            l = len(bom_parts[bom_part]) + 2
             if l > longest_bom_comment:
                 longest_bom_comment = l
 
