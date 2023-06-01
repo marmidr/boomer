@@ -31,9 +31,9 @@ class ReportGenerator:
     @staticmethod
     def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, str]:
         # TODO: case when the file does not contains a column titles, thus column indexes are used instead
-        if not isinstance(grid.designator_col, str):
+        if not type(grid.designator_col) is str:
             raise Exception(f"{grid_name} designator column id must be a string")
-        if not isinstance(grid.comment_col, str):
+        if not type(grid.comment_col) is str:
             raise Exception(f"{grid_name} comment column id must be a string")
 
         # find part designator column index

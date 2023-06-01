@@ -1,4 +1,10 @@
-# BOM vs PnP Application
+# BOM & PnP verifier
+#
+# The purpose of this application is to read the PCB BillOfMaterial file
+# together with the correcponding PickAndPlace file(s), and check the contents against
+# differences in an electronic parts listed in both files, plus verify if the
+# parts comments (values) matches.
+#
 # (c) 2023 Mariusz Midor
 # https://github.com/marmidr/boomer
 
@@ -117,6 +123,10 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         logging.debug("Save as...")
         dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
         new_profile_name = dialog.get_input().strip()
+        if '[' in new_profile_name or ']' in new_profile_name:
+            logging.error("Profile name cannot contain square bracket characters: []")
+            return
+
         if len(new_profile_name) >= 3:
             old_name = proj.profile.name
             proj.profile.name = new_profile_name
@@ -366,6 +376,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
         super().__init__(master, **kwargs)
 
+        #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
@@ -375,36 +386,44 @@ class BOMConfig(customtkinter.CTkFrame):
                                                     variable=self.opt_separator_var)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
+        #
+        # https://stackoverflow.com/questions/6548837/how-do-i-get-an-event-callback-when-a-tkinter-entry-widget-is-modified
+        self.entry_first_row_var = customtkinter.StringVar(value="1")
+        self.entry_first_row_var.trace_add("write", lambda n, i, m, sv=self.entry_first_row_var: self.var_first_row_event(sv))
+        self.entry_first_row = customtkinter.CTkEntry(self, placeholder_text="first row", textvariable=self.entry_first_row_var)
+        self.entry_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="w")
+
+        #
+        self.entry_last_row_var = customtkinter.StringVar(value="")
+        self.entry_last_row_var.trace_add("write", lambda n, i, m, sv=self.entry_last_row_var: self.var_last_row_event(sv))
+        self.entry_last_row = customtkinter.CTkEntry(self, placeholder_text="last row", textvariable=self.entry_last_row_var)
+        self.entry_last_row.grid(row=0, column=5, padx=5, pady=5, sticky="w")
+
+        #
         self.btn_load = customtkinter.CTkButton(self, text="Reload BOM",
                                                 command=self.button_load_event)
-        self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
+        self.btn_load.grid(row=0, column=6, pady=5, padx=5, sticky="e")
 
-        lbl_first_row = customtkinter.CTkLabel(self, text="Columns\nheader row:")
-        lbl_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="")
-
-        self.opt_first_row_var = customtkinter.IntVar(value=0)
-        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)],
-                                                    command=self.opt_first_row_event,
-                                                    variable=self.opt_first_row_var)
-        opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
-
+        #
         self.lbl_columns = customtkinter.CTkLabel(self, text="", justify="left")
-        self.lbl_columns.grid(row=0, column=5, pady=5, padx=(15,5), sticky="w")
+        self.lbl_columns.grid(row=0, column=7, pady=5, padx=(15,5), sticky="w")
         self.update_lbl_columns()
 
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
                                                    command=self.button_columns_event)
-        self.btn_columns.grid(row=0, column=6, pady=5, padx=5, sticky="")
+        self.btn_columns.grid(row=0, column=8, pady=5, padx=5, sticky="")
 
+        #
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
-        self.btn_save.grid(row=0, column=7, pady=5, padx=5, sticky="e")
+        self.btn_save.grid(row=0, column=9, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state="disabled")
-        self.grid_columnconfigure(7, weight=1)
+        self.grid_columnconfigure(9, weight=1)
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.bom_separator)
-        self.opt_first_row_var.set(proj.profile.bom_first_row + 1)
+        self.entry_first_row_var.set(str(proj.profile.bom_first_row + 1))
+        self.entry_last_row_var.set("" if proj.profile.bom_last_row == -1 else str(proj.profile.bom_last_row))
         self.bom_view.clear_preview()
         self.update_lbl_columns()
 
@@ -417,11 +436,30 @@ class BOMConfig(customtkinter.CTkFrame):
         self.btn_save.configure(state="enabled")
         self.button_load_event()
 
-    def opt_first_row_event(self, new_first_row: str):
-        logging.debug(f"BOM 1st row: {new_first_row}")
-        proj.profile.bom_first_row = int(new_first_row.strip()) - 1
-        self.btn_save.configure(state="enabled")
-        self.button_load_event()
+    def var_first_row_event(self, sv: customtkinter.StringVar):
+        new_first_row = sv.get().strip()
+        try:
+            proj.profile.bom_first_row = int(new_first_row) - 1
+            self.btn_save.configure(state="enabled")
+
+            logging.debug(f"BOM 1st row: {proj.profile.bom_first_row+1}")
+            self.button_load_event()
+        except Exception as e:
+            logging.error(f"Invalid row number: {e}")
+
+    def var_last_row_event(self, sv: customtkinter.StringVar):
+        new_last_row = sv.get().strip()
+        try:
+            # last row is optional, so it may be an empty string
+            if new_last_row == "":
+                proj.profile.bom_last_row = -1
+            else:
+                proj.profile.bom_last_row = int(new_last_row) - 1
+
+            logging.debug(f"BOM last row: {proj.profile.bom_last_row+1}")
+            self.button_load_event()
+        except Exception as e:
+            logging.error(f"Invalid row number: {e}")
 
     def button_columns_event(self):
         logging.debug("Select BOM columns...")
@@ -465,8 +503,6 @@ class PnPView(customtkinter.CTkFrame):
                                                 activate_scrollbars=True,
                                                 wrap='none')
         self.textbox.grid(row=0, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
-        # self.textbox.insert("0.0", "𝐓𝐞𝐱𝐭 𝐄𝐝𝐢𝐭𝐨𝐫, 𝕋𝕖𝕩𝕥 𝔼𝕕𝕚𝕥𝕠𝕣")
-
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -530,6 +566,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
         super().__init__(master, **kwargs)
 
+        #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
@@ -539,36 +576,44 @@ class PnPConfig(customtkinter.CTkFrame):
                                                     variable=self.opt_separator_var)
         opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
+        #
+        # https://stackoverflow.com/questions/6548837/how-do-i-get-an-event-callback-when-a-tkinter-entry-widget-is-modified
+        self.entry_first_row_var = customtkinter.StringVar(value="1")
+        self.entry_first_row_var.trace_add("write", lambda n, i, m, sv=self.entry_first_row_var: self.var_first_row_event(sv))
+        self.entry_first_row = customtkinter.CTkEntry(self, placeholder_text="first row", textvariable=self.entry_first_row_var)
+        self.entry_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="w")
+
+        #
+        self.entry_last_row_var = customtkinter.StringVar(value="")
+        self.entry_last_row_var.trace_add("write", lambda n, i, m, sv=self.entry_last_row_var: self.var_last_row_event(sv))
+        self.entry_last_row = customtkinter.CTkEntry(self, placeholder_text="last row", textvariable=self.entry_last_row_var)
+        self.entry_last_row.grid(row=0, column=5, padx=5, pady=5, sticky="w")
+
+        #
         self.btn_load = customtkinter.CTkButton(self, text="Reload PnP",
                                                 command=self.button_load_event)
-        self.btn_load.grid(row=0, column=2, pady=5, padx=5, sticky="e")
+        self.btn_load.grid(row=0, column=6, pady=5, padx=5, sticky="e")
 
-        lbl_first_row = customtkinter.CTkLabel(self, text="Columns\nheader row:")
-        lbl_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="")
-
-        self.opt_first_row_var = customtkinter.IntVar(value=0)
-        opt_first_row = customtkinter.CTkOptionMenu(self, values=[str(i) for i in range(1, 20)],
-                                                    command=self.opt_first_row_event,
-                                                    variable=self.opt_first_row_var)
-        opt_first_row.grid(row=0, column=4, padx=5, pady=5, sticky="we")
-
+        #
         self.lbl_columns = customtkinter.CTkLabel(self, text="", justify="left")
-        self.lbl_columns.grid(row=0, column=5, pady=5, padx=(15,5), sticky="w")
+        self.lbl_columns.grid(row=0, column=7, pady=5, padx=(15,5), sticky="w")
         self.update_lbl_columns()
 
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumn...",
                                                    command=self.button_columns_event)
-        self.btn_columns.grid(row=0, column=6, pady=5, padx=5, sticky="")
+        self.btn_columns.grid(row=0, column=8, pady=5, padx=5, sticky="")
 
+        #
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
-        self.btn_save.grid(row=0, column=7, pady=5, padx=5, sticky="e")
+        self.btn_save.grid(row=0, column=9, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state="disabled")
-        self.grid_columnconfigure(7, weight=1)
+        self.grid_columnconfigure(9, weight=1)
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.pnp_separator)
-        self.opt_first_row_var.set(proj.profile.pnp_first_row+1)
+        self.entry_first_row_var.set(str(proj.profile.pnp_first_row + 1))
+        self.entry_last_row_var.set("" if proj.profile.pnp_last_row == -1 else str(proj.profile.pnp_last_row))
         self.pnp_view.clear_preview()
         self.update_lbl_columns()
 
@@ -581,11 +626,30 @@ class PnPConfig(customtkinter.CTkFrame):
         self.btn_save.configure(state="enabled")
         self.button_load_event()
 
-    def opt_first_row_event(self, new_first_row: str):
-        logging.debug(f"PnP 1st row: {new_first_row}")
-        proj.profile.pnp_first_row = int(new_first_row.strip()) - 1
-        self.btn_save.configure(state="enabled")
-        self.button_load_event()
+    def var_first_row_event(self, sv: customtkinter.StringVar):
+        new_first_row = sv.get().strip()
+        try:
+            proj.profile.pnp_first_row = int(new_first_row) - 1
+            self.btn_save.configure(state="enabled")
+
+            logging.debug(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
+            self.button_load_event()
+        except Exception as e:
+            logging.error(f"Invalid row number: {e}")
+
+    def var_last_row_event(self, sv: customtkinter.StringVar):
+        new_last_row = sv.get().strip()
+        try:
+            # last row is optional, so it may be an empty string
+            if new_last_row == "":
+                proj.profile.pnp_last_row = -1
+            else:
+                proj.profile.pnp_last_row = int(new_last_row) - 1
+
+            logging.debug(f"PnP last row: {proj.profile.pnp_last_row+1}")
+            self.button_load_event()
+        except Exception as e:
+            logging.error(f"Invalid row number: {e}")
 
     def button_columns_event(self):
         logging.debug("Select PnP columns...")
