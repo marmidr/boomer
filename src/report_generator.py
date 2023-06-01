@@ -138,7 +138,7 @@ class ReportGenerator:
         output += "=================================================\n"
         for item in comment_mismatch_parts:
             output += "{name:{w}}: BOM={bom_cmnt:{bw}}, PnP={pnp_cmnt}\n".format(
-                name=item[0], w=longest_part_name, bom_cmnt=item[1], bw=longest_bom_comment, pnp_cmnt=item[2])
+                name=item[0], w=longest_part_name, bom_cmnt=f"'{item[1]}'", bw=longest_bom_comment, pnp_cmnt=f"'{item[2]}'")
         output += "\n"
 
         return output

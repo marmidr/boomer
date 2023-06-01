@@ -41,8 +41,8 @@ class TextGrid:
                 row_formatted = "{:0>3} | ".format(r+1)
                 for c, cell in enumerate(row):
                     cell = self.format_cell(cell)
-                    to_fill = columns_width[c] - len(cell)
-                    fill = " " * to_fill if to_fill > 0 else ""
+                    to_fill = max(columns_width[c] - len(cell), 0)
+                    fill = " " * to_fill
                     cell = cell + fill + " | "
                     row_formatted = row_formatted + cell
                 grid_formatted = grid_formatted + row_formatted + "\n"

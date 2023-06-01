@@ -97,8 +97,6 @@ proj = Project()
 # -----------------------------------------------------------------------------
 
 class ProjectProfileFrame(customtkinter.CTkFrame):
-    # project_frame: ProjectFrame = None
-
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
@@ -133,6 +131,8 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
             proj.profile.save()
             # restore original profile name, not touching the project configuration
             proj.profile.name = old_name
+            # update list of profiles
+            self.opt_profile.configure(values=proj.cfg_get_profiles())
         else:
             logging.error("Profile name length must be 3 or more")
 
@@ -174,13 +174,13 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.opt_bom_path = customtkinter.CTkOptionMenu(self, values=self.bom_paths,
                                                         command=self.opt_bom_event,
                                                         variable=self.opt_bom_var)
-        self.opt_bom_path.grid(row=0, column=1, pady=5, padx=5, sticky="we")
+        self.opt_bom_path.grid(row=0, column=1, pady=5, padx=5, columnspan=2, sticky="we")
 
         btn_browse = customtkinter.CTkButton(self, text="Browse...", command=self.button_browse_event)
-        btn_browse.grid(row=0, column=2, pady=5, padx=5, sticky="e")
+        btn_browse.grid(row=0, column=3, pady=5, padx=5, sticky="e")
 
         btn_browse = customtkinter.CTkButton(self, text="Remove\nfrom list", command=self.button_remove_event)
-        btn_browse.grid(row=0, column=3, pady=5, padx=5, sticky="e")
+        btn_browse.grid(row=0, column=5, pady=5, padx=5, sticky="e")
 
         # ---
 
