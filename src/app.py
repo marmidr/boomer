@@ -291,6 +291,7 @@ class ProjectFrame(customtkinter.CTkFrame):
         # update config
         proj.bom_path = bom_path
         proj.cfg_save_project()
+        self.activate_bom_separator()
 
     def button_remove_event(self):
         logging.debug("Remove project from list")
@@ -302,6 +303,14 @@ class ProjectFrame(customtkinter.CTkFrame):
     def config_frames_load_profile(self):
         self.bom_config.load_profile()
         self.pnp_config.load_profile()
+        self.activate_bom_separator()
+
+    def activate_bom_separator(self):
+        if proj.bom_path.endswith("xls") or proj.bom_path.endswith("xlsx"):
+            self.bom_config.opt_separator.configure(state="disabled")
+        else:
+            self.bom_config.opt_separator.configure(state="enabled")
+
 
 # -----------------------------------------------------------------------------
 
@@ -381,10 +390,10 @@ class BOMConfig(customtkinter.CTkFrame):
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
         self.opt_separator_var = customtkinter.StringVar(value="")
-        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(),
+        self.opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(),
                                                     command=self.opt_separator_event,
                                                     variable=self.opt_separator_var)
-        opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        self.opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
         #
         # https://stackoverflow.com/questions/6548837/how-do-i-get-an-event-callback-when-a-tkinter-entry-widget-is-modified

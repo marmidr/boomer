@@ -52,8 +52,8 @@ def read_csv(path: str, delim: str) -> TextGrid:
         else:
             reader = csv.reader(f, delimiter=delim)
             for row in reader:
-                # ignore rows with empty cell 'A'
-                if len(row) > 0 and row[0] != "":
+                # ignore rows with empty cell 'A' or cell with a long horizontal line
+                if len(row) > 0 and row[0] != "" and not row[0].startswith("___"):
                     row_cells = []
                     for cell in row:
                         row_cells.append(cell.strip())
