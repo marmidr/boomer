@@ -76,6 +76,7 @@ class Profile:
 
     @staticmethod
     def translate_separator(sep: str) -> str:
+        """
         # Python 3.10+
         match sep:
             case "COMMA":
@@ -92,6 +93,22 @@ class Profile:
                 return "*re"
             case _:
                 raise RuntimeError("Unknown CSV separator")
+        """
+
+        if sep == "COMMA":
+            return ","
+        elif sep == "SEMICOLON":
+            return ";"
+        elif sep == "TAB":
+            return "\t"
+        elif sep == "SPACES":
+            return "*sp"
+        elif sep == "FIXED-WIDTH":
+            return "*fw"
+        elif sep == "REGEX":
+            return "*re"
+        else:
+            raise RuntimeError("Unknown CSV separator")
 
     def get_bom_delimiter(self) -> str:
         return self.translate_separator(self.bom_separator)

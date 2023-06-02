@@ -13,6 +13,7 @@ import tkinter
 import logging
 import os
 import configparser
+import sys
 
 import xls_reader
 import xlsx_reader
@@ -832,6 +833,14 @@ if __name__ == "__main__":
     logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % "INFO ")
     logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % "WARN ")
     logging.addLevelName(logging.ERROR,   "\033[1;31m%s\033[1;0m" % "ERROR")
+
+    logging.info("BOM vs PnP cross checker (c) 2023")
+
+    if (sys.version_info.major < 3) or (sys.version_info.minor < 9):
+        logging.error("Required Python version 3.9 or later!")
+        exit()
+    else:
+        logging.info("Python version: {}.{}".format(sys.version_info.major, sys.version_info.minor))
 
     # https://customtkinter.tomschimansky.com/documentation/appearancemode
     customtkinter.set_appearance_mode("light")

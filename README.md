@@ -49,3 +49,11 @@ From PowerShell:
 ```ps1
 python.exe src/app.py
 ```
+
+## Trouble shooting
+
+* *ModuleNotFoundError: No module named 'tkinter'*
+
+  `tkinter` is not part of your Python installation -
+  follow the instructions [here](https://bobbyhadz.com/blog/python-no-module-named-tkinter).
+*
