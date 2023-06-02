@@ -1,6 +1,5 @@
 *.~*
 *.pyc
 __pycache__
-example2/
 example_ctk/
 boomer.ini

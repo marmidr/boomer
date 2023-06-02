@@ -20,8 +20,8 @@ def read_csv(path: str, delim: str) -> TextGrid:
                 # split row by any number of following whitespaces
                 row_cells = row.split()
                 max_cols = max(max_cols, len(row_cells))
-                # ignore rows with empty cell 'A'
-                if len(row_cells) > 0 and row_cells[0] != "":
+                # ignore rows with empty cell 'A' or cell with a long horizontal line
+                if len(row_cells) > 0 and row_cells[0] != "" and not row_cells[0].startswith("___"):
                     row_cells_processed = []
 
                     # merge quoted cells into single one,
