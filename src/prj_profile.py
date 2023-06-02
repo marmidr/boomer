@@ -20,8 +20,8 @@ class Profile:
     pnp_comment_col: str
     __config: configparser.ConfigParser
 
-    def __init__(self, config: configparser.ConfigParser):
-        self.name = "noname"
+    def __init__(self, cfgparser: configparser.ConfigParser):
+        self.name = "initial-profile"
         self.bom_first_row = 0
         self.bom_last_row = -1 # not saved in config file
         self.bom_separator = "COMMA"
@@ -32,27 +32,30 @@ class Profile:
         self.pnp_separator = "COMMA"
         self.pnp_designator_col = "?"
         self.pnp_comment_col = "?"
-        self.__config = config
+        self.__config = cfgparser
 
     def load(self, name: str):
         if os.path.isfile(self.CONFIG_FILE_NAME):
             logging.debug(f"Load profile: {name}")
             self.name = name
-            section = self.__config['profile.' + self.name]
+            if self.__config.has_section('profile.' + self.name):
+                section = self.__config['profile.' + self.name]
 
-            self.bom_first_row = int(section.get("bom_first_row", "0"))
-            self.bom_last_row = -1
-            self.bom_separator = section.get("bom_separator", "COMMA")
-            self.bom_designator_col = section.get("bom_designator_col", "?")
-            self.bom_comment_col = section.get("bom_comment_col", "?")
+                self.bom_first_row = int(section.get("bom_first_row", "0"))
+                self.bom_last_row = -1
+                self.bom_separator = section.get("bom_separator", "COMMA")
+                self.bom_designator_col = section.get("bom_designator_col", "?")
+                self.bom_comment_col = section.get("bom_comment_col", "?")
 
-            self.pnp_first_row = int(section.get("pnp_first_row", "0"))
-            self.pnp_last_row = -1
-            self.pnp_separator = section.get("pnp_separator", "COMMA")
-            self.pnp_designator_col = section.get("pnp_designator_col", "?")
-            self.pnp_comment_col = section.get("pnp_comment_col", "?")
+                self.pnp_first_row = int(section.get("pnp_first_row", "0"))
+                self.pnp_last_row = -1
+                self.pnp_separator = section.get("pnp_separator", "COMMA")
+                self.pnp_designator_col = section.get("pnp_designator_col", "?")
+                self.pnp_comment_col = section.get("pnp_comment_col", "?")
+            else:
+                logging.warning(f"No section {self.name} in config file")
         else:
-            logging.warning("Config file not found")
+            logging.warning(f"Config file {self.CONFIG_FILE_NAME} not found")
 
     def save(self):
         logging.debug(f"Save profile: {self.name}")

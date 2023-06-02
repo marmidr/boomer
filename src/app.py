@@ -49,7 +49,7 @@ class Project:
                 "initial_dir": "",
             }
 
-        self.profile = Profile(config=self.__config)
+        self.profile = Profile(cfgparser=self.__config)
 
     def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
         try:
@@ -82,6 +82,9 @@ class Project:
             if sect.startswith("profile."):
                 profiles.append(sect.removeprefix("profile."))
 
+        if len(profiles) == 0:
+            profiles.append("default-profile")
+
         return profiles
 
     def cfg_save_project(self):
@@ -104,8 +107,10 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         lbl_config = customtkinter.CTkLabel(self, text="BOM+PnP profile:")
         lbl_config.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
-        self.opt_profile_var = customtkinter.StringVar(value="")
-        self.opt_profile = customtkinter.CTkOptionMenu(self, values=proj.cfg_get_profiles(),
+        profiles = proj.cfg_get_profiles()
+        assert len(profiles) > 0
+        self.opt_profile_var = customtkinter.StringVar(value=profiles[0])
+        self.opt_profile = customtkinter.CTkOptionMenu(self, values=profiles,
                                                        command=self.opt_profile_event,
                                                        variable=self.opt_profile_var)
         self.opt_profile.grid(row=0, column=1, pady=5, padx=5, sticky="we")
@@ -745,12 +750,12 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.first_row = proj.profile.pnp_first_row
         pnp_cfg.last_row = proj.profile.pnp_last_row
 
-        rg = report_generator.ReportGenerator(bom_cfg, pnp_cfg)
         try:
+            rg = report_generator.ReportGenerator(bom_cfg, pnp_cfg)
             report = rg.analyze()
             self.textbox.insert("0.0", report)
         except Exception as e:
-            logging.error(f"Report error: {e}")
+            logging.error(f"Report generator error: {e}")
 
     def button_find_event(self):
         txt = self.entry_search.get()
@@ -777,7 +782,7 @@ class CtkApp(customtkinter.CTk):
         tab_prj = tabview.add("Project")
         tab_bom = tabview.add("Bill Of Materials")
         tab_pnp = tabview.add("Pick And Place")
-        tab_report = tabview.add("Comparison Report")
+        tab_report = tabview.add("Cross-check Report")
         tabview.set("Project")  # set currently visible tab
 
         # panel with predefined configs

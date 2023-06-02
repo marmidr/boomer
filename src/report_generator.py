@@ -10,6 +10,11 @@ class ReportGenerator:
     pnp: ConfiguredTextGrid = None
 
     def __init__(self, bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid):
+        if bom is None or bom.text_grid is None:
+            raise Exception(f"BOM data is missing")
+        if pnp is None or pnp.text_grid is None:
+            raise Exception(f"PnP data is missing")
+
         self.bom = bom
         self.pnp = pnp
 
