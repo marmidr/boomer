@@ -39,8 +39,8 @@ Remember to check "Add Python to PATH".
 Open PowerShell and:
 
 ```ps1
-# .xls reader, .xlsx reader, UI lib
-pip install xlrd openpyxl customtkinter
+# .xls reader, .xlsx reader, UI lib, natural sorting
+pip install xlrd openpyxl customtkinter natsort
 ```
 
 ## How to run

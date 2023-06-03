@@ -1,5 +1,5 @@
 import logging
-# import itertools
+import natsort
 
 from text_grid import *
 
@@ -81,6 +81,7 @@ class ReportGenerator:
 
     @staticmethod
     def __compare(bom_parts: dict[str, str], pnp_parts: dict[str, str]) -> str:
+        # TODO: extract cross checker as a separate module
         missing_pnp_parts = []
         missing_bom_parts = []
         comment_mismatch_parts = []
@@ -89,20 +90,21 @@ class ReportGenerator:
         for bom_part in bom_parts:
             if not bom_part in pnp_parts:
                 missing_pnp_parts.append((bom_part, bom_parts[bom_part]))
-        missing_pnp_parts.sort()
+        # sort naturally: https://pypi.org/project/natsort/
+        missing_pnp_parts = natsort.natsorted(missing_pnp_parts)
 
         # check for items present in PnP, but missing in the BOM
         for pnp_part in pnp_parts:
             if not pnp_part in bom_parts:
                 missing_bom_parts.append((pnp_part, pnp_parts[pnp_part]))
-        missing_bom_parts.sort()
+        missing_bom_parts = natsort.natsorted(missing_bom_parts)
 
         # check for comments mismatch
         for bom_part in bom_parts:
             if bom_part in pnp_parts:
                 if bom_parts[bom_part] != pnp_parts[bom_part]:
                     comment_mismatch_parts.append((bom_part, bom_parts[bom_part], pnp_parts[bom_part]))
-        comment_mismatch_parts.sort()
+        comment_mismatch_parts = natsort.natsorted(comment_mismatch_parts)
 
         # prepare analysis report
         longest_part_name = 0
@@ -123,16 +125,17 @@ class ReportGenerator:
             if l > longest_bom_comment:
                 longest_bom_comment = l
 
+        # report generator starts here
         output = ""
 
-        output += f"ＭＩＳＳＩＮＧ ＰＡＲＴＳ ＩＮ ＰＮＰ: {len(missing_pnp_parts)}\n"
+        output += f"ＢＯＭ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＰＮＰ: {len(missing_pnp_parts)}\n"
         output += "====================================\n"
         for item in missing_pnp_parts:
             output += "{name:{w}}: {cmnt}\n".format(
                 name=item[0], w=longest_part_name, cmnt=item[1])
         output += "\n"
 
-        output += f"ＭＩＳＳＩＮＧ ＰＡＲＴＳ ＩＮ ＢＯＭ: {len(missing_bom_parts)}\n"
+        output += f"ＰＮＰ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＢＯＭ: {len(missing_bom_parts)}\n"
         output += "====================================\n"
         for item in missing_bom_parts:
             output += "{name:{w}}: {cmnt}\n".format(
