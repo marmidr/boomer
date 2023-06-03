@@ -441,6 +441,8 @@ class BOMConfig(customtkinter.CTkFrame):
         self.entry_last_row_var.set("" if proj.profile.bom_last_row == -1 else str(proj.profile.bom_last_row))
         self.bom_view.clear_preview()
         self.update_lbl_columns()
+        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
         self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.bom_designator_col}\n• {proj.profile.bom_comment_col}")
@@ -455,9 +457,8 @@ class BOMConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.bom_first_row = int(new_first_row) - 1
-            self.btn_save.configure(state="enabled")
-
             logging.debug(f"BOM 1st row: {proj.profile.bom_first_row+1}")
+            self.btn_save.configure(state="enabled")
             self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
@@ -631,6 +632,8 @@ class PnPConfig(customtkinter.CTkFrame):
         self.entry_last_row_var.set("" if proj.profile.pnp_last_row == -1 else str(proj.profile.pnp_last_row))
         self.pnp_view.clear_preview()
         self.update_lbl_columns()
+        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
         self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.pnp_designator_col}\n• {proj.profile.pnp_comment_col}")
@@ -645,9 +648,8 @@ class PnPConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.pnp_first_row = int(new_first_row) - 1
-            self.btn_save.configure(state="enabled")
-
             logging.debug(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
+            self.btn_save.configure(state="enabled")
             self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
