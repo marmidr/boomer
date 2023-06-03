@@ -43,8 +43,8 @@ Remember to check these options:
 To install required libraries, open the PowerShell and:
 
 ```ps1
-# .xls reader, .xlsx reader, UI lib, natural sorting
-pip install xlrd openpyxl customtkinter natsort
+# .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting
+pip install xlrd openpyxl odfpy customtkinter natsort
 ```
 
 ## How to run

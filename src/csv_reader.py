@@ -1,6 +1,9 @@
-from text_grid import TextGrid
 import csv
 import logging
+
+from text_grid import TextGrid
+
+# -----------------------------------------------------------------------------
 
 def read_csv(path: str, delim: str) -> TextGrid:
     """

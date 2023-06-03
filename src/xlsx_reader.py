@@ -2,8 +2,11 @@
 # https://openpyxl.readthedocs.io/en/stable/tutorial.html
 
 import openpyxl
-from text_grid import TextGrid
 import logging
+
+from text_grid import TextGrid
+
+# -----------------------------------------------------------------------------
 
 def read_xlsx_sheet(path: str) -> TextGrid:
     """Reads entire sheet 0"""

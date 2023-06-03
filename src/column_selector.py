@@ -25,13 +25,18 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         assert "callback" in kwargs
         self.callback = kwargs.pop("callback")
 
+        assert "designator_default" in kwargs
+        designator_default = kwargs.pop("designator_default")
+        assert "comment_default" in kwargs
+        comment_default = kwargs.pop("comment_default")
+
         super().__init__(*args, **kwargs)
         self.geometry("400x160")
 
         lbl_designator = customtkinter.CTkLabel(self, text="Part designator column:")
         lbl_designator.grid(row=0, column=0, pady=5, padx=5, sticky="w")
 
-        self.opt_designator_var = customtkinter.StringVar(value="")
+        self.opt_designator_var = customtkinter.StringVar(value=designator_default)
         opt_designator = customtkinter.CTkOptionMenu(self, values=self.columns,
                                                      command=self.opt_event,
                                                      variable=self.opt_designator_var)
@@ -41,7 +46,7 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         lbl_comment = customtkinter.CTkLabel(self, text="Part comment (value) column:")
         lbl_comment.grid(row=1, column=0, pady=5, padx=5, sticky="w")
 
-        self.opt_comment_var = customtkinter.StringVar(value="")
+        self.opt_comment_var = customtkinter.StringVar(value=comment_default)
         opt_comment = customtkinter.CTkOptionMenu(self, values=self.columns,
                                                 command=self.opt_event,
                                                 variable=self.opt_comment_var)
@@ -62,7 +67,7 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         # enable "always-on-top" for this popup window
         self.attributes('-topmost', True)
 
-    def opt_event(self, new_profile: str):
+    def opt_event(self, _new_choice: str):
         if self.opt_designator_var.get() != "" and self.opt_comment_var.get() != "":
             self.btn_ok.configure(state="enabled")
 

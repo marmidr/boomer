@@ -2,8 +2,11 @@
 # https://xlrd.readthedocs.io/en/latest/
 
 import xlrd
-from text_grid import TextGrid
 import logging
+
+from text_grid import TextGrid
+
+# -----------------------------------------------------------------------------
 
 def read_xls_sheet(path: str) -> TextGrid:
     """Reads entire sheet 0"""

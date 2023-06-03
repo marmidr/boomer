@@ -116,7 +116,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         self.opt_profile.grid(row=0, column=1, pady=5, padx=5, sticky="we")
         self.grid_columnconfigure(1, weight=1)
 
-        btn_save_as = customtkinter.CTkButton(self, text="Save as...", command=self.button_save_event)
+        btn_save_as = customtkinter.CTkButton(self, text="Clone as...", command=self.button_save_event)
         btn_save_as.grid(row=0, column=3, pady=5, padx=5)
 
         btn_delete = customtkinter.CTkButton(self, text="Delete profile", command=self.button_del_event)
@@ -124,7 +124,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         btn_delete.configure(state="disabled")
 
     def button_save_event(self):
-        logging.debug("Save as...")
+        logging.debug("Clone profile as...")
         dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
         new_profile_name = dialog.get_input().strip()
         if '[' in new_profile_name or ']' in new_profile_name:
@@ -282,7 +282,7 @@ class ProjectFrame(customtkinter.CTkFrame):
             title="Select BOM file",
             initialdir=None,
             filetypes=(
-                ("Supported (*.xls; *.xlsx; *.csv)", "*.xls; *.xlsx; *.csv"),
+                ("Supported (*.xls; *.xlsx; *.csv; *.ods)", "*.xls; *.xlsx; *.csv; *.ods"),
                 ("All (*.*)", "*.*")
             ),
         )
@@ -486,7 +486,10 @@ class BOMConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self, columns=columns, callback=self.column_selector_callback)
+        self.column_selector = ColumnsSelectorWindow(self,
+                                                     columns=columns, callback=self.column_selector_callback,
+                                                     designator_default=proj.profile.bom_designator_col,
+                                                     comment_default=proj.profile.bom_comment_col)
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
@@ -677,7 +680,10 @@ class PnPConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self, columns=columns, callback=self.column_selector_callback)
+        self.column_selector = ColumnsSelectorWindow(self,
+                                                     columns=columns, callback=self.column_selector_callback,
+                                                     designator_default=proj.profile.pnp_designator_col,
+                                                     comment_default=proj.profile.pnp_comment_col)
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
