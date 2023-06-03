@@ -42,7 +42,7 @@ def read_csv(path: str, delim: str) -> TextGrid:
                                 row_cells_processed.append(quoted_cell)
                                 quoted_cell = ""
                         else:
-                            row_cells_processed.append(cell)
+                            row_cells_processed.append(cell.strip())
 
                     tg.rows.append(row_cells_processed)
 

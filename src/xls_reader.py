@@ -26,7 +26,7 @@ def read_xls_sheet(path: str) -> TextGrid:
                 cell = ""
             elif type(cell) is float or type(cell) is int:
                 cell = repr(cell)
-            row_cells.append(cell)
+            row_cells.append(cell.strip())
 
         # ignore rows with empty cell 'A'
         if len(row_cells) > 0 and row_cells[0] != "":
