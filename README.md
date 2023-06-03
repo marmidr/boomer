@@ -33,10 +33,14 @@ The following checks are performed:
 
 ## Prerequisites
 
-[Python for Windows with addons (pip, tkinter)](https://www.python.org/)
-Remember to check "Add Python to PATH".
+[Python for Windows with addons](https://www.python.org/).
+Remember to check these options:
 
-Open PowerShell and:
+* pip
+* tcl\tk
+* Add Python to environment variables
+
+To install required libraries, open the PowerShell and:
 
 ```ps1
 # .xls reader, .xlsx reader, UI lib, natural sorting
@@ -46,6 +50,7 @@ pip install xlrd openpyxl customtkinter natsort
 ## How to run
 
 From PowerShell:
+
 ```ps1
 python.exe src/app.py
 ```
@@ -54,6 +59,6 @@ python.exe src/app.py
 
 * *ModuleNotFoundError: No module named 'tkinter'*
 
-  `tkinter` is not part of your Python installation -
+  `tkinter` was not installed together with the Python -
   follow the instructions [here](https://bobbyhadz.com/blog/python-no-module-named-tkinter).
 *

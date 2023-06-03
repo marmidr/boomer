@@ -238,12 +238,11 @@ class ProjectFrame(customtkinter.CTkFrame):
         logging.debug(f"Open BOM: {bom_path}")
         self.opt_pnp_var.set("")
         self.opt_pnp2_var.set("")
+        self.bom_view.clear_preview()
+        self.pnp_view.clear_preview()
+        self.report_view.clear_preview()
 
         if os.path.isfile(bom_path):
-            self.bom_view.clear_preview()
-            self.pnp_view.clear_preview()
-            self.report_view.clear_preview()
-
             proj.bom_path = bom_path
             self.opt_bom_var.set(bom_path)
             # set pnp
@@ -259,6 +258,8 @@ class ProjectFrame(customtkinter.CTkFrame):
             # load profile
             proj.profile.load(profile_name)
             self.config_frames_load_profile()
+        else:
+            logging.error(f"File '{bom_path}' does not exists")
 
     def opt_pnp_event(self, pnp_fname: str):
         logging.debug(f"Select PnP: {pnp_fname}")
@@ -317,7 +318,6 @@ class ProjectFrame(customtkinter.CTkFrame):
         else:
             self.bom_config.opt_separator.configure(state="enabled")
 
-
 # -----------------------------------------------------------------------------
 
 class BOMView(customtkinter.CTkFrame):
@@ -344,6 +344,8 @@ class BOMView(customtkinter.CTkFrame):
         self.lbl_occurences.grid(row=1, column=2, pady=5, padx=5, sticky="")
 
     def load_bom(self, path: str, **kwargs):
+        self.clear_preview()
+
         if not os.path.isfile(path):
             logging.error(f"File '{path}' does not exists")
             return
@@ -364,9 +366,7 @@ class BOMView(customtkinter.CTkFrame):
         logging.info("Read BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
 
         bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
-        self.clear_preview()
         self.textbox.insert("0.0", bom_txt_grid)
-        logging.info("BOM ready")
 
     def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)
@@ -531,6 +531,8 @@ class PnPView(customtkinter.CTkFrame):
         self.lbl_occurences.grid(row=1, column=2, pady=5, padx=5, sticky="")
 
     def load_pnp(self, path: str, path2: str):
+        self.clear_preview()
+
         if not os.path.isfile(path):
             raise Exception(f"File '{path}' does not exists")
 
@@ -554,9 +556,7 @@ class PnPView(customtkinter.CTkFrame):
             proj.pnp_grid.rows.extend(pnp2_grid.rows)
 
         pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row, proj.profile.pnp_last_row)
-        self.clear_preview()
         self.textbox.insert("0.0", pnp_txt_grid)
-        logging.info("PnP ready")
 
     def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)

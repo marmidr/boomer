@@ -129,14 +129,14 @@ class ReportGenerator:
         output = ""
 
         output += f"ＢＯＭ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＰＮＰ: {len(missing_pnp_parts)}\n"
-        output += "====================================\n"
+        output += "==========================================\n"
         for item in missing_pnp_parts:
             output += "{name:{w}}: {cmnt}\n".format(
                 name=item[0], w=longest_part_name, cmnt=item[1])
         output += "\n"
 
         output += f"ＰＮＰ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＢＯＭ: {len(missing_bom_parts)}\n"
-        output += "====================================\n"
+        output += "==========================================\n"
         for item in missing_bom_parts:
             output += "{name:{w}}: {cmnt}\n".format(
                 name=item[0], w=longest_part_name, cmnt=item[1])
