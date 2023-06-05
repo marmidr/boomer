@@ -18,6 +18,7 @@ import sys
 import xls_reader
 import xlsx_reader
 import csv_reader
+import ods_reader
 import text_grid
 import report_generator
 from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
@@ -225,7 +226,7 @@ class ProjectFrame(customtkinter.CTkFrame):
             self.opt_pnp_var.set("")
             self.pnp_names = [""]
             for de in os.scandir(bom_dir):
-                logging.debug("PnP path: " + de.path)
+                # logging.debug("PnP path: " + de.path)
                 # take only the file name
                 pnp_fname = os.path.basename(de.path)
                 if pnp_fname != os.path.basename(bom_path):
@@ -352,10 +353,13 @@ class BOMView(customtkinter.CTkFrame):
 
         if path.endswith("xls"):
             logging.debug(f"Read BOM: {path}")
-            proj.bom_grid = xls_reader.read_xls_sheet(path, **kwargs)
+            proj.bom_grid = xls_reader.read_xls_sheet(path)
         elif path.endswith("xlsx"):
             logging.debug(f"Read BOM: {path}")
-            proj.bom_grid = xlsx_reader.read_xlsx_sheet(path, **kwargs)
+            proj.bom_grid = xlsx_reader.read_xlsx_sheet(path)
+        elif path.endswith("ods"):
+            logging.debug(f"Read BOM: {path}")
+            proj.bom_grid = ods_reader.read_ods_sheet(path)
         elif path.endswith("csv"):
             delim = proj.profile.get_bom_delimiter()
             logging.debug(f"Read BOM: {path}, delim='{delim}'")
@@ -550,6 +554,9 @@ class PnPView(customtkinter.CTkFrame):
         elif path.endswith("xlsx"):
             logging.debug(f"Read PnP: {path}")
             proj.pnp_grid = xlsx_reader.read_xlsx_sheet(path)
+        elif path.endswith("ods"):
+            logging.debug(f"Read PnP: {path}")
+            proj.pnp_grid = ods_reader.read_ods_sheet(path)
         else: # assume CSV
             delim = proj.profile.get_pnp_delimiter()
             logging.debug(f"Read PnP: {path}, delim='{delim}'")
@@ -848,7 +855,7 @@ class CtkApp(customtkinter.CTk):
         tab_report.grid_rowconfigure(0, weight=1)
 
         # UI ready
-        logging.info('Ready')
+        logging.info('Application ready.')
 
 # -----------------------------------------------------------------------------
 
