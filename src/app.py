@@ -314,10 +314,15 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.activate_bom_separator()
 
     def activate_bom_separator(self):
-        if proj.bom_path.endswith("xls") or proj.bom_path.endswith("xlsx"):
+        if proj.bom_path.endswith("xls") or proj.bom_path.endswith("xlsx") or proj.bom_path.endswith("ods"):
             self.bom_config.opt_separator.configure(state="disabled")
         else:
             self.bom_config.opt_separator.configure(state="enabled")
+
+        if proj.pnp_fname.endswith("xls") or proj.pnp_fname.endswith("xlsx") or proj.pnp_fname.endswith("ods"):
+            self.pnp_config.opt_separator.configure(state="disabled")
+        else:
+            self.pnp_config.opt_separator.configure(state="enabled")
 
 # -----------------------------------------------------------------------------
 
@@ -607,10 +612,10 @@ class PnPConfig(customtkinter.CTkFrame):
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
 
         self.opt_separator_var = customtkinter.StringVar(value="")
-        opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(),
+        self.opt_separator = customtkinter.CTkOptionMenu(self, values=Profile.get_separator_names(),
                                                     command=self.opt_separator_event,
                                                     variable=self.opt_separator_var)
-        opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        self.opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
         #
         # https://stackoverflow.com/questions/6548837/how-do-i-get-an-event-callback-when-a-tkinter-entry-widget-is-modified
