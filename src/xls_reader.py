@@ -14,7 +14,6 @@ def read_xls_sheet(path: str) -> TextGrid:
     logging.info(f"Reading file '{path}'")
     book = xlrd.open_workbook(filename=path)
     sheet = book.sheet_by_index(0)
-
     tg = TextGrid()
 
     # Iterate the loop to read the cell values

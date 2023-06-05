@@ -15,7 +15,6 @@ def read_xlsx_sheet(path: str) -> TextGrid:
     # Define variable to load the wookbook
     wookbook = openpyxl.load_workbook(path)
     sheet = wookbook.active
-
     tg = TextGrid()
 
     # Iterate the loop to read the cell values

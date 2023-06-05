@@ -148,7 +148,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         # TODO:
 
     def opt_profile_event(self, new_profile: str):
-        logging.debug(f"Select profile: {new_profile}")
+        logging.info(f"Select profile: {new_profile}")
         proj.profile.load(new_profile)
         proj.cfg_save_project()
         self.project_frame.config_frames_load_profile()
@@ -287,7 +287,7 @@ class ProjectFrame(customtkinter.CTkFrame):
                 ("All (*.*)", "*.*")
             ),
         )
-        logging.debug(f"Selected path: {bom_path}")
+        logging.info(f"Selected path: {bom_path}")
 
         if os.path.isfile(bom_path):
             if not bom_path in self.bom_paths:
@@ -352,22 +352,18 @@ class BOMView(customtkinter.CTkFrame):
             return
 
         if path.endswith("xls"):
-            logging.debug(f"Read BOM: {path}")
             proj.bom_grid = xls_reader.read_xls_sheet(path)
         elif path.endswith("xlsx"):
-            logging.debug(f"Read BOM: {path}")
             proj.bom_grid = xlsx_reader.read_xlsx_sheet(path)
         elif path.endswith("ods"):
-            logging.debug(f"Read BOM: {path}")
             proj.bom_grid = ods_reader.read_ods_sheet(path)
         elif path.endswith("csv"):
             delim = proj.profile.get_bom_delimiter()
-            logging.debug(f"Read BOM: {path}, delim='{delim}'")
             proj.bom_grid = csv_reader.read_csv(path, delim)
         else:
             raise RuntimeError("Unknown file type")
 
-        logging.info("Read BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
+        logging.info("BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
 
         bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
         self.textbox.insert("0.0", bom_txt_grid)
@@ -452,7 +448,7 @@ class BOMConfig(customtkinter.CTkFrame):
         self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.bom_designator_col}\n• {proj.profile.bom_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
-        logging.debug(f"BOM separator: {new_sep}")
+        logging.info(f"BOM separator: {new_sep}")
         proj.profile.bom_separator = new_sep
         self.btn_save.configure(state="enabled")
         self.button_load_event()
@@ -461,7 +457,7 @@ class BOMConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.bom_first_row = int(new_first_row) - 1
-            logging.debug(f"BOM 1st row: {proj.profile.bom_first_row+1}")
+            logging.info(f"BOM 1st row: {proj.profile.bom_first_row+1}")
             self.btn_save.configure(state="enabled")
             self.button_load_event()
         except Exception as e:
@@ -476,7 +472,7 @@ class BOMConfig(customtkinter.CTkFrame):
             else:
                 proj.profile.bom_last_row = int(new_last_row) - 1
 
-            logging.debug(f"BOM last row: {proj.profile.bom_last_row+1}")
+            logging.info(f"BOM last row: {proj.profile.bom_last_row+1}")
             self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
@@ -549,38 +545,34 @@ class PnPView(customtkinter.CTkFrame):
             raise Exception(f"File '{path2}' does not exists")
 
         if path.endswith("xls"):
-            logging.debug(f"Read PnP: {path}")
             proj.pnp_grid = xls_reader.read_xls_sheet(path)
         elif path.endswith("xlsx"):
-            logging.debug(f"Read PnP: {path}")
             proj.pnp_grid = xlsx_reader.read_xlsx_sheet(path)
         elif path.endswith("ods"):
-            logging.debug(f"Read PnP: {path}")
             proj.pnp_grid = ods_reader.read_ods_sheet(path)
         else: # assume CSV
             delim = proj.profile.get_pnp_delimiter()
-            logging.debug(f"Read PnP: {path}, delim='{delim}'")
             proj.pnp_grid = csv_reader.read_csv(path, delim)
 
-        logging.info("Read PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
+        logging.info("PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
 
         # load the optional second PnP file
         if path2 != "":
             if path2.endswith("xls"):
-                logging.debug(f"Read PnP2: {path2}")
                 pnp2_grid = xls_reader.read_xls_sheet(path2)
             elif path2.endswith("xlsx"):
-                logging.debug(f"Read PnP2: {path2}")
                 pnp2_grid = xlsx_reader.read_xlsx_sheet(path)
+            elif path.endswith("ods"):
+                pnp2_grid = ods_reader.read_ods_sheet(path2)
             else: # assume CSV
                 delim = proj.profile.get_pnp_delimiter()
-                logging.debug(f"Read PnP2: {path2}, delim='{delim}'")
                 pnp2_grid = csv_reader.read_csv(path2, delim)
 
-            logging.info("Read PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
+            logging.info("PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
             # merge
             if pnp2_grid.ncols != proj.pnp_grid.ncols:
                 raise Exception("PnP has {} columns, but PnP2 has {} columns".format(proj.pnp_grid.ncols, pnp2_grid.ncols))
+
             proj.pnp_grid.nrows += pnp2_grid.nrows
             proj.pnp_grid.rows.extend(pnp2_grid.rows)
 
@@ -667,7 +659,7 @@ class PnPConfig(customtkinter.CTkFrame):
         self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.pnp_designator_col}\n• {proj.profile.pnp_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
-        logging.debug(f"PnP separator: {new_sep}")
+        logging.info(f"PnP separator: {new_sep}")
         proj.profile.pnp_separator = new_sep
         self.btn_save.configure(state="enabled")
         self.button_load_event()
@@ -676,7 +668,7 @@ class PnPConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.pnp_first_row = int(new_first_row) - 1
-            logging.debug(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
+            logging.info(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
             self.btn_save.configure(state="enabled")
             self.button_load_event()
         except Exception as e:
@@ -691,7 +683,7 @@ class PnPConfig(customtkinter.CTkFrame):
             else:
                 proj.profile.pnp_last_row = int(new_last_row) - 1
 
-            logging.debug(f"PnP last row: {proj.profile.pnp_last_row+1}")
+            logging.info(f"PnP last row: {proj.profile.pnp_last_row+1}")
             self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
@@ -712,8 +704,7 @@ class PnPConfig(customtkinter.CTkFrame):
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
-        logging.info(f"Selected PnP designator column: '{result.designator_col}'")
-
+        logging.info(f"Selected PnP columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
         self.update_lbl_columns()

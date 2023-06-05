@@ -12,7 +12,7 @@ def read_csv(path: str, delim: str) -> TextGrid:
     Delim may be: ' '  ','  ';'  '\t'  '*fw'  '*re'
     """
 
-    logging.info(f"Reading file '{path}'")
+    logging.info(f"Reading file '{path}', delim='{delim}'")
     tg = TextGrid()
     max_cols = 0
 

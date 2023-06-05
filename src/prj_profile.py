@@ -36,7 +36,7 @@ class Profile:
 
     def load(self, name: str):
         if os.path.isfile(self.CONFIG_FILE_NAME):
-            logging.debug(f"Load profile: {name}")
+            logging.info(f"Load profile: {name}")
             self.name = name
             if self.__config.has_section('profile.' + self.name):
                 section = self.__config['profile.' + self.name]
@@ -58,7 +58,7 @@ class Profile:
             logging.warning(f"Config file {self.CONFIG_FILE_NAME} not found")
 
     def save(self):
-        logging.debug(f"Save profile: {self.name}")
+        logging.info(f"Save profile: {self.name}")
         self.__config["profile." + self.name] = {
             "bom_first_row": self.bom_first_row,
             "bom_separator": self.bom_separator,

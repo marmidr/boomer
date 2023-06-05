@@ -6,6 +6,11 @@ from text_grid import TextGrid
 # -----------------------------------------------------------------------------
 
 def read_ods_sheet(path: str) -> TextGrid:
+    """
+    Reads ODS/spreadsheet document, returning the first sheet
+    """
+
+    logging.info(f"Reading file '{path}'")
     doc = opendocument.load(path)
     tg = TextGrid()
 
