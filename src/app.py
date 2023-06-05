@@ -540,18 +540,36 @@ class PnPView(customtkinter.CTkFrame):
         if not os.path.isfile(path):
             raise Exception(f"File '{path}' does not exists")
 
-        # optional second PnP file
+        # check if optional second PnP file exists
         if path2 != "" and not os.path.isfile(path2):
             raise Exception(f"File '{path2}' does not exists")
 
-        delim = proj.profile.get_pnp_delimiter()
-        logging.debug(f"Read PnP: {path}, delim='{delim}'")
-        proj.pnp_grid = csv_reader.read_csv(path, delim)
+        if path.endswith("xls"):
+            logging.debug(f"Read PnP: {path}")
+            proj.pnp_grid = xls_reader.read_xls_sheet(path)
+        elif path.endswith("xlsx"):
+            logging.debug(f"Read PnP: {path}")
+            proj.pnp_grid = xlsx_reader.read_xlsx_sheet(path)
+        else: # assume CSV
+            delim = proj.profile.get_pnp_delimiter()
+            logging.debug(f"Read PnP: {path}, delim='{delim}'")
+            proj.pnp_grid = csv_reader.read_csv(path, delim)
+
         logging.info("Read PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
 
+        # load the optional second PnP file
         if path2 != "":
-            logging.debug(f"Read PnP2: {path2}, delim='{delim}'")
-            pnp2_grid = csv_reader.read_csv(path2, delim)
+            if path2.endswith("xls"):
+                logging.debug(f"Read PnP2: {path2}")
+                pnp2_grid = xls_reader.read_xls_sheet(path2)
+            elif path2.endswith("xlsx"):
+                logging.debug(f"Read PnP2: {path2}")
+                pnp2_grid = xlsx_reader.read_xlsx_sheet(path)
+            else: # assume CSV
+                delim = proj.profile.get_pnp_delimiter()
+                logging.debug(f"Read PnP2: {path2}, delim='{delim}'")
+                pnp2_grid = csv_reader.read_csv(path2, delim)
+
             logging.info("Read PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
             # merge
             if pnp2_grid.ncols != proj.pnp_grid.ncols:

@@ -18,9 +18,9 @@ Report:
 
 The following checks are performed:
 
-* BOM contains some element that is missing in the PnP file
+* BOM contains element that is missing in the PnP file
 * PnP contains reference to element that is not present in the BOM
-* Part comment (value) differs between BOM and PnP file
+* Part comment (value) differs between BOM and PnP files
 
 ## Supported formats
 
@@ -29,7 +29,9 @@ The following checks are performed:
   * .xlsx
   * .csv
 * [PnP](. "Pick And Place")
-  * .csv
+  * .xls
+  * .xlsx
+  * any other extension - considered as a CSV file
 
 ## Prerequisites
 
