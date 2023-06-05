@@ -27,10 +27,12 @@ The following checks are performed:
 * [BOM](. "Bill Of Materials")
   * .xls
   * .xlsx
+  * .ods
   * .csv
 * [PnP](. "Pick And Place")
   * .xls
   * .xlsx
+  * .ods
   * any other extension - considered as a CSV file
 
 ## Prerequisites

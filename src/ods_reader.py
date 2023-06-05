@@ -28,7 +28,10 @@ def read_ods_sheet(path: str) -> TextGrid:
                 for child in tablerow.childNodes:
                     row_cells.append(str(child).strip())
                 max_cols = max(max_cols, len(row_cells))
-                tg.rows.append(row_cells)
+
+                # ignore rows with empty cell 'A'
+                if len(row_cells) > 0 and row_cells[0] != "":
+                    tg.rows.append(row_cells)
 
             tg.nrows = len(tg.rows)
             tg.ncols = max_cols
