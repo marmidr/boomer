@@ -28,21 +28,19 @@ import ui_helpers
 # -----------------------------------------------------------------------------
 
 class Project:
-    bom_path: str
-    pnp_fname: str
-    pnp2_fname: str
+    bom_path: str = "<bom_path>"
+    pnp_fname: str = "<pnp_fname>"
+    pnp2_fname: str = ""
     __config: configparser.ConfigParser
     profile: Profile
     bom_grid: text_grid.TextGrid = None
     pnp_grid: text_grid.TextGrid = None
+    loading: bool = False
 
     def __init__(self):
-        self.bom_path = "<bom_path>"
-        self.pnp_fname = "<pnp_fname>"
-        self.pnp2_fname = ""
-
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
+
         if os.path.isfile(Profile.CONFIG_FILE_NAME):
             self.__config.read(Profile.CONFIG_FILE_NAME)
         else:
@@ -242,25 +240,31 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.bom_view.clear_preview()
         self.pnp_view.clear_preview()
         self.report_view.clear_preview()
+        proj.loading = True
 
-        if os.path.isfile(bom_path):
-            proj.bom_path = bom_path
-            self.opt_bom_var.set(bom_path)
-            # set pnp
-            self.find_pnp_files(bom_path)
-            section = proj.cfg_get_section("project." + proj.bom_path)
-            proj.pnp_fname = section.get("pnp", "???")
-            self.opt_pnp_var.set(proj.pnp_fname)
-            proj.pnp2_fname = section.get("pnp2", "")
-            self.opt_pnp2_var.set(proj.pnp2_fname)
-            # set profile
-            profile_name = section["profile"] or "???"
-            self.config_frame.opt_profile_var.set(profile_name)
-            # load profile
-            proj.profile.load(profile_name)
-            self.config_frames_load_profile()
-        else:
-            logging.error(f"File '{bom_path}' does not exists")
+        try:
+            if os.path.isfile(bom_path):
+                proj.bom_path = bom_path
+                self.opt_bom_var.set(bom_path)
+                # set pnp
+                self.find_pnp_files(bom_path)
+                section = proj.cfg_get_section("project." + proj.bom_path)
+                proj.pnp_fname = section.get("pnp", "???")
+                self.opt_pnp_var.set(proj.pnp_fname)
+                proj.pnp2_fname = section.get("pnp2", "")
+                self.opt_pnp2_var.set(proj.pnp2_fname)
+                # set profile
+                profile_name = section["profile"] or "???"
+                self.config_frame.opt_profile_var.set(profile_name)
+                # load profile
+                proj.profile.load(profile_name)
+                self.config_frames_load_profile()
+            else:
+                logging.error(f"File '{bom_path}' does not exists")
+        except Exception as e:
+            logging.error(f"Cannot open project: {e}")
+        finally:
+            proj.loading = False
 
     def opt_pnp_event(self, pnp_fname: str):
         logging.debug(f"Select PnP: {pnp_fname}")
@@ -464,7 +468,8 @@ class BOMConfig(customtkinter.CTkFrame):
             proj.profile.bom_first_row = int(new_first_row) - 1
             logging.info(f"BOM 1st row: {proj.profile.bom_first_row+1}")
             self.btn_save.configure(state="enabled")
-            self.button_load_event()
+            if not proj.loading:
+                self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
 
@@ -478,7 +483,8 @@ class BOMConfig(customtkinter.CTkFrame):
                 proj.profile.bom_last_row = int(new_last_row) - 1
 
             logging.info(f"BOM last row: {proj.profile.bom_last_row+1}")
-            self.button_load_event()
+            if not proj.loading:
+                self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
 
@@ -675,7 +681,8 @@ class PnPConfig(customtkinter.CTkFrame):
             proj.profile.pnp_first_row = int(new_first_row) - 1
             logging.info(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
             self.btn_save.configure(state="enabled")
-            self.button_load_event()
+            if not proj.loading:
+                self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
 
@@ -689,7 +696,8 @@ class PnPConfig(customtkinter.CTkFrame):
                 proj.profile.pnp_last_row = int(new_last_row) - 1
 
             logging.info(f"PnP last row: {proj.profile.pnp_last_row+1}")
-            self.button_load_event()
+            if not proj.loading:
+                self.button_load_event()
         except Exception as e:
             logging.error(f"Invalid row number: {e}")
 
