@@ -44,6 +44,8 @@ Remember to check these options:
 * tcl\tk
 * Add Python to environment variables
 
+Minimum required Python is 3.9
+
 To install required libraries, open the PowerShell and:
 
 ```ps1

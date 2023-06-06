@@ -1,152 +1,51 @@
-import logging
-import natsort
+# import logging
 
 from text_grid import *
+import cross_check
 
 # -----------------------------------------------------------------------------
 
-class ReportGenerator:
-    bom: ConfiguredTextGrid = None
-    pnp: ConfiguredTextGrid = None
+def prepare_text_report(ccresult: cross_check.CrossCheckResult) -> str:
+    output = ""
 
-    def __init__(self, bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid):
-        if bom is None or bom.text_grid is None:
-            raise Exception(f"BOM data is missing")
-        if pnp is None or pnp.text_grid is None:
-            raise Exception(f"PnP data is missing")
+    output += f"ＢＯＭ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＰＮＰ: {len(ccresult.bom_parst_missing_in_pnp)}\n"
+    output += "==========================================\n"
+    longest_designator = 0
+    for item in ccresult.bom_parst_missing_in_pnp:
+        longest_designator = max(len(item[0]), longest_designator)
 
-        self.bom = bom
-        self.pnp = pnp
-
-    def analyze(self) -> str:
-        bom_parts = ReportGenerator.__extract_bom_parts(self.bom)
-        pnp_parts = ReportGenerator.__extract_pnp_parts(self.pnp)
-        return ReportGenerator.__compare(bom_parts, pnp_parts)
-
-    @staticmethod
-    def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, str]:
-        output = ReportGenerator.__extract_grid(bom, "BOM")
-        return output
-
-    @staticmethod
-    def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, str]:
-        output = ReportGenerator.__extract_grid(pnp, "PnP")
-        return output
-
-    @staticmethod
-    def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, str]:
-        # TODO: case when the file does not contains a column titles, thus column indexes are used instead
-        if not type(grid.designator_col) is str:
-            raise Exception(f"{grid_name} designator column id must be a string")
-        if not type(grid.comment_col) is str:
-            raise Exception(f"{grid_name} comment column id must be a string")
-
-        # find part designator column index
-        designator_col_idx = -1
-        for i in range(0, grid.text_grid.ncols):
-            if grid.text_grid.rows[grid.first_row][i] == grid.designator_col:
-                designator_col_idx = i
-                break
-
-        # find part comment column index
-        comment_col_idx = -1
-        for i in range(0, grid.text_grid.ncols):
-            if grid.text_grid.rows[grid.first_row][i] == grid.comment_col:
-                comment_col_idx = i
-                break
-
-        if designator_col_idx == -1:
-            raise Exception(f"{grid_name} designator column not found")
-        if comment_col_idx == -1:
-            raise Exception(f"{grid_name} comment column not found")
-
-        logging.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
-        logging.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
-
-        output = {}
-        last_row = grid.text_grid.nrows if grid.last_row == -1 else grid.last_row
-        if last_row > grid.text_grid.nrows:
-            raise Exception(f"{grid_name} last row > number of rows")
-
-        for row in range(grid.first_row+1, last_row):
-            dsgn = grid.text_grid.rows[row][designator_col_idx]
-            cmnt = grid.text_grid.rows[row][comment_col_idx]
-            dsgn = dsgn.split(',')
-            # logging.debug(f"designators: '{dsgn}'")
-            for d in dsgn:
-                d = d.strip()
-                output[d] = cmnt
-
-        return output
-
-    @staticmethod
-    def __compare(bom_parts: dict[str, str], pnp_parts: dict[str, str]) -> str:
-        # TODO: extract cross checker as a separate module
-        missing_pnp_parts = []
-        missing_bom_parts = []
-        comment_mismatch_parts = []
-
-        # check for items present in BOM, but missing in the PnP
-        for bom_part in bom_parts:
-            if not bom_part in pnp_parts:
-                missing_pnp_parts.append((bom_part, bom_parts[bom_part]))
-        # sort naturally: https://pypi.org/project/natsort/
-        missing_pnp_parts = natsort.natsorted(missing_pnp_parts)
-
-        # check for items present in PnP, but missing in the BOM
-        for pnp_part in pnp_parts:
-            if not pnp_part in bom_parts:
-                missing_bom_parts.append((pnp_part, pnp_parts[pnp_part]))
-        missing_bom_parts = natsort.natsorted(missing_bom_parts)
-
-        # check for comments mismatch
-        for bom_part in bom_parts:
-            if bom_part in pnp_parts:
-                if bom_parts[bom_part] != pnp_parts[bom_part]:
-                    comment_mismatch_parts.append((bom_part, bom_parts[bom_part], pnp_parts[bom_part]))
-        comment_mismatch_parts = natsort.natsorted(comment_mismatch_parts)
-
-        # prepare analysis report
-        longest_part_name = 0
-        for bom_part in bom_parts:
-            l = len(bom_part)
-            if l > longest_part_name:
-                longest_part_name = l
-
-        for pnp_part in pnp_parts:
-            l = len(pnp_part)
-            if l > longest_part_name:
-                longest_part_name = l
+    for item in ccresult.bom_parst_missing_in_pnp:
+        output += "{name:{w}}: {cmnt}\n".format(
+            name=item[0], w=longest_designator, cmnt=item[1]
+        )
+    output += "\n"
 
 
-        longest_bom_comment = 0
-        for bom_part in bom_parts:
-            l = len(bom_parts[bom_part]) + 2
-            if l > longest_bom_comment:
-                longest_bom_comment = l
+    output += f"ＰＮＰ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＢＯＭ: {len(ccresult.pnp_parst_missing_in_bom)}\n"
+    output += "==========================================\n"
+    longest_designator = 0
+    for pnp_part in ccresult.pnp_parst_missing_in_bom:
+        longest_designator = max(len(pnp_part[0]), longest_designator)
 
-        # report generator starts here
-        output = ""
+    for pnp_part in ccresult.pnp_parst_missing_in_bom:
+        output += "{name:{w}}: {cmnt}\n".format(
+            name=pnp_part[0], w=longest_designator, cmnt=pnp_part[1]
+        )
+    output += "\n"
 
-        output += f"ＢＯＭ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＰＮＰ: {len(missing_pnp_parts)}\n"
-        output += "==========================================\n"
-        for item in missing_pnp_parts:
-            output += "{name:{w}}: {cmnt}\n".format(
-                name=item[0], w=longest_part_name, cmnt=item[1])
-        output += "\n"
 
-        output += f"ＰＮＰ ＰＡＲＴＳ ＭＩＳＳＩＮＧ ＩＮ ＢＯＭ: {len(missing_bom_parts)}\n"
-        output += "==========================================\n"
-        for item in missing_bom_parts:
-            output += "{name:{w}}: {cmnt}\n".format(
-                name=item[0], w=longest_part_name, cmnt=item[1])
-        output += "\n"
+    output += f"ＢＯＭ ＡＮＤ ＰＮＰ ＣＯＭＭＥＮＴ ＭＩＳＭＡＴＣＨ: {len(ccresult.parts_comment_mismatch)}\n"
+    output += "=================================================\n"
+    longest_designator = 0
+    longest_bom_comment = 0
+    for item in ccresult.parts_comment_mismatch:
+        longest_designator = max(len(pnp_part[0]), longest_designator)
+        longest_bom_comment = max(len(item[1]) + 2, longest_bom_comment)
 
-        output += f"ＢＯＭ ＡＮＤ ＰＮＰ ＣＯＭＭＥＮＴ ＭＩＳＭＡＴＣＨ: {len(comment_mismatch_parts)}\n"
-        output += "=================================================\n"
-        for item in comment_mismatch_parts:
-            output += "{name:{w}}: BOM={bom_cmnt:{bw}}, PnP={pnp_cmnt}\n".format(
-                name=item[0], w=longest_part_name, bom_cmnt=f"'{item[1]}'", bw=longest_bom_comment, pnp_cmnt=f"'{item[2]}'")
-        output += "\n"
+    for item in ccresult.parts_comment_mismatch:
+        output += "{name:{w}}: BOM={bom_cmnt:{bw}}, PnP={pnp_cmnt}\n".format(
+            name=item[0], w=longest_designator, bom_cmnt=f"'{item[1]}'", bw=longest_bom_comment, pnp_cmnt=f"'{item[2]}'"
+        )
+    output += "\n"
 
-        return output
+    return output

@@ -20,6 +20,7 @@ import xlsx_reader
 import csv_reader
 import ods_reader
 import text_grid
+import cross_check
 import report_generator
 from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
 from prj_profile import Profile
@@ -318,12 +319,14 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.activate_bom_separator()
 
     def activate_bom_separator(self):
-        if proj.bom_path.endswith("xls") or proj.bom_path.endswith("xlsx") or proj.bom_path.endswith("ods"):
+        bom_path = proj.bom_path.lower()
+        if bom_path.endswith("xls") or bom_path.endswith("xlsx") or bom_path.endswith("ods"):
             self.bom_config.opt_separator.configure(state="disabled")
         else:
             self.bom_config.opt_separator.configure(state="enabled")
 
-        if proj.pnp_fname.endswith("xls") or proj.pnp_fname.endswith("xlsx") or proj.pnp_fname.endswith("ods"):
+        pnp_fname = proj.pnp_fname.lower()
+        if pnp_fname.endswith("xls") or pnp_fname.endswith("xlsx") or pnp_fname.endswith("ods"):
             self.pnp_config.opt_separator.configure(state="disabled")
         else:
             self.pnp_config.opt_separator.configure(state="enabled")
@@ -360,13 +363,14 @@ class BOMView(customtkinter.CTkFrame):
             logging.error(f"File '{path}' does not exists")
             return
 
-        if path.endswith("xls"):
+        path_lower = path.lower()
+        if path_lower.endswith("xls"):
             proj.bom_grid = xls_reader.read_xls_sheet(path)
-        elif path.endswith("xlsx"):
+        elif path_lower.endswith("xlsx"):
             proj.bom_grid = xlsx_reader.read_xlsx_sheet(path)
-        elif path.endswith("ods"):
+        elif path_lower.endswith("ods"):
             proj.bom_grid = ods_reader.read_ods_sheet(path)
-        elif path.endswith("csv"):
+        elif path_lower.endswith("csv"):
             delim = proj.profile.get_bom_delimiter()
             proj.bom_grid = csv_reader.read_csv(path, delim)
         else:
@@ -555,11 +559,12 @@ class PnPView(customtkinter.CTkFrame):
         if path2 != "" and not os.path.isfile(path2):
             raise Exception(f"File '{path2}' does not exists")
 
-        if path.endswith("xls"):
+        path_lower = path.lower()
+        if path_lower.endswith("xls"):
             proj.pnp_grid = xls_reader.read_xls_sheet(path)
-        elif path.endswith("xlsx"):
+        elif path_lower.endswith("xlsx"):
             proj.pnp_grid = xlsx_reader.read_xlsx_sheet(path)
-        elif path.endswith("ods"):
+        elif path_lower.endswith("ods"):
             proj.pnp_grid = ods_reader.read_ods_sheet(path)
         else: # assume CSV
             delim = proj.profile.get_pnp_delimiter()
@@ -788,8 +793,8 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.last_row = proj.profile.pnp_last_row
 
         try:
-            rg = report_generator.ReportGenerator(bom_cfg, pnp_cfg)
-            report = rg.analyze()
+            ccresult = cross_check.compare(bom_cfg, pnp_cfg)
+            report = report_generator.prepare_text_report(ccresult)
             self.textbox.insert("0.0", report)
         except Exception as e:
             logging.error(f"Report generator error: {e}")
