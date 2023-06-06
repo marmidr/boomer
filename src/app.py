@@ -792,12 +792,13 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.first_row = proj.profile.pnp_first_row
         pnp_cfg.last_row = proj.profile.pnp_last_row
 
-        try:
-            ccresult = cross_check.compare(bom_cfg, pnp_cfg)
-            report = report_generator.prepare_text_report(ccresult)
-            self.textbox.insert("0.0", report)
-        except Exception as e:
-            logging.error(f"Report generator error: {e}")
+        # try:
+        ccresult = cross_check.compare(bom_cfg, pnp_cfg)
+        report = report_generator.prepare_text_report(ccresult)
+        self.textbox.insert("0.0", report)
+        ui_helpers.textbox_colorize_comments_mismatch(self.textbox, ccresult)
+        # except Exception as e:
+        #     logging.error(f"Report generator error: {e}")
 
     def button_find_event(self):
         txt = self.entry_search.get()
