@@ -55,7 +55,7 @@ class Profile:
             else:
                 logging.warning(f"No section {self.name} in config file")
         else:
-            logging.warning(f"Config file {self.CONFIG_FILE_NAME} not found")
+            logging.error(f"Config file {self.CONFIG_FILE_NAME} not found")
 
     def save(self):
         logging.info(f"Save profile: {self.name}")

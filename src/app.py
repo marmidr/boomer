@@ -1,7 +1,7 @@
 # BOM & PnP verifier
 #
 # The purpose of this application is to read the PCB BillOfMaterial file
-# together with the correcponding PickAndPlace file(s), and check the contents against
+# together with the corresponding PickAndPlace file(s), and check the contents against
 # differences in an electronic parts listed in both files, plus verify if the
 # parts comments (values) matches.
 #
@@ -25,6 +25,10 @@ import report_generator
 from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
 from prj_profile import Profile
 import ui_helpers
+
+# -----------------------------------------------------------------------------
+
+APP_NAME = f"BOM vs PnP Cross Checker v0.3"
 
 # -----------------------------------------------------------------------------
 
@@ -76,6 +80,17 @@ class Project:
         else:
             logging.warning(f"Project '{name}' not found")
 
+    def del_profile(self, name):
+        sect_name = "profile." + name
+        if sect_name in self.__config.sections():
+            self.__config.remove_section(sect_name)
+            with open(Profile.CONFIG_FILE_NAME, 'w') as f:
+                self.__config.write(f)
+            # reset profile
+            self.profile = Profile(cfgparser=self.__config)
+        else:
+            logging.warning(f"Profile '{name}' not found")
+
     def cfg_get_profiles(self) -> list[str]:
         profiles = []
         for sect in self.__config.sections():
@@ -116,14 +131,13 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         self.opt_profile.grid(row=0, column=1, pady=5, padx=5, sticky="we")
         self.grid_columnconfigure(1, weight=1)
 
-        btn_save_as = customtkinter.CTkButton(self, text="Clone as...", command=self.button_save_event)
-        btn_save_as.grid(row=0, column=3, pady=5, padx=5)
+        btn_clone = customtkinter.CTkButton(self, text="Clone as...", command=self.button_clone_event)
+        btn_clone.grid(row=0, column=3, pady=5, padx=5)
 
         btn_delete = customtkinter.CTkButton(self, text="Delete profile", command=self.button_del_event)
         btn_delete.grid(row=0, column=4, pady=5, padx=5)
-        btn_delete.configure(state="disabled")
 
-    def button_save_event(self):
+    def button_clone_event(self):
         logging.debug("Clone profile as...")
         dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
         new_profile_name = dialog.get_input().strip()
@@ -143,8 +157,12 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
             logging.error("Profile name length must be 3 or more")
 
     def button_del_event(self):
-        logging.debug("Del profile")
-        # TODO:
+        prof = self.opt_profile_var.get()
+        if prof != "":
+            # FIXME: app behavior with this action is hardly predictable
+            logging.debug(f"Del profile: {prof}")
+            proj.del_profile(prof)
+            self.opt_profile_var.set("")
 
     def opt_profile_event(self, new_profile: str):
         logging.info(f"Select profile: {new_profile}")
@@ -241,23 +259,27 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.bom_view.clear_preview()
         self.pnp_view.clear_preview()
         self.report_view.clear_preview()
+
+        # reset entire project
+        global proj
+        proj = Project()
         proj.loading = True
 
         try:
             if os.path.isfile(bom_path):
                 proj.bom_path = bom_path
                 self.opt_bom_var.set(bom_path)
-                # set pnp
+                # set pnp file name
                 self.find_pnp_files(bom_path)
                 section = proj.cfg_get_section("project." + proj.bom_path)
                 proj.pnp_fname = section.get("pnp", "???")
                 self.opt_pnp_var.set(proj.pnp_fname)
                 proj.pnp2_fname = section.get("pnp2", "")
                 self.opt_pnp2_var.set(proj.pnp2_fname)
-                # set profile
+                # select profile name in the option
                 profile_name = section["profile"] or "???"
                 self.config_frame.opt_profile_var.set(profile_name)
-                # load profile
+                # load the profile
                 proj.profile.load(profile_name)
                 self.config_frames_load_profile()
             else:
@@ -299,12 +321,13 @@ class ProjectFrame(customtkinter.CTkFrame):
                 self.bom_paths.append(bom_path)
             self.opt_bom_path.configure(values=self.bom_paths)
             self.opt_bom_var.set(bom_path)
-
-        self.find_pnp_files(bom_path)
-        # update config
-        proj.bom_path = bom_path
-        proj.cfg_save_project()
-        self.activate_bom_separator()
+            self.find_pnp_files(bom_path)
+            # update config
+            proj.bom_path = bom_path
+            proj.cfg_save_project()
+            self.activate_csv_separator_for_bom_pnp()
+        else:
+            logging.error(f"Cannot access the file '{bom_path}'")
 
     def button_remove_event(self):
         logging.debug("Remove project from list")
@@ -316,9 +339,9 @@ class ProjectFrame(customtkinter.CTkFrame):
     def config_frames_load_profile(self):
         self.bom_config.load_profile()
         self.pnp_config.load_profile()
-        self.activate_bom_separator()
+        self.activate_csv_separator_for_bom_pnp()
 
-    def activate_bom_separator(self):
+    def activate_csv_separator_for_bom_pnp(self):
         bom_path = proj.bom_path.lower()
         if bom_path.endswith("xls") or bom_path.endswith("xlsx") or bom_path.endswith("ods"):
             self.bom_config.opt_separator.configure(state="disabled")
@@ -389,7 +412,6 @@ class BOMView(customtkinter.CTkFrame):
         logging.info(f"Find '{txt}'")
         cnt = ui_helpers.textbox_find_text(self.textbox, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
-        # logging.debug(f"Found {cnt} occurences")
 
 # -----------------------------------------------------------------------------
 
@@ -502,10 +524,9 @@ class BOMConfig(customtkinter.CTkFrame):
         if self.column_selector:
             self.column_selector.destroy()
         self.column_selector = ColumnsSelectorWindow(self,
-                                                     columns=columns, callback=self.column_selector_callback,
-                                                     designator_default=proj.profile.bom_designator_col,
-                                                     comment_default=proj.profile.bom_comment_col)
-        # self.wnd_column_selector.focusmodel(model="active")
+                                    columns=columns, callback=self.column_selector_callback,
+                                    designator_default=proj.profile.bom_designator_col,
+                                    comment_default=proj.profile.bom_comment_col)
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
         logging.info(f"Selected BOM columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
@@ -517,7 +538,6 @@ class BOMConfig(customtkinter.CTkFrame):
     def button_save_event(self):
         self.btn_save.configure(state="disabled")
         proj.profile.save()
-        logging.debug("Profile saved")
 
     def button_load_event(self):
         logging.debug("Load BOM...")
@@ -570,24 +590,30 @@ class PnPView(customtkinter.CTkFrame):
             delim = proj.profile.get_pnp_delimiter()
             proj.pnp_grid = csv_reader.read_csv(path, delim)
 
-        logging.info("PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
+        log_f = logging.info if proj.pnp_grid.nrows > 0 else logging.warning
+        log_f("PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
 
         # load the optional second PnP file
         if path2 != "":
-            if path2.endswith("xls"):
+            path2_lower = path2.lower()
+            if path2_lower.endswith("xls"):
                 pnp2_grid = xls_reader.read_xls_sheet(path2)
-            elif path2.endswith("xlsx"):
+            elif path2_lower.endswith("xlsx"):
                 pnp2_grid = xlsx_reader.read_xlsx_sheet(path)
-            elif path.endswith("ods"):
+            elif path2_lower.endswith("ods"):
                 pnp2_grid = ods_reader.read_ods_sheet(path2)
             else: # assume CSV
                 delim = proj.profile.get_pnp_delimiter()
                 pnp2_grid = csv_reader.read_csv(path2, delim)
 
-            logging.info("PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
+            log_f = logging.info if pnp2_grid.nrows > 0 else logging.warning
+            log_f("PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
+
             # merge
             if pnp2_grid.ncols != proj.pnp_grid.ncols:
-                raise Exception("PnP has {} columns, but PnP2 has {} columns".format(proj.pnp_grid.ncols, pnp2_grid.ncols))
+                raise Exception("PnP has {} columns, but PnP2 has {} columns".format(
+                    proj.pnp_grid.ncols, pnp2_grid.ncols
+                ))
 
             proj.pnp_grid.nrows += pnp2_grid.nrows
             proj.pnp_grid.rows.extend(pnp2_grid.rows)
@@ -603,7 +629,6 @@ class PnPView(customtkinter.CTkFrame):
         logging.info(f"Find '{txt}'")
         cnt = ui_helpers.textbox_find_text(self.textbox, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
-        # logging.debug(f"Found {cnt} occurences")
 
 # -----------------------------------------------------------------------------
 
@@ -716,9 +741,9 @@ class PnPConfig(customtkinter.CTkFrame):
         if self.column_selector:
             self.column_selector.destroy()
         self.column_selector = ColumnsSelectorWindow(self,
-                                                     columns=columns, callback=self.column_selector_callback,
-                                                     designator_default=proj.profile.pnp_designator_col,
-                                                     comment_default=proj.profile.pnp_comment_col)
+                                    columns=columns, callback=self.column_selector_callback,
+                                    designator_default=proj.profile.pnp_designator_col,
+                                    comment_default=proj.profile.pnp_comment_col)
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
@@ -731,7 +756,6 @@ class PnPConfig(customtkinter.CTkFrame):
     def button_save_event(self):
         self.btn_save.configure(state="disabled")
         proj.profile.save()
-        logging.debug("Profile saved")
 
     def button_load_event(self):
         logging.debug("Load PnP...")
@@ -755,7 +779,6 @@ class ReportView(customtkinter.CTkFrame):
                                                 activate_scrollbars=True,
                                                 wrap='none')
         self.textbox.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
-        # self.textbox.insert("0.0", "𝐓𝐞𝐱𝐭 𝐄𝐝𝐢𝐭𝐨𝐫, 𝕋𝕖𝕩𝕥 𝔼𝕕𝕚𝕥𝕠𝕣")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -792,20 +815,19 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.first_row = proj.profile.pnp_first_row
         pnp_cfg.last_row = proj.profile.pnp_last_row
 
-        # try:
-        ccresult = cross_check.compare(bom_cfg, pnp_cfg)
-        report = report_generator.prepare_text_report(ccresult)
-        self.textbox.insert("0.0", report)
-        ui_helpers.textbox_colorize_comments_mismatch(self.textbox, ccresult)
-        # except Exception as e:
-        #     logging.error(f"Report generator error: {e}")
+        try:
+            ccresult = cross_check.compare(bom_cfg, pnp_cfg)
+            report = report_generator.prepare_text_report(ccresult)
+            self.textbox.insert("0.0", report)
+            ui_helpers.textbox_colorize_comments_mismatch(self.textbox, ccresult)
+        except Exception as e:
+            logging.error(f"Report generator error: {e}")
 
     def button_find_event(self):
         txt = self.entry_search.get()
         logging.info(f"Find '{txt}'")
         cnt = ui_helpers.textbox_find_text(self.textbox, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
-        # logging.debug(f"Found {cnt} occurences")
 
 # -----------------------------------------------------------------------------
 
@@ -814,7 +836,7 @@ class CtkApp(customtkinter.CTk):
         logging.info('Ctk app is starting')
         super().__init__()
 
-        self.title("BOM & PnP verifier")
+        self.title(f"{APP_NAME}")
         self.geometry("1200x600")
         self.grid_columnconfigure(0, weight=1)
 
@@ -882,7 +904,7 @@ if __name__ == "__main__":
     logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % "WARN ")
     logging.addLevelName(logging.ERROR,   "\033[1;31m%s\033[1;0m" % "ERROR")
 
-    logging.info("BOM vs PnP cross checker (c) 2023")
+    logging.info(f"{APP_NAME}   (c) 2023")
 
     if (sys.version_info.major < 3) or (sys.version_info.minor < 9):
         logging.error("Required Python version 3.9 or later!")

@@ -35,7 +35,13 @@ The following checks are performed:
   * .ods
   * any other extension - considered as a CSV file
 
+> NOTE
+>
+> If xls/xlsx/ods file contains several sheets, only the first one will be used.
+
 ## Prerequisites
+
+### Python
 
 [Python for Windows with addons](https://www.python.org/).
 Remember to check these options:
@@ -44,7 +50,9 @@ Remember to check these options:
 * tcl\tk
 * Add Python to environment variables
 
-Minimum required Python is 3.9
+Minimum required version is **Python 3.9**.
+
+### Libraries
 
 To install required libraries, open the PowerShell and:
 
@@ -67,4 +75,7 @@ python.exe src/app.py
 
   `tkinter` was not installed together with the Python -
   follow the instructions [here](https://bobbyhadz.com/blog/python-no-module-named-tkinter).
+* *ERROR: Cannot load BOM: 'utf-8' codec can't decode byte*
+
+  Only UTF-8 files are accepted; if the BOM or PnP file uses ANSI or WINDOWS encoding, use `Notepad++` or other editor to change the encoding to UTF-8
 *
