@@ -14,6 +14,7 @@ import logging
 import os
 import configparser
 import sys
+from tkhtmlview import HTMLScrolledText
 
 import xls_reader
 import xlsx_reader
@@ -54,6 +55,9 @@ class Project:
             }
 
         self.profile = Profile(cfgparser=self.__config)
+
+    def get_name(self) -> str:
+        return os.path.basename(self.bom_path)
 
     def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
         try:
@@ -774,11 +778,8 @@ class ReportView(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.textbox = customtkinter.CTkTextbox(self,
-                                                font=customtkinter.CTkFont(size=12, family="Consolas"),
-                                                activate_scrollbars=True,
-                                                wrap='none')
-        self.textbox.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+        self.htmlview = HTMLScrolledText(self, wrap='none')
+        self.htmlview.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -796,7 +797,7 @@ class ReportView(customtkinter.CTkFrame):
         self.lbl_occurences.grid(row=1, column=3, pady=5, padx=5, sticky="")
 
     def clear_preview(self):
-        self.textbox.delete("0.0", tkinter.END)
+        self.htmlview.delete("0.0", tkinter.END)
 
     def button_analyze_event(self):
         self.clear_preview()
@@ -817,16 +818,15 @@ class ReportView(customtkinter.CTkFrame):
 
         try:
             ccresult = cross_check.compare(bom_cfg, pnp_cfg)
-            report = report_generator.prepare_text_report(ccresult)
-            self.textbox.insert("0.0", report)
-            ui_helpers.textbox_colorize_comments_mismatch(self.textbox, ccresult)
+            report = report_generator.prepare_html_report(proj.get_name(), ccresult)
+            self.htmlview.set_html(report)
         except Exception as e:
             logging.error(f"Report generator error: {e}")
 
     def button_find_event(self):
         txt = self.entry_search.get()
         logging.info(f"Find '{txt}'")
-        cnt = ui_helpers.textbox_find_text(self.textbox, txt)
+        cnt = ui_helpers.textbox_find_text(self.htmlview, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
 
 # -----------------------------------------------------------------------------
