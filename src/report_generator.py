@@ -22,20 +22,21 @@ def __html_span_red(content: str) -> str:
     return f'<span style="color: IndianRed">{content}</span>'
 
 def __html_span_green(content: str) -> str:
-    return f'<span style="color: SeaGreen">{content}</span>'
+    return f'<span style="color: ForestGreen">{content}</span>'
 
 def __html_span_gray(content: str) -> str:
     return f'<span style="color: Gray">{content}</span>'
 
 def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str) -> str:
     # format BOM comment:
-    bom_comment = "{c:{w}}".format(c=bom_cmnt, w=bom_w) # set width
-    # TODO: html view does not preserve spaces  when PRE combined with SPAN
-    # pnp_in_bom_idx = bom_comment.lower().find(pnp_cmnt.lower())
-    # if pnp_in_bom_idx > -1:
-    #     before = bom_comment[:pnp_in_bom_idx]
-    #     after = bom_comment[pnp_in_bom_idx + len(pnp_cmnt):]
-    #     bom_comment = __html_span_red(before) + pnp_cmnt + __html_span_red(after)
+    pnp_in_bom_idx = bom_cmnt.lower().find(pnp_cmnt.lower())
+    if pnp_in_bom_idx > -1:
+        before = bom_cmnt[:pnp_in_bom_idx]
+        after = bom_cmnt[pnp_in_bom_idx + len(pnp_cmnt):]
+        bom_comment = __html_span_red(before) + pnp_cmnt + __html_span_red(after)
+        bom_comment += ' ' * max(0, bom_w - len(bom_cmnt))
+    else:
+        bom_comment = bom_cmnt + ' ' * max(0, bom_w - len(bom_cmnt))
 
     # format PnP comment:
     pnp_comment = pnp_cmnt
@@ -46,9 +47,11 @@ def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: i
         pnp_comment = __html_span_green(before) + bom_cmnt + __html_span_green(after)
 
     # output:
-    out = '{desgn:{w}}: <span style="color: Gray">BOM =</span>{bom_comment}, <span style="color: Gray">PnP =</span>{pnp_comment}<br/>'.format(
+    out = '{desgn:{w}}: {bom}{bom_comment}, {pnp}{pnp_comment}<br/>'.format(
                 desgn=designator, w=designator_w,
+                bom=__html_span_gray('BOM='),
                 bom_comment=bom_comment,
+                pnp=__html_span_gray('PnP='),
                 pnp_comment=pnp_comment
             )
     # logging.debug(f"'{out}'")

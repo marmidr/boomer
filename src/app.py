@@ -779,19 +779,21 @@ class ReportView(customtkinter.CTkFrame):
         super().__init__(master, **kwargs)
 
         self.htmlview = HTMLScrolledText(self, wrap='none', html="""
-<!DOCTYPE html>
-<html>
-<body>
-<h1>The pre element</h1>
-<pre>
-C1     : <span style="color: Gray">BOM =</span>2u2/25/0603                           , <span style="color: Gray">PnP =</span>2u2_25V
-C2     : <span style="color: Gray">BOM =</span><span style="color: IndianRed"></span>22pF<span style="color: IndianRed">/50/0603/COG                      </span>, <span style="color: Gray">PnP =</span>22pF
-C7     : <span style="color: Gray">BOM =</span>2u2/25/0603                           , <span style="color: Gray">PnP =</span>2u2_25V
-C3     : <span style="color: Gray">BOM =</span><span style="color: IndianRed"></span>22pF<span style="color: IndianRed">/50/0603/COG                      </span>, <span style="color: Gray">PnP =</span>22pF
-R65    : <span style="color: Gray">BOM =</span>0603; 220Ω; 100mW; ±1%; 100ppm        , <span style="color: Gray">PnP =</span>220R
-</pre>
-</body>
-</html>""")
+        <!DOCTYPE html>
+        <html>
+        <body>
+        <h1>The PRE element</h1>
+        <p>List <em>of</em><b>items</b>:</p>
+        <pre>
+C1     : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
+C2     : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: IndianRed">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
+C7     : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
+C3     : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: ForestGreen">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
+R65    : <span style="color: Gray">BOM=</span>0603; 220Ω; 100mW; ±1%; 100ppm        , <span style="color: Gray">PnP=</span>220R
+        </pre>
+        <p> The summary <b>is</b>: None</p>
+        </body>
+        </html>""")
         self.htmlview.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
         self.grid_columnconfigure(0, weight=1)
