@@ -73,6 +73,7 @@ class Project:
             if sect.startswith("project."):
                 projects.append(sect.removeprefix("project."))
 
+        projects.sort()
         return projects
 
     def del_project(self, name: str):
@@ -104,6 +105,7 @@ class Project:
         if len(profiles) == 0:
             profiles.append("default-profile")
 
+        profiles.sort()
         return profiles
 
     def cfg_save_project(self):
@@ -140,6 +142,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 
         btn_delete = customtkinter.CTkButton(self, text="Delete profile", command=self.button_del_event)
         btn_delete.grid(row=0, column=4, pady=5, padx=5)
+        btn_delete.configure(state=tkinter.DISABLED)
 
     def button_clone_event(self):
         logging.debug("Clone profile as...")
@@ -221,7 +224,7 @@ class ProjectFrame(customtkinter.CTkFrame):
                                                         command=self.opt_pnp_event,
                                                         variable=self.opt_pnp_var)
         self.opt_pnp_fname.grid(row=1, column=1, pady=5, padx=5, sticky="we")
-        self.opt_pnp_fname.configure(state="disabled")
+        self.opt_pnp_fname.configure(state=tkinter.DISABLED)
 
 
         lbl_pnp2_path = customtkinter.CTkLabel(self, text="PnP2 (optional):")
@@ -232,12 +235,12 @@ class ProjectFrame(customtkinter.CTkFrame):
                                                         command=self.opt_pnp2_event,
                                                         variable=self.opt_pnp2_var)
         self.opt_pnp2_fname.grid(row=2, column=1, pady=5, padx=5, sticky="we")
-        self.opt_pnp2_fname.configure(state="disabled")
+        self.opt_pnp2_fname.configure(state=tkinter.DISABLED)
 
         self.config_frame = ProjectProfileFrame(self)
         self.config_frame.grid(row=3, column=0, padx=5, pady=5, columnspan=2, sticky="we")
         self.config_frame.project_frame = self
-        # self.config_frame.configure(state="disabled")
+        # self.config_frame.configure(state=tkinter.DISABLED)
 
     def find_pnp_files(self, bom_path: str):
         if os.path.isfile(bom_path):
@@ -252,9 +255,9 @@ class ProjectFrame(customtkinter.CTkFrame):
                 pnp_fname = os.path.basename(de.path)
                 if pnp_fname != os.path.basename(bom_path):
                     self.pnp_names.append(pnp_fname)
-            self.opt_pnp_fname.configure(values=self.pnp_names, state="enabled")
-            self.opt_pnp2_fname.configure(values=self.pnp_names, state="enabled")
-            # self.config_frame.configure(state="enabled")
+            self.opt_pnp_fname.configure(values=self.pnp_names, state=tkinter.NORMAL)
+            self.opt_pnp2_fname.configure(values=self.pnp_names, state=tkinter.NORMAL)
+            # self.config_frame.configure(state=tkinter.NORMAL)
 
     def opt_bom_event(self, bom_path: str):
         logging.debug(f"Open BOM: {bom_path}")
@@ -348,15 +351,15 @@ class ProjectFrame(customtkinter.CTkFrame):
     def activate_csv_separator_for_bom_pnp(self):
         bom_path = proj.bom_path.lower()
         if bom_path.endswith("xls") or bom_path.endswith("xlsx") or bom_path.endswith("ods"):
-            self.bom_config.opt_separator.configure(state="disabled")
+            self.bom_config.opt_separator.configure(state=tkinter.DISABLED)
         else:
-            self.bom_config.opt_separator.configure(state="enabled")
+            self.bom_config.opt_separator.configure(state=tkinter.NORMAL)
 
         pnp_fname = proj.pnp_fname.lower()
         if pnp_fname.endswith("xls") or pnp_fname.endswith("xlsx") or pnp_fname.endswith("ods"):
-            self.pnp_config.opt_separator.configure(state="disabled")
+            self.pnp_config.opt_separator.configure(state=tkinter.DISABLED)
         else:
-            self.pnp_config.opt_separator.configure(state="enabled")
+            self.pnp_config.opt_separator.configure(state=tkinter.NORMAL)
 
 # -----------------------------------------------------------------------------
 
@@ -439,18 +442,19 @@ class BOMConfig(customtkinter.CTkFrame):
                                                     command=self.opt_separator_event,
                                                     variable=self.opt_separator_var)
         self.opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        self.opt_separator.configure(state=tkinter.DISABLED)
 
         #
         # https://stackoverflow.com/questions/6548837/how-do-i-get-an-event-callback-when-a-tkinter-entry-widget-is-modified
         self.entry_first_row_var = customtkinter.StringVar(value="1")
         self.entry_first_row_var.trace_add("write", lambda n, i, m, sv=self.entry_first_row_var: self.var_first_row_event(sv))
-        self.entry_first_row = customtkinter.CTkEntry(self, placeholder_text="first row", textvariable=self.entry_first_row_var)
+        self.entry_first_row = customtkinter.CTkEntry(self, width=60, placeholder_text="first row", textvariable=self.entry_first_row_var)
         self.entry_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="w")
 
         #
         self.entry_last_row_var = customtkinter.StringVar(value="")
         self.entry_last_row_var.trace_add("write", lambda n, i, m, sv=self.entry_last_row_var: self.var_last_row_event(sv))
-        self.entry_last_row = customtkinter.CTkEntry(self, placeholder_text="last row", textvariable=self.entry_last_row_var)
+        self.entry_last_row = customtkinter.CTkEntry(self, width=60, placeholder_text="last row", textvariable=self.entry_last_row_var)
         self.entry_last_row.grid(row=0, column=5, padx=5, pady=5, sticky="w")
 
         #
@@ -466,12 +470,13 @@ class BOMConfig(customtkinter.CTkFrame):
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
                                                    command=self.button_columns_event)
         self.btn_columns.grid(row=0, column=8, pady=5, padx=5, sticky="")
+        self.btn_columns.configure(state=tkinter.DISABLED)
 
         #
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
         self.btn_save.grid(row=0, column=9, pady=5, padx=5, sticky="e")
-        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(state=tkinter.DISABLED)
         self.grid_columnconfigure(9, weight=1)
 
     def load_profile(self):
@@ -480,7 +485,7 @@ class BOMConfig(customtkinter.CTkFrame):
         self.entry_last_row_var.set("" if proj.profile.bom_last_row == -1 else str(proj.profile.bom_last_row))
         self.bom_view.clear_preview()
         self.update_lbl_columns()
-        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(state=tkinter.DISABLED)
         self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
@@ -489,7 +494,7 @@ class BOMConfig(customtkinter.CTkFrame):
     def opt_separator_event(self, new_sep: str):
         logging.info(f"BOM separator: {new_sep}")
         proj.profile.bom_separator = new_sep
-        self.btn_save.configure(state="enabled")
+        self.btn_save.configure(state=tkinter.NORMAL)
         self.button_load_event()
 
     def var_first_row_event(self, sv: customtkinter.StringVar):
@@ -497,7 +502,7 @@ class BOMConfig(customtkinter.CTkFrame):
         try:
             proj.profile.bom_first_row = int(new_first_row) - 1
             logging.info(f"BOM 1st row: {proj.profile.bom_first_row+1}")
-            self.btn_save.configure(state="enabled")
+            self.btn_save.configure(state=tkinter.NORMAL)
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
@@ -537,14 +542,15 @@ class BOMConfig(customtkinter.CTkFrame):
         proj.profile.bom_designator_col = result.designator_col
         proj.profile.bom_comment_col = result.comment_col
         self.update_lbl_columns()
-        self.btn_save.configure(state="enabled")
+        self.btn_save.configure(state=tkinter.NORMAL)
 
     def button_save_event(self):
-        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(state=tkinter.DISABLED)
         proj.profile.save()
 
     def button_load_event(self):
         logging.debug("Load BOM...")
+        self.btn_columns.configure(state=tkinter.NORMAL)
         try:
             self.bom_view.load_bom(proj.bom_path)
         except Exception as e:
@@ -656,18 +662,19 @@ class PnPConfig(customtkinter.CTkFrame):
                                                     command=self.opt_separator_event,
                                                     variable=self.opt_separator_var)
         self.opt_separator.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        self.opt_separator.configure(state=tkinter.DISABLED)
 
         #
         # https://stackoverflow.com/questions/6548837/how-do-i-get-an-event-callback-when-a-tkinter-entry-widget-is-modified
         self.entry_first_row_var = customtkinter.StringVar(value="1")
         self.entry_first_row_var.trace_add("write", lambda n, i, m, sv=self.entry_first_row_var: self.var_first_row_event(sv))
-        self.entry_first_row = customtkinter.CTkEntry(self, placeholder_text="first row", textvariable=self.entry_first_row_var)
+        self.entry_first_row = customtkinter.CTkEntry(self, width=60, placeholder_text="first row", textvariable=self.entry_first_row_var)
         self.entry_first_row.grid(row=0, column=3, padx=5, pady=5, sticky="w")
 
         #
         self.entry_last_row_var = customtkinter.StringVar(value="")
         self.entry_last_row_var.trace_add("write", lambda n, i, m, sv=self.entry_last_row_var: self.var_last_row_event(sv))
-        self.entry_last_row = customtkinter.CTkEntry(self, placeholder_text="last row", textvariable=self.entry_last_row_var)
+        self.entry_last_row = customtkinter.CTkEntry(self, width=60, placeholder_text="last row", textvariable=self.entry_last_row_var)
         self.entry_last_row.grid(row=0, column=5, padx=5, pady=5, sticky="w")
 
         #
@@ -683,12 +690,13 @@ class PnPConfig(customtkinter.CTkFrame):
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumn...",
                                                    command=self.button_columns_event)
         self.btn_columns.grid(row=0, column=8, pady=5, padx=5, sticky="")
+        self.btn_columns.configure(state=tkinter.DISABLED)
 
         #
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
         self.btn_save.grid(row=0, column=9, pady=5, padx=5, sticky="e")
-        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(state=tkinter.DISABLED)
         self.grid_columnconfigure(9, weight=1)
 
     def load_profile(self):
@@ -697,7 +705,7 @@ class PnPConfig(customtkinter.CTkFrame):
         self.entry_last_row_var.set("" if proj.profile.pnp_last_row == -1 else str(proj.profile.pnp_last_row))
         self.pnp_view.clear_preview()
         self.update_lbl_columns()
-        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(state=tkinter.DISABLED)
         self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
@@ -706,7 +714,7 @@ class PnPConfig(customtkinter.CTkFrame):
     def opt_separator_event(self, new_sep: str):
         logging.info(f"PnP separator: {new_sep}")
         proj.profile.pnp_separator = new_sep
-        self.btn_save.configure(state="enabled")
+        self.btn_save.configure(state=tkinter.NORMAL)
         self.button_load_event()
 
     def var_first_row_event(self, sv: customtkinter.StringVar):
@@ -714,7 +722,7 @@ class PnPConfig(customtkinter.CTkFrame):
         try:
             proj.profile.pnp_first_row = int(new_first_row) - 1
             logging.info(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
-            self.btn_save.configure(state="enabled")
+            self.btn_save.configure(state=tkinter.NORMAL)
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
@@ -755,14 +763,15 @@ class PnPConfig(customtkinter.CTkFrame):
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
         self.update_lbl_columns()
-        self.btn_save.configure(state="enabled")
+        self.btn_save.configure(state=tkinter.NORMAL)
 
     def button_save_event(self):
-        self.btn_save.configure(state="disabled")
+        self.btn_save.configure(state=tkinter.DISABLED)
         proj.profile.save()
 
     def button_load_event(self):
         logging.debug("Load PnP...")
+        self.btn_columns.configure(state=tkinter.NORMAL)
         pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
         pnp2_path = "" if proj.pnp2_fname == "" else os.path.join(os.path.dirname(proj.bom_path), proj.pnp2_fname)
         try:
@@ -778,29 +787,31 @@ class ReportView(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.htmlview = HTMLScrolledText(self, wrap='none', html="""
-        <!DOCTYPE html>
-        <html>
-        <body>
-        <h1>The PRE element</h1>
-        <p>List <em>of</em><b>items</b>:</p>
-        <pre>
-C1     : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
-C2     : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: IndianRed">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
-C7     : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
-C3     : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: ForestGreen">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
-R65    : <span style="color: Gray">BOM=</span>0603; 220Ω; 100mW; ±1%; 100ppm        , <span style="color: Gray">PnP=</span>220R
-        </pre>
-        <p> The summary <b>is</b>: None</p>
-        </body>
-        </html>""")
+        self.htmlview = HTMLScrolledText(self, wrap='none', html=
+        """
+            <!DOCTYPE html>
+            <html>
+            <body>
+            <h1>The PRE element</h1>
+            <p>List <em>of</em><b>items</b>:</p>
+            <pre>
+            C1   : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
+            C2   : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: IndianRed">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
+            C7   : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
+            C3   : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: ForestGreen">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
+            R65  : <span style="color: Gray">BOM=</span>0603; 220Ω; 100mW; ±1%; 100ppm        , <span style="color: Gray">PnP=</span>220R
+            </pre>
+            <p> The summary <b>is</b>: None</p>
+            </body>
+            </html>
+        """)
         self.htmlview.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.btn_analyze = customtkinter.CTkButton(self, text="Analyze documents", command=self.button_analyze_event)
-        self.btn_analyze.grid(row=1, column=0, pady=5, padx=5, sticky="we")
+        self.btn_crosscheck = customtkinter.CTkButton(self, text="Cross-check the files", command=self.button_crosscheck_event)
+        self.btn_crosscheck.grid(row=1, column=0, pady=5, padx=5, sticky="we")
 
         self.entry_search = customtkinter.CTkEntry(self, placeholder_text="search...")
         self.entry_search.grid(row=1, column=1, padx=5, pady=5, sticky="wens")
@@ -814,7 +825,7 @@ R65    : <span style="color: Gray">BOM=</span>0603; 220Ω; 100mW; ±1%; 100ppm  
     def clear_preview(self):
         self.htmlview.delete("0.0", tkinter.END)
 
-    def button_analyze_event(self):
+    def button_crosscheck_event(self):
         self.clear_preview()
 
         bom_cfg = text_grid.ConfiguredTextGrid()
@@ -913,11 +924,17 @@ if __name__ == "__main__":
                         datefmt='%H:%M:%S',
                         level=logging.DEBUG)
     # https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
+
+    ANSI_FG_WHITE=  "\033[1;37m"
+    ANSI_FG_YELLOW= "\033[1;33m"
+    ANSI_FG_RED=    "\033[1;31m"
+    ANSI_FG_DEFAULT="\033[1;0m"
+
     # logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % logging.getLevelName(logging.INFO))
-    logging.addLevelName(logging.DEBUG,   "%s"                    % "DEBUG")
-    logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % "INFO ")
-    logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % "WARN ")
-    logging.addLevelName(logging.ERROR,   "\033[1;31m%s\033[1;0m" % "ERROR")
+    logging.addLevelName(logging.DEBUG,   f"DEBUG")
+    logging.addLevelName(logging.INFO,    f"{ANSI_FG_WHITE}INFO {ANSI_FG_DEFAULT}")
+    logging.addLevelName(logging.WARNING, f"{ANSI_FG_YELLOW}WARN {ANSI_FG_DEFAULT}")
+    logging.addLevelName(logging.ERROR,   f"{ANSI_FG_RED}ERROR{ANSI_FG_DEFAULT}")
 
     logging.info(f"{APP_NAME}   (c) 2023")
 
