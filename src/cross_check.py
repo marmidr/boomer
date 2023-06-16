@@ -17,29 +17,33 @@ class CrossCheckResult:
 
 def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, str]:
     # TODO: case when the file does not contains a column titles, thus column indexes are used instead
-    if not type(grid.designator_col) is str:
-        raise Exception(f"{grid_name} designator column id must be a string")
-    if not type(grid.comment_col) is str:
-        raise Exception(f"{grid_name} comment column id must be a string")
+    if type(grid.designator_col) is not str:
+        raise ValueError(f"{grid_name} designator column id must be a string")
+    if type(grid.comment_col) is not str:
+        raise ValueError(f"{grid_name} comment column id must be a string")
 
-    # find part designator column index
-    designator_col_idx = -1
-    for i in range(0, grid.text_grid.ncols):
-        if grid.text_grid.rows[grid.first_row][i] == grid.designator_col:
-            designator_col_idx = i
-            break
+    designator_col_idx = next(
+        (
+            i
+            for i in range(grid.text_grid.ncols)
+            if grid.text_grid.rows[grid.first_row][i] == grid.designator_col
+        ),
+        -1,
+    )
 
-    # find part comment column index
-    comment_col_idx = -1
-    for i in range(0, grid.text_grid.ncols):
-        if grid.text_grid.rows[grid.first_row][i] == grid.comment_col:
-            comment_col_idx = i
-            break
+    comment_col_idx = next(
+        (
+            i
+            for i in range(grid.text_grid.ncols)
+            if grid.text_grid.rows[grid.first_row][i] == grid.comment_col
+        ),
+        -1,
+    )
 
     if designator_col_idx == -1:
-        raise Exception(f"{grid_name} designator column not found")
+        raise ValueError(f"{grid_name} designator column not found")
     if comment_col_idx == -1:
-        raise Exception(f"{grid_name} comment column not found")
+        raise ValueError(f"{grid_name} comment column not found")
 
     logging.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
     logging.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
@@ -47,7 +51,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, str]:
     output = {}
     last_row = grid.text_grid.nrows if grid.last_row == -1 else grid.last_row
     if last_row > grid.text_grid.nrows:
-        raise Exception(f"{grid_name} last row > number of rows")
+        raise ValueError(f"{grid_name} last row > number of rows")
 
     for row in range(grid.first_row+1, last_row):
         dsgn = grid.text_grid.rows[row][designator_col_idx]
@@ -61,26 +65,25 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, str]:
     return output
 
 def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, str]:
-    output = __extract_grid(bom, "BOM")
-    return output
+    return __extract_grid(bom, "BOM")
 
 def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, str]:
-    output = __extract_grid(pnp, "PnP")
-    return output
+    return __extract_grid(pnp, "PnP")
 
 def __compare(bom_parts: dict[str, str], pnp_parts: dict[str, str]) -> CrossCheckResult:
+    # sourcery skip: merge-nested-ifs
     result = CrossCheckResult()
 
     # check for items present in BOM, but missing in the PnP
     for designator in bom_parts:
-        if not designator in pnp_parts:
+        if designator not in pnp_parts:
             result.bom_parst_missing_in_pnp.append((designator, bom_parts[designator]))
     # sort naturally: https://pypi.org/project/natsort/
     result.bom_parst_missing_in_pnp = natsort.natsorted(result.bom_parst_missing_in_pnp)
 
     # check for items present in PnP, but missing in the BOM
     for designator in pnp_parts:
-        if not designator in bom_parts:
+        if designator not in bom_parts:
             result.pnp_parst_missing_in_bom.append((designator, pnp_parts[designator]))
     result.pnp_parst_missing_in_bom = natsort.natsorted(result.pnp_parst_missing_in_bom)
 
@@ -100,9 +103,9 @@ def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid) -> CrossCheckResul
     """Performs BOM and PnP cross check"""
 
     if bom is None or bom.text_grid is None:
-        raise Exception(f"BOM data is missing")
+        raise ValueError("BOM data is missing")
     if pnp is None or pnp.text_grid is None:
-        raise Exception(f"PnP data is missing")
+        raise ValueError("PnP data is missing")
 
     bom_parts = __extract_bom_parts(bom)
     pnp_parts = __extract_pnp_parts(pnp)

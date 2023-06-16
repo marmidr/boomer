@@ -24,13 +24,11 @@ def read_ods_sheet(path: str) -> TextGrid:
             max_cols = 0
 
             for tablerow in tab.getElementsByType(table.TableRow):
-                row_cells = []
-                for child in tablerow.childNodes:
-                    row_cells.append(str(child).strip())
+                row_cells = [str(child).strip() for child in tablerow.childNodes]
                 max_cols = max(max_cols, len(row_cells))
 
                 # ignore rows with empty cell 'A'
-                if len(row_cells) > 0 and row_cells[0] != "":
+                if row_cells and row_cells[0] != "":
                     tg.rows.append(row_cells)
 
             tg.nrows = len(tg.rows)

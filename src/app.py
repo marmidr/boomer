@@ -29,7 +29,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = f"BOM vs PnP Cross Checker v0.3"
+APP_NAME = "BOM vs PnP Cross Checker v0.3"
 
 # -----------------------------------------------------------------------------
 
@@ -62,22 +62,22 @@ class Project:
     def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
         try:
             self.__config[sect_name]
-        except:
+        except Exception:
             self.__config[sect_name] = {}
 
         return self.__config[sect_name]
 
     def get_projects(self) -> list[str]:
-        projects = []
-        for sect in self.__config.sections():
-            if sect.startswith("project."):
-                projects.append(sect.removeprefix("project."))
-
+        projects = [
+            sect.removeprefix("project.")
+            for sect in self.__config.sections()
+            if sect.startswith("project.")
+        ]
         projects.sort()
         return projects
 
     def del_project(self, name: str):
-        sect_name = "project." + name
+        sect_name = f"project.{name}"
         if sect_name in self.__config.sections():
             self.__config.remove_section(sect_name)
             with open(Profile.CONFIG_FILE_NAME, 'w') as f:
@@ -86,7 +86,7 @@ class Project:
             logging.warning(f"Project '{name}' not found")
 
     def del_profile(self, name):
-        sect_name = "profile." + name
+        sect_name = f"profile.{name}"
         if sect_name in self.__config.sections():
             self.__config.remove_section(sect_name)
             with open(Profile.CONFIG_FILE_NAME, 'w') as f:
@@ -97,19 +97,19 @@ class Project:
             logging.warning(f"Profile '{name}' not found")
 
     def cfg_get_profiles(self) -> list[str]:
-        profiles = []
-        for sect in self.__config.sections():
-            if sect.startswith("profile."):
-                profiles.append(sect.removeprefix("profile."))
-
-        if len(profiles) == 0:
+        profiles = [
+            sect.removeprefix("profile.")
+            for sect in self.__config.sections()
+            if sect.startswith("profile.")
+        ]
+        if not profiles:
             profiles.append("default-profile")
 
         profiles.sort()
         return profiles
 
     def cfg_save_project(self):
-        section = self.cfg_get_section("project." + self.bom_path)
+        section = self.cfg_get_section(f"project.{self.bom_path}")
         section["pnp"] = self.pnp_fname
         section["pnp2"] = self.pnp2_fname or ""
         section["profile"] = self.profile.name
@@ -246,7 +246,7 @@ class ProjectFrame(customtkinter.CTkFrame):
         if os.path.isfile(bom_path):
             # load all files from the BOM directory to the PnP list
             bom_dir = os.path.dirname(bom_path)
-            logging.debug("Search PnP in: {}".format(bom_dir))
+            logging.debug(f"Search PnP in: {bom_dir}")
             self.opt_pnp_var.set("")
             self.pnp_names = [""]
             for de in os.scandir(bom_dir):
@@ -260,6 +260,7 @@ class ProjectFrame(customtkinter.CTkFrame):
             # self.config_frame.configure(state=tkinter.NORMAL)
 
     def opt_bom_event(self, bom_path: str):
+        # sourcery skip: extract-method, use-fstring-for-concatenation
         logging.debug(f"Open BOM: {bom_path}")
         self.opt_pnp_var.set("")
         self.opt_pnp2_var.set("")
@@ -308,7 +309,7 @@ class ProjectFrame(customtkinter.CTkFrame):
         proj.pnp2_fname = pnp_fname
         proj.cfg_save_project()
 
-    def button_browse_event(self):
+    def button_browse_event(self):  # sourcery skip: de-morgan, extract-method
         logging.debug("Browse BOM")
         # https://docs.python.org/3/library/dialog.html
 
@@ -406,7 +407,7 @@ class BOMView(customtkinter.CTkFrame):
         else:
             raise RuntimeError("Unknown file type")
 
-        logging.info("BOM: {} rows x {} cols".format(proj.bom_grid.nrows, proj.bom_grid.ncols))
+        logging.info(f"BOM: {proj.bom_grid.nrows} rows x {proj.bom_grid.ncols} cols")
 
         bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
         self.textbox.insert("0.0", bom_txt_grid)
@@ -512,11 +513,7 @@ class BOMConfig(customtkinter.CTkFrame):
         new_last_row = sv.get().strip()
         try:
             # last row is optional, so it may be an empty string
-            if new_last_row == "":
-                proj.profile.bom_last_row = -1
-            else:
-                proj.profile.bom_last_row = int(new_last_row) - 1
-
+            proj.profile.bom_last_row = -1 if new_last_row == "" else int(new_last_row) - 1
             logging.info(f"BOM last row: {proj.profile.bom_last_row+1}")
             if not proj.loading:
                 self.button_load_event()
@@ -580,14 +577,15 @@ class PnPView(customtkinter.CTkFrame):
         self.lbl_occurences.grid(row=1, column=2, pady=5, padx=5, sticky="")
 
     def load_pnp(self, path: str, path2: str):
+        # sourcery skip: extract-method, use-fstring-for-formatting
         self.clear_preview()
 
         if not os.path.isfile(path):
-            raise Exception(f"File '{path}' does not exists")
+            raise FileNotFoundError(f"File '{path}' does not exists")
 
         # check if optional second PnP file exists
         if path2 != "" and not os.path.isfile(path2):
-            raise Exception(f"File '{path2}' does not exists")
+            raise FileNotFoundError(f"File '{path2}' does not exists")
 
         path_lower = path.lower()
         if path_lower.endswith("xls"):
@@ -601,7 +599,7 @@ class PnPView(customtkinter.CTkFrame):
             proj.pnp_grid = csv_reader.read_csv(path, delim)
 
         log_f = logging.info if proj.pnp_grid.nrows > 0 else logging.warning
-        log_f("PnP: {} rows x {} cols".format(proj.pnp_grid.nrows, proj.pnp_grid.ncols))
+        log_f(f"PnP: {proj.pnp_grid.nrows} rows x {proj.pnp_grid.ncols} cols")
 
         # load the optional second PnP file
         if path2 != "":
@@ -621,7 +619,7 @@ class PnPView(customtkinter.CTkFrame):
 
             # merge
             if pnp2_grid.ncols != proj.pnp_grid.ncols:
-                raise Exception("PnP has {} columns, but PnP2 has {} columns".format(
+                raise ValueError("PnP has {} columns, but PnP2 has {} columns".format(
                     proj.pnp_grid.ncols, pnp2_grid.ncols
                 ))
 
@@ -732,11 +730,7 @@ class PnPConfig(customtkinter.CTkFrame):
         new_last_row = sv.get().strip()
         try:
             # last row is optional, so it may be an empty string
-            if new_last_row == "":
-                proj.profile.pnp_last_row = -1
-            else:
-                proj.profile.pnp_last_row = int(new_last_row) - 1
-
+            proj.profile.pnp_last_row = -1 if new_last_row == "" else int(new_last_row) - 1
             logging.info(f"PnP last row: {proj.profile.pnp_last_row+1}")
             if not proj.loading:
                 self.button_load_event()
@@ -931,7 +925,7 @@ if __name__ == "__main__":
     ANSI_FG_DEFAULT="\033[1;0m"
 
     # logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % logging.getLevelName(logging.INFO))
-    logging.addLevelName(logging.DEBUG,   f"DEBUG")
+    logging.addLevelName(logging.DEBUG,    "DEBUG")
     logging.addLevelName(logging.INFO,    f"{ANSI_FG_WHITE}INFO {ANSI_FG_DEFAULT}")
     logging.addLevelName(logging.WARNING, f"{ANSI_FG_YELLOW}WARN {ANSI_FG_DEFAULT}")
     logging.addLevelName(logging.ERROR,   f"{ANSI_FG_RED}ERROR{ANSI_FG_DEFAULT}")
@@ -942,7 +936,9 @@ if __name__ == "__main__":
         logging.error("Required Python version 3.9 or later!")
         exit()
     else:
-        logging.info("Python version: {}.{}".format(sys.version_info.major, sys.version_info.minor))
+        logging.info(
+            f"Python version: {sys.version_info.major}.{sys.version_info.minor}"
+        )
 
     # https://customtkinter.tomschimansky.com/documentation/appearancemode
     customtkinter.set_appearance_mode("light")

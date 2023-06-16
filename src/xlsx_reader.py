@@ -9,7 +9,9 @@ from text_grid import TextGrid
 # -----------------------------------------------------------------------------
 
 def read_xlsx_sheet(path: str) -> TextGrid:
-    """Reads entire sheet 0"""
+    """
+    Reads entire sheet 0
+    """
 
     logging.info(f"Reading file '{path}'")
     # Define variable to load the wookbook
@@ -28,7 +30,7 @@ def read_xlsx_sheet(path: str) -> TextGrid:
             row_cells.append(cell.strip())
 
         # ignore rows with empty cell 'A'
-        if len(row_cells) > 0 and row_cells[0] != "":
+        if row_cells and row_cells[0] != "":
             tg.rows.append(row_cells)
 
     tg.nrows = len(tg.rows)

@@ -38,8 +38,8 @@ class Profile:
         if os.path.isfile(self.CONFIG_FILE_NAME):
             logging.info(f"Load profile: {name}")
             self.name = name
-            if self.__config.has_section('profile.' + self.name):
-                section = self.__config['profile.' + self.name]
+            if self.__config.has_section(f'profile.{self.name}'):
+                section = self.__config[f'profile.{self.name}']
 
                 self.bom_first_row = int(section.get("bom_first_row", "0"))
                 self.bom_last_row = -1
@@ -59,12 +59,11 @@ class Profile:
 
     def save(self):
         logging.info(f"Save profile: {self.name}")
-        self.__config["profile." + self.name] = {
+        self.__config[f"profile.{self.name}"] = {
             "bom_first_row": self.bom_first_row,
             "bom_separator": self.bom_separator,
             "bom_designator_col": self.bom_designator_col,
             "bom_comment_col": self.bom_comment_col,
-
             "pnp_first_row": self.pnp_first_row,
             "pnp_separator": self.pnp_separator,
             "pnp_designator_col": self.pnp_designator_col,

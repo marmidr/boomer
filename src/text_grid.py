@@ -1,6 +1,8 @@
 
 class TextGrid:
-    """Represents data read from the XLS/XLSX/CSV"""
+    """
+    Represents data read from the XLS/XLSX/ODS/CSV
+    """
 
     nrows: int
     ncols: int
@@ -16,9 +18,7 @@ class TextGrid:
         # https://stackoverflow.com/questions/2184955/test-if-a-variable-is-a-list-or-tuple
         if cell is None:
             cell = "---"
-        elif type(cell) is str:
-            pass
-        else:
+        elif type(cell) is not str:
             cell = repr(cell)
         return cell
 
@@ -49,7 +49,9 @@ class TextGrid:
         return grid_formatted
 
 class ConfiguredTextGrid:
-    """Determines data range to be imported"""
+    """
+    Determines data range to be imported
+    """
     text_grid: TextGrid
     designator_col: str
     comment_col: str

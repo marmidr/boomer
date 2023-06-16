@@ -1,8 +1,6 @@
 import customtkinter
 import tkinter
-import logging
-
-import cross_check
+# import logging
 
 # -----------------------------------------------------------------------------
 
@@ -21,7 +19,7 @@ def textbox_find_text(textbox: customtkinter.CTkTextbox, needle: str) -> int:
             found_cnt += 1
             row, col = pos.split('.')
             end = int(col) + length
-            end = row + '.' + str(end)
+            end = f'{row}.{str(end)}'
             textbox.tag_add("search", pos, end)
             start = end
             pos = textbox.search(pattern=needle, index=start, stopindex=tkinter.END, nocase=True)
