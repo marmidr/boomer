@@ -57,9 +57,9 @@ Minimum required version is **Python 3.9**.
 To install required libraries, open the PowerShell and:
 
 ```ps1
-# .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting, HTML widgets,
-pip install xlrd openpyxl odfpy customtkinter natsort
-# tkhtmlview
+# .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting, clipboard, image formats, http requests,
+pip install xlrd openpyxl odfpy customtkinter natsort klembord pillow requests
+# tkhtmlview - HTML widgets,
 ```
 
 ## How to run

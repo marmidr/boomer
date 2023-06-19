@@ -15,6 +15,7 @@ import os
 import configparser
 import sys
 from tkhtmlview import HTMLScrolledText
+import klembord
 
 import xls_reader
 import xlsx_reader
@@ -29,7 +30,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.3"
+APP_NAME = "BOM vs PnP Cross Checker v0.4"
 
 # -----------------------------------------------------------------------------
 
@@ -777,17 +778,14 @@ class PnPConfig(customtkinter.CTkFrame):
 
 class ReportView(customtkinter.CTkFrame):
     txt_grid: text_grid.TextGrid = None
+    report_html: str = ""
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.htmlview = HTMLScrolledText(self, wrap='none', html=
-        """
-            <!DOCTYPE html>
-            <html>
-            <body>
+        self.report_html = """
             <h1>The PRE element</h1>
-            <p>List <em>of</em><b>items</b>:</p>
+            <p>List <em>of</em> <b>items</b>:</p>
             <pre>
             C1   : <span style="color: Gray">BOM=</span>2u2/25/0603                           , <span style="color: Gray">PnP=</span>2u2_25V
             C2   : <span style="color: Gray">BOM=</span><span style="color: IndianRed"></span>22pF<span style="color: IndianRed">/50/0603/COG                      </span>, <span style="color: Gray">PnP=</span>22pF
@@ -796,10 +794,9 @@ class ReportView(customtkinter.CTkFrame):
             R65  : <span style="color: Gray">BOM=</span>0603; 220Ω; 100mW; ±1%; 100ppm        , <span style="color: Gray">PnP=</span>220R
             </pre>
             <p> The summary <b>is</b>: None</p>
-            </body>
-            </html>
-        """)
-        self.htmlview.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+        """
+        self.htmlview = HTMLScrolledText(self, wrap='none', html=self.report_html)
+        self.htmlview.grid(row=0, column=0, columnspan=5, padx=10, pady=10, sticky="nsew")
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -807,14 +804,17 @@ class ReportView(customtkinter.CTkFrame):
         self.btn_crosscheck = customtkinter.CTkButton(self, text="Cross-check the files", command=self.button_crosscheck_event)
         self.btn_crosscheck.grid(row=1, column=0, pady=5, padx=5, sticky="we")
 
+        self.btn_search = customtkinter.CTkButton(self, text="Copy HTML", command=self.button_copyhtml_event)
+        self.btn_search.grid(row=1, column=1, pady=5, padx=5, sticky="")
+
         self.entry_search = customtkinter.CTkEntry(self, placeholder_text="search...")
-        self.entry_search.grid(row=1, column=1, padx=5, pady=5, sticky="wens")
+        self.entry_search.grid(row=1, column=2, padx=5, pady=5, sticky="wens")
 
         self.btn_search = customtkinter.CTkButton(self, text="Find", command=self.button_find_event)
-        self.btn_search.grid(row=1, column=2, pady=5, padx=5, sticky="we")
+        self.btn_search.grid(row=1, column=3, pady=5, padx=5, sticky="we")
 
         self.lbl_occurences = customtkinter.CTkLabel(self, text="Found: 0")
-        self.lbl_occurences.grid(row=1, column=3, pady=5, padx=5, sticky="")
+        self.lbl_occurences.grid(row=1, column=4, pady=5, padx=5, sticky="")
 
     def clear_preview(self):
         self.htmlview.delete("0.0", tkinter.END)
@@ -838,10 +838,15 @@ class ReportView(customtkinter.CTkFrame):
 
         try:
             ccresult = cross_check.compare(bom_cfg, pnp_cfg)
-            report = report_generator.prepare_html_report(proj.get_name(), ccresult)
-            self.htmlview.set_html(report)
+            self.report_html = report_generator.prepare_html_report(proj.get_name(), ccresult)
+            self.htmlview.set_html(self.report_html)
         except Exception as e:
             logging.error(f"Report generator error: {e.with_traceback()}")
+
+    def button_copyhtml_event(self):
+        logging.debug("Copy as HTML")
+        plain_txt = self.htmlview.get("0.0", tkinter.END)
+        klembord.set_with_rich_text(plain_txt, self.report_html)
 
     def button_find_event(self):
         txt = self.entry_search.get()
@@ -944,5 +949,6 @@ if __name__ == "__main__":
     customtkinter.set_appearance_mode("light")
     customtkinter.set_default_color_theme("green")
 
+    klembord.init()
     ctkapp = CtkApp()
     ctkapp.mainloop()

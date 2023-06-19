@@ -2,6 +2,17 @@
 
 See the description: https://keepachangelog.com/en/1.0.0/
 
+## 0.4.0 - 2023-06-19
+
+* Added
+  * HTML widget for formatted report
+  * copy to clipboard as HTML
+* Changed
+  * Project and PnP lists are now sorted
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.3.0 - 2023-06-14
 
 * Added

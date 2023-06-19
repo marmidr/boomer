@@ -6,17 +6,18 @@ import cross_check
 # -----------------------------------------------------------------------------
 
 def __html_title(content: str) -> str:
-    return f'<h3 style="color: DarkSlateGray;">{content}</h3>'
+    # add the newlines so if copied to the clipboard, it will be somewhat readable
+    return f'<h3 style="color: DarkSlateGray;">{content}</h3>\n'
 
 def __html_header(content: str) -> str:
-    return f'<h5 style="color: DimGray;">{content}</h5>'
+    return f'<h5 style="color: DimGray;">{content}</h5>\n'
 
 def __html_section_begin() -> str:
     # https://www.w3schools.com/tags/tag_pre.asp
-    return '<pre style="font-family: Consolas; font-size: 80%">'
+    return '<pre style="font-family: Consolas; font-size: 80%">\n'
 
 def __html_section_end() -> str:
-    return '</pre>'
+    return '</pre>\n'
 
 def __html_span_red(content: str) -> str:
     return f'<span style="color: IndianRed">{content}</span>'
@@ -47,7 +48,7 @@ def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: i
         pnp_comment = __html_span_green(before) + bom_cmnt + __html_span_green(after)
 
     # output:
-    out = '{desgn:{w}}: {bom}{bom_comment}, {pnp}{pnp_comment}<br/>'.format(
+    out = '{desgn:{w}}: {bom}{bom_comment}, {pnp}{pnp_comment}\n'.format(
                 desgn=designator, w=designator_w,
                 bom=__html_span_gray('BOM='),
                 bom_comment=bom_comment,
@@ -60,7 +61,8 @@ def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: i
 # -----------------------------------------------------------------------------
 
 def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) -> str:
-    output = '<html>'
+    # html/body tags not necessary, moreover disadviced when used with the `klembord`
+    output = '' #'<html><body>\n'
     # https://en.wikipedia.org/wiki/Web_colors
     output += __html_title(f'Cross-check report for: <em>{proj_name}</em>')
 
@@ -73,7 +75,7 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
         dsgn_w = max(len(item[0]), dsgn_w)
     # format the output
     for item in ccresult.bom_parst_missing_in_pnp:
-        section += '{desgn:{w}}: {cmnt}<br/>'.format(
+        section += '{desgn:{w}}: {cmnt}\n'.format(
             desgn=item[0], w=dsgn_w, cmnt=item[1]
         )
     section += __html_section_end()
@@ -88,7 +90,7 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
         dsgn_w = max(len(pnp_part[0]), dsgn_w)
     # format the output
     for pnp_part in ccresult.pnp_parst_missing_in_bom:
-        section += '{desgn:{w}}: {cmnt}<br/>'.format(
+        section += '{desgn:{w}}: {cmnt}\n'.format(
             desgn=pnp_part[0], w=dsgn_w, cmnt=pnp_part[1]
         )
     section += __html_section_end()
@@ -112,5 +114,5 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
     output += section
 
 
-    output += '<br/></html>'
+    # output += '<br/></body></html>'
     return output
