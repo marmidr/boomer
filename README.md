@@ -58,7 +58,8 @@ To install required libraries, open the PowerShell and:
 
 ```ps1
 # .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting, HTML widgets,
-pip install xlrd openpyxl odfpy customtkinter natsort tkhtmlview
+pip install xlrd openpyxl odfpy customtkinter natsort
+# tkhtmlview
 ```
 
 ## How to run
