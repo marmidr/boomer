@@ -6,12 +6,17 @@ from text_grid import *
 # -----------------------------------------------------------------------------
 
 class CrossCheckResult:
-    bom_parst_missing_in_pnp: list[(str, str)] = []
+    bom_parst_missing_in_pnp: list[(str, str)]
     """Pairs part_designator:part_comment"""
-    pnp_parst_missing_in_bom: list[(str, str)] = []
+    pnp_parst_missing_in_bom: list[(str, str)]
     """Pairs part_designator:part_comment"""
-    parts_comment_mismatch: list[(str, str, str)] = []
+    parts_comment_mismatch: list[(str, str, str)]
     """Triplets part_designator:bom_comment:pnp_comment"""
+
+    def __init__(self):
+        self.bom_parst_missing_in_pnp = []
+        self.pnp_parst_missing_in_bom = []
+        self.parts_comment_mismatch = []
 
 # -----------------------------------------------------------------------------
 

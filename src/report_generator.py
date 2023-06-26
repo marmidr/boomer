@@ -29,6 +29,7 @@ def __html_span_gray(content: str) -> str:
     return f'<span style="color: Gray">{content}</span>'
 
 def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str) -> str:
+    # sourcery skip: inline-immediately-returned-variable
     # format BOM comment:
     pnp_in_bom_idx = bom_cmnt.lower().find(pnp_cmnt.lower())
     if pnp_in_bom_idx > -1:

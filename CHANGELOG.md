@@ -2,6 +2,16 @@
 
 See the description: https://keepachangelog.com/en/1.0.0/
 
+## 0.4.1 - 2023-06-26
+
+* Added
+* Changed
+* Deprecated
+* Removed
+* Fixed
+  * clears all of the previews when adding a new project (Browse...)
+  * fix error causing results wrom previous project being added to the current project cross-check results
+
 ## 0.4.0 - 2023-06-19
 
 * Added

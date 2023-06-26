@@ -30,7 +30,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.4"
+APP_NAME = "BOM vs PnP Cross Checker v0.4.1"
 
 # -----------------------------------------------------------------------------
 
@@ -243,6 +243,13 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.config_frame.project_frame = self
         # self.config_frame.configure(state=tkinter.DISABLED)
 
+    def clear_previews(self):
+        self.opt_pnp_var.set("")
+        self.opt_pnp2_var.set("")
+        self.bom_view.clear_preview()
+        self.pnp_view.clear_preview()
+        self.report_view.clear_preview()
+
     def find_pnp_files(self, bom_path: str):
         if os.path.isfile(bom_path):
             # load all files from the BOM directory to the PnP list
@@ -263,11 +270,7 @@ class ProjectFrame(customtkinter.CTkFrame):
     def opt_bom_event(self, bom_path: str):
         # sourcery skip: extract-method, use-fstring-for-concatenation
         logging.debug(f"Open BOM: {bom_path}")
-        self.opt_pnp_var.set("")
-        self.opt_pnp2_var.set("")
-        self.bom_view.clear_preview()
-        self.pnp_view.clear_preview()
-        self.report_view.clear_preview()
+        self.clear_previews()
 
         # reset entire project
         global proj
@@ -312,8 +315,9 @@ class ProjectFrame(customtkinter.CTkFrame):
 
     def button_browse_event(self):  # sourcery skip: de-morgan, extract-method
         logging.debug("Browse BOM")
-        # https://docs.python.org/3/library/dialog.html
+        self.clear_previews()
 
+        # https://docs.python.org/3/library/dialog.html
         # TODO: get the initial dir from the proj settings
         bom_path = tkinter.filedialog.askopenfilename(
             title="Select BOM file",
@@ -326,15 +330,25 @@ class ProjectFrame(customtkinter.CTkFrame):
         logging.info(f"Selected path: {bom_path}")
 
         if os.path.isfile(bom_path):
-            if not bom_path in self.bom_paths:
-                self.bom_paths.append(bom_path)
-            self.opt_bom_path.configure(values=self.bom_paths)
-            self.opt_bom_var.set(bom_path)
-            self.find_pnp_files(bom_path)
-            # update config
-            proj.bom_path = bom_path
-            proj.cfg_save_project()
-            self.activate_csv_separator_for_bom_pnp()
+            try:
+                # reset entire project
+                global proj
+                proj = Project()
+                proj.loading = True
+
+                if not bom_path in self.bom_paths:
+                    self.bom_paths.append(bom_path)
+                self.opt_bom_path.configure(values=self.bom_paths)
+                self.opt_bom_var.set(bom_path)
+                self.find_pnp_files(bom_path)
+                # update config
+                proj.bom_path = bom_path
+                proj.cfg_save_project()
+                self.activate_csv_separator_for_bom_pnp()
+            except Exception as e:
+                logging.error(f"Cannot open project: {e}")
+            finally:
+                proj.loading = False
         else:
             logging.error(f"Cannot access the file '{bom_path}'")
 
@@ -777,7 +791,6 @@ class PnPConfig(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class ReportView(customtkinter.CTkFrame):
-    txt_grid: text_grid.TextGrid = None
     report_html: str = ""
 
     def __init__(self, master, **kwargs):
@@ -817,6 +830,7 @@ class ReportView(customtkinter.CTkFrame):
         self.lbl_occurences.grid(row=1, column=4, pady=5, padx=5, sticky="")
 
     def clear_preview(self):
+        self.report_html = ""
         self.htmlview.delete("0.0", tkinter.END)
 
     def button_crosscheck_event(self):
