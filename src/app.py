@@ -26,6 +26,7 @@ import cross_check
 import report_generator
 from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
 from prj_profile import Profile
+from msg_box import MessageBox
 import ui_helpers
 
 # -----------------------------------------------------------------------------
@@ -97,6 +98,15 @@ class Project:
         else:
             logging.warning(f"Profile '{name}' not found")
 
+    def cfg_count_profile(self, profile_name: str) -> int:
+        cnt = 0
+        projs = self.get_projects()
+        for prj in projs:
+            section = self.cfg_get_section(f"project.{prj}")
+            if section["profile"] == profile_name:
+                cnt += 1
+        return cnt
+
     def cfg_get_profiles(self) -> list[str]:
         profiles = [
             sect.removeprefix("profile.")
@@ -112,7 +122,7 @@ class Project:
     def cfg_save_project(self):
         section = self.cfg_get_section(f"project.{self.bom_path}")
         section["pnp"] = self.pnp_fname
-        section["pnp2"] = self.pnp2_fname or ""
+        section["pnp2"] = self.pnp2_fname
         section["profile"] = self.profile.name
         with open(Profile.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
@@ -557,8 +567,21 @@ class BOMConfig(customtkinter.CTkFrame):
         self.btn_save.configure(state=tkinter.NORMAL)
 
     def button_save_event(self):
+        if (n := proj.cfg_count_profile(proj.profile.name)) > 1:
+            mb = MessageBox(dialog_type="yn",
+                            message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
+                            callback=self.onmsgbox_on_click)
+            return
+
         self.btn_save.configure(state=tkinter.DISABLED)
         proj.profile.save()
+
+    def onmsgbox_on_click(self, btn: str):
+        if btn == "y":
+            self.btn_save.configure(state=tkinter.DISABLED)
+            proj.profile.save()
+        else:
+            logging.info("Profile NOT saved")
 
     def button_load_event(self):
         logging.debug("Load BOM...")
@@ -775,8 +798,21 @@ class PnPConfig(customtkinter.CTkFrame):
         self.btn_save.configure(state=tkinter.NORMAL)
 
     def button_save_event(self):
+        if (n := proj.cfg_count_profile(proj.profile.name)) > 1:
+            mb = MessageBox(dialog_type="yn",
+                            message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
+                            callback=self.onmsgbox_on_click)
+            return
+
         self.btn_save.configure(state=tkinter.DISABLED)
         proj.profile.save()
+
+    def onmsgbox_on_click(self, btn: str):
+        if btn == "y":
+            self.btn_save.configure(state=tkinter.DISABLED)
+            proj.profile.save()
+        else:
+            logging.info("Profile NOT saved")
 
     def button_load_event(self):
         logging.debug("Load PnP...")

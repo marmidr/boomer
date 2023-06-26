@@ -5,6 +5,7 @@ See the description: https://keepachangelog.com/en/1.0.0/
 ## 0.4.1 - 2023-06-26
 
 * Added
+  * if current shared profile was changed and user wants to save it, message box is displayed asking whether to overwrite
 * Changed
 * Deprecated
 * Removed
