@@ -6,3 +6,4 @@ boomer.ini
 TODO.*
 *dump*
 example*/*.html
+.vscode/bookmarks.json

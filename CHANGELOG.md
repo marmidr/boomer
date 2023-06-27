@@ -2,6 +2,17 @@
 
 See the description: https://keepachangelog.com/en/1.0.0/
 
+## 0.5.0 - 2023-06-27
+
+* Added
+  * generated report is automatically saved as .html file in the project directory
+  * on startup, automatically deletes nonexisting projects from the configuration file
+* Changed
+* Deprecated
+* Removed
+* Fixed
+  * `Copy HTML` button - fixed library attached, HTML text recognized by GMail editor
+
 ## 0.4.1 - 2023-06-26
 
 * Added
