@@ -49,7 +49,7 @@ def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: i
         pnp_comment = __html_span_green(before) + bom_cmnt + __html_span_green(after)
 
     # output:
-    out = '{desgn:{w}}: {bom}{bom_comment}, {pnp}{pnp_comment}\n'.format(
+    out = '{desgn:{w}}: {bom}{bom_comment} {pnp}{pnp_comment}\n'.format(
                 desgn=designator, w=designator_w,
                 bom=__html_span_gray('BOM='),
                 bom_comment=bom_comment,
@@ -104,7 +104,7 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
     dsgn_w = 0
     bom_w = 0
     for item in ccresult.parts_comment_mismatch:
-        dsgn_w = max(len(pnp_part[0]), dsgn_w)
+        dsgn_w = max(len(item[0]), dsgn_w)
         bom_w = max(len(item[1]) + 2, bom_w)
     # format the output
     for item in ccresult.parts_comment_mismatch:

@@ -75,17 +75,23 @@ class Project:
             for sect in self.__config.sections()
             if sect.startswith("project.")
         ]
+        for prj_path in projects:
+            if not os.path.exists(prj_path):
+                logging.info(f"Project '{prj_path}' not found - removed")
+                projects.remove(prj_path)
+                self.del_project(prj_path)
+
         projects.sort()
         return projects
 
-    def del_project(self, name: str):
-        sect_name = f"project.{name}"
+    def del_project(self, proj_path: str):
+        sect_name = f"project.{proj_path}"
         if sect_name in self.__config.sections():
             self.__config.remove_section(sect_name)
             with open(Profile.CONFIG_FILE_NAME, 'w') as f:
                 self.__config.write(f)
         else:
-            logging.warning(f"Project '{name}' not found")
+            logging.warning(f"Project '{proj_path}' not found")
 
     def del_profile(self, name):
         sect_name = f"profile.{name}"
