@@ -5,3 +5,4 @@ example_ctk/
 boomer.ini
 TODO.*
 *dump*
+example*/*.html

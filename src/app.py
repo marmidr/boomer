@@ -890,8 +890,21 @@ class ReportView(customtkinter.CTkFrame):
             ccresult = cross_check.compare(bom_cfg, pnp_cfg)
             self.report_html = report_generator.prepare_html_report(proj.get_name(), ccresult)
             self.htmlview.set_html(self.report_html)
+            self.save_report_to_file()
         except Exception as e:
-            logging.error(f"Report generator error: {e.with_traceback()}")
+            logging.error(f"Report generator error: {e}")
+
+    def save_report_to_file(self):
+        report_dir = os.path.dirname(proj.bom_path)
+        report_fname = os.path.splitext(os.path.basename(proj.bom_path))[0]
+        report_fname += "_report.html"
+        report_path = os.path.join(report_dir, report_fname)
+        logging.debug("Saving to .html file...")
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write('<html>\n<body>\n')
+            f.write(self.report_html)
+            f.write('</body>\n</html>\n')
+            logging.info(f"Report saved to: {report_path}")
 
     def button_copyhtml_event(self):
         logging.debug("Copy as HTML")
