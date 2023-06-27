@@ -915,7 +915,7 @@ class ReportView(customtkinter.CTkFrame):
     def button_copyhtml_event(self):
         logging.debug("Copy as HTML")
         plain_txt = self.htmlview.get("0.0", tkinter.END)
-        klembord.set_with_rich_text(plain_txt, self.report_html)
+        klembord.set_with_rich_text(text=plain_txt, html=self.report_html)
 
     def button_find_event(self):
         txt = self.entry_search.get()
