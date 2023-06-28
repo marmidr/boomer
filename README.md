@@ -57,8 +57,8 @@ Minimum required version is **Python 3.9**.
 To install required libraries, open the PowerShell and:
 
 ```ps1
-# .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting, image formats, http requests,
-pip install xlrd openpyxl odfpy customtkinter natsort pillow requests
+# .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting, http requests, image formats
+pip install xlrd openpyxl odfpy customtkinter natsort requests pillow
 # using local copy of fixed:
 #   tkhtmlview - HTML widgets,
 #   klembord - clipboard
@@ -82,3 +82,18 @@ python.exe src/app.py
 
   Only UTF-8 files are accepted; if the BOM or PnP file uses ANSI or WINDOWS encoding, use `Notepad++` or other editor to change the encoding to UTF-8
 *
+
+## Unit tests
+
+Based on [pytest](https://docs.pytest.org/en/latest/)
+
+```ps1
+pip install pytest
+cd tests
+# run all
+pytest
+# run single test
+pytest test_csv_reader.py::test_no_file
+# print everything
+pytest -s
+```

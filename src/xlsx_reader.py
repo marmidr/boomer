@@ -12,7 +12,7 @@ def read_xlsx_sheet(path: str) -> TextGrid:
     """
     Reads entire sheet 0
     """
-
+    assert path is not None
     logging.info(f"Reading file '{path}'")
     # Define variable to load the wookbook
     wookbook = openpyxl.load_workbook(path)

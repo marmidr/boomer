@@ -9,7 +9,7 @@ def read_ods_sheet(path: str) -> TextGrid:
     """
     Reads ODS/spreadsheet document, returning the first sheet
     """
-
+    assert path is not None
     logging.info(f"Reading file '{path}'")
     doc = opendocument.load(path)
     tg = TextGrid()

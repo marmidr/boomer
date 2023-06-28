@@ -41,6 +41,8 @@ def read_csv(path: str, delim: str) -> TextGrid:
     Delim may be: ' '  ','  ';'  '\t'  '*fw'  '*re'
     """
 
+    assert path is not None
+    assert type(delim) is str
     logging.info(f"Reading file '{path}', delim='{delim}'")
     tg = TextGrid()
     max_cols = 0
