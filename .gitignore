@@ -1,9 +1,9 @@
 *.~*
 *.pyc
 __pycache__
-example_ctk/
 boomer.ini
 TODO.*
 *dump*
-example*/*.html
+example_ctk/
+examples/*/*.html
 .vscode/bookmarks.json

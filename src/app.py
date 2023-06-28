@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.5.0"
+APP_NAME = "BOM vs PnP Cross Checker v0.5.1"
 
 # -----------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ class Project:
             for sect in self.__config.sections()
             if sect.startswith("project.")
         ]
-        for prj_path in projects:
+        for prj_path in reversed(projects):
             if not os.path.exists(prj_path):
                 logging.info(f"Project '{prj_path}' not found - removed")
                 projects.remove(prj_path)
@@ -192,7 +192,12 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         logging.info(f"Select profile: {new_profile}")
         proj.profile.load(new_profile)
         proj.cfg_save_project()
-        self.project_frame.config_frames_load_profile()
+        try:
+            # block the automatic loading of the files
+            proj.loading = True
+            self.project_frame.config_frames_load_profile()
+        finally:
+            proj.loading = False
 
 # -----------------------------------------------------------------------------
 
@@ -278,7 +283,8 @@ class ProjectFrame(customtkinter.CTkFrame):
                 # take only the file name
                 pnp_fname = os.path.basename(de.path)
                 if pnp_fname != os.path.basename(bom_path):
-                    self.pnp_names.append(pnp_fname)
+                    if not pnp_fname.lower().endswith(".html"):
+                        self.pnp_names.append(pnp_fname)
             self.opt_pnp_fname.configure(values=self.pnp_names, state=tkinter.NORMAL)
             self.opt_pnp2_fname.configure(values=self.pnp_names, state=tkinter.NORMAL)
             # self.config_frame.configure(state=tkinter.NORMAL)
@@ -524,7 +530,7 @@ class BOMConfig(customtkinter.CTkFrame):
         self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.bom_designator_col}\n• {proj.profile.bom_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
-        logging.info(f"BOM separator: {new_sep}")
+        logging.info(f"  BOM separator: {new_sep}")
         proj.profile.bom_separator = new_sep
         self.btn_save.configure(state=tkinter.NORMAL)
         self.button_load_event()
@@ -533,23 +539,23 @@ class BOMConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.bom_first_row = int(new_first_row) - 1
-            logging.info(f"BOM 1st row: {proj.profile.bom_first_row+1}")
+            logging.info(f"  BOM 1st row: {proj.profile.bom_first_row+1}")
             self.btn_save.configure(state=tkinter.NORMAL)
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"Invalid row number: {e}")
+            logging.error(f"  Invalid row number: {e}")
 
     def var_last_row_event(self, sv: customtkinter.StringVar):
         new_last_row = sv.get().strip()
         try:
             # last row is optional, so it may be an empty string
             proj.profile.bom_last_row = -1 if new_last_row == "" else int(new_last_row) - 1
-            logging.info(f"BOM last row: {proj.profile.bom_last_row+1}")
+            logging.info(f"  BOM last row: {proj.profile.bom_last_row+1}")
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"Invalid row number: {e}")
+            logging.error(f"  Invalid row number: {e}")
 
     def button_columns_event(self):
         logging.debug("Select BOM columns...")
@@ -754,7 +760,7 @@ class PnPConfig(customtkinter.CTkFrame):
         self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.pnp_designator_col}\n• {proj.profile.pnp_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
-        logging.info(f"PnP separator: {new_sep}")
+        logging.info(f"  PnP separator: {new_sep}")
         proj.profile.pnp_separator = new_sep
         self.btn_save.configure(state=tkinter.NORMAL)
         self.button_load_event()
@@ -763,23 +769,23 @@ class PnPConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.pnp_first_row = int(new_first_row) - 1
-            logging.info(f"PnP 1st row: {proj.profile.pnp_first_row+1}")
+            logging.info(f"  PnP 1st row: {proj.profile.pnp_first_row+1}")
             self.btn_save.configure(state=tkinter.NORMAL)
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"Invalid row number: {e}")
+            logging.error(f"  Invalid row number: {e}")
 
     def var_last_row_event(self, sv: customtkinter.StringVar):
         new_last_row = sv.get().strip()
         try:
             # last row is optional, so it may be an empty string
             proj.profile.pnp_last_row = -1 if new_last_row == "" else int(new_last_row) - 1
-            logging.info(f"PnP last row: {proj.profile.pnp_last_row+1}")
+            logging.info(f"  PnP last row: {proj.profile.pnp_last_row+1}")
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"Invalid row number: {e}")
+            logging.error(f"  Invalid row number: {e}")
 
     def button_columns_event(self):
         logging.debug("Select PnP columns...")
@@ -876,6 +882,7 @@ class ReportView(customtkinter.CTkFrame):
         self.htmlview.delete("0.0", tkinter.END)
 
     def button_crosscheck_event(self):
+        logging.debug("Performing cross-check...")
         self.clear_preview()
 
         bom_cfg = text_grid.ConfiguredTextGrid()

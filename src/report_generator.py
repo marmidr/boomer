@@ -1,3 +1,4 @@
+import time
 import logging
 
 from text_grid import *
@@ -5,7 +6,7 @@ import cross_check
 
 # -----------------------------------------------------------------------------
 
-EOL = '\r\n'
+EOL = '\n'
 PRE_EOL = '\n' # when \r\n, PRE block inserts empty lines when .html file is opened
 
 def __html_title(content: str) -> str:
@@ -22,6 +23,9 @@ def __html_section_begin() -> str:
 
 def __html_section_end() -> str:
     return f'</pre>{EOL}'
+
+def __html_p(content: str) -> str:
+    return f'<p style="font-size: 80%">{content}</p>{EOL}'
 
 def __html_span_red(content: str) -> str:
     return f'<span style="color: IndianRed">{content}</span>'
@@ -69,6 +73,8 @@ def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: i
 def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) -> str:
     # html/body tags not necessary, moreover disadviced when used with the `klembord`
     output = __html_title(f'Cross-check report for: <em>{proj_name}</em>')
+    # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+    output += __html_p(f"Generated: <b>{time.strftime('%Y-%m-%d %H:%M:%S')}</b>")
 
     ### 1st section:
     section = __html_header(f'BOM parts missing in the PnP: {len(ccresult.bom_parst_missing_in_pnp)}')

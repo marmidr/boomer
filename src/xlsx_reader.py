@@ -35,4 +35,5 @@ def read_xlsx_sheet(path: str) -> TextGrid:
 
     tg.nrows = len(tg.rows)
     tg.ncols = sheet.max_column
+    tg.align_number_of_columns()
     return tg

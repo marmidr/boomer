@@ -39,4 +39,5 @@ def read_ods_sheet(path: str) -> TextGrid:
     else:
         logging.error("File does not contain a spreadsheet document")
 
+    tg.align_number_of_columns()
     return tg

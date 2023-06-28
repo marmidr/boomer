@@ -35,4 +35,5 @@ def read_xls_sheet(path: str) -> TextGrid:
 
     tg.nrows = len(tg.rows)
     tg.ncols = sheet.ncols
+    tg.align_number_of_columns()
     return tg

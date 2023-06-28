@@ -66,12 +66,5 @@ def read_csv(path: str, delim: str) -> TextGrid:
 
     tg.nrows = len(tg.rows)
     tg.ncols = max_cols
-
-    # ensure every row has the same number of columns
-    for row in tg.rows:
-        cols_to_add = tg.ncols - len(row)
-        while cols_to_add > 0:
-            row.append("")
-            cols_to_add -= 1
-
+    tg.align_number_of_columns()
     return tg
