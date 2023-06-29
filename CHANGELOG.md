@@ -7,6 +7,7 @@ See the description: https://keepachangelog.com/en/1.0.0/
 * Added
   * report has a date/time information pointing on when it was generated
   * for every type of input file, not just CSV, ensure that each row has the same number of columns
+  * unit tests
 * Changed
   * examples moved to `examples` folder
   * html files not listed as potential PnP files

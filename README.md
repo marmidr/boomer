@@ -85,7 +85,7 @@ python.exe src/app.py
 
 ## Unit tests
 
-Based on [pytest](https://docs.pytest.org/en/latest/)
+Uses [pytest](https://docs.pytest.org/en/latest/):
 
 ```ps1
 pip install pytest
@@ -96,4 +96,26 @@ pytest
 pytest test_csv_reader.py::test_no_file
 # print everything
 pytest -s
+```
+
+### Tests coverage
+
+Uses [Coverage](https://coverage.readthedocs.io/en/):
+
+```ps1
+pip install coverage
+cd tests
+coverage run -m pytest
+coverage report --omit "test_*"
+# Name                 Stmts   Miss  Cover
+# ----------------------------------------
+# src/csv_reader.py       48      9    81%
+# src/ods_reader.py       24      1    96%
+# src/text_grid.py        49     27    45%
+# src/xls_reader.py       24      1    96%
+# src/xlsx_reader.py      23      0   100%
+# ----------------------------------------
+# TOTAL                  243     38    84%
+coverage html --omit "test_*"
+# open tests\htmlcov\index.html
 ```

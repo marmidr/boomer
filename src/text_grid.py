@@ -20,7 +20,7 @@ class TextGrid:
         """
         # https://stackoverflow.com/questions/2184955/test-if-a-variable-is-a-list-or-tuple
         if cell is None:
-            cell = "---"
+            cell = ""
         elif type(cell) is not str:
             cell = repr(cell)
         return cell
@@ -38,7 +38,7 @@ class TextGrid:
                     col_max_w[c] = max(col_max_w[c], cell_w)
         return col_max_w
 
-    def format_grid(self, first_row: int, last_row: int) -> str:
+    def format_grid(self, first_row: int, last_row: int = -1) -> str:
         """
         Create spreadsheet-like grid from the content
         """
@@ -52,9 +52,9 @@ class TextGrid:
                     cell = self.format_cell(cell)
                     to_fill = max(columns_width[c] - len(cell), 0)
                     fill = " " * to_fill
-                    cell = cell + fill + " | "
-                    row_formatted = row_formatted + cell
-                grid_formatted = grid_formatted + row_formatted + "\n"
+                    cell += f"{fill} | "
+                    row_formatted += cell
+                grid_formatted += row_formatted + "\n"
         return grid_formatted
 
     def align_number_of_columns(self):

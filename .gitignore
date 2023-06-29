@@ -1,9 +1,11 @@
 *.~*
 *.pyc
-__pycache__
+*.coverage
+*dump*
 boomer.ini
 TODO.*
-*dump*
-example_ctk/
-examples/*/*.html
 .vscode/bookmarks.json
+examples/*/*.html
+__pycache__/
+example_ctk/
+htmlcov/
