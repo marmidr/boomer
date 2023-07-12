@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.5.1"
+APP_NAME = "BOM vs PnP Cross Checker v0.6.0"
 
 # -----------------------------------------------------------------------------
 
@@ -42,7 +42,9 @@ class Project:
     __config: configparser.ConfigParser
     profile: Profile
     bom_grid: text_grid.TextGrid = None
+    bom_grid_dirty: bool = False
     pnp_grid: text_grid.TextGrid = None
+    pnp_grid_dirty: bool = False
     loading: bool = False
 
     def __init__(self):
@@ -428,8 +430,7 @@ class BOMView(customtkinter.CTkFrame):
         self.clear_preview()
 
         if not os.path.isfile(path):
-            logging.error(f"File '{path}' does not exists")
-            return
+            raise FileNotFoundError(f"File '{path}' does not exists")
 
         path_lower = path.lower()
         if path_lower.endswith("xls"):
@@ -448,6 +449,7 @@ class BOMView(customtkinter.CTkFrame):
 
         bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
         self.textbox.insert("0.0", bom_txt_grid)
+        proj.bom_grid_dirty = False
 
     def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)
@@ -678,6 +680,7 @@ class PnPView(customtkinter.CTkFrame):
 
         pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row, proj.profile.pnp_last_row)
         self.textbox.insert("0.0", pnp_txt_grid)
+        proj.pnp_grid_dirty = False
 
     def clear_preview(self):
         self.textbox.delete("0.0", tkinter.END)
@@ -840,8 +843,17 @@ class PnPConfig(customtkinter.CTkFrame):
 
 class ReportView(customtkinter.CTkFrame):
     report_html: str = ""
+    bom_view: BOMView = None
+    pnp_view: PnPView = None
 
     def __init__(self, master, **kwargs):
+        assert "bom_view" in kwargs
+        self.bom_view = kwargs.pop("bom_view")
+        assert isinstance(self.bom_view, BOMView)
+
+        assert "pnp_view" in kwargs
+        self.pnp_view = kwargs.pop("pnp_view")
+        assert isinstance(self.pnp_view, PnPView)
         super().__init__(master, **kwargs)
 
         self.report_html = """
@@ -882,10 +894,30 @@ class ReportView(customtkinter.CTkFrame):
         self.htmlview.delete("0.0", tkinter.END)
 
     def button_crosscheck_event(self):
-        logging.debug("Performing cross-check...")
+        logging.info("Performing cross-check...")
         self.clear_preview()
 
         bom_cfg = text_grid.ConfiguredTextGrid()
+        if proj.bom_grid and proj.bom_grid_dirty:
+            # reload file if manual load was successful
+            try:
+                logging.info("Reload BOM...")
+                self.bom_view.load_bom(proj.bom_path)
+            except Exception as e:
+                logging.error(f"Cannot load BOM: {e}")
+                return
+
+        if proj.pnp_grid and proj.pnp_grid_dirty:
+            # reload file if manual load was successful
+            try:
+                logging.info("Reload PnP...")
+                pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
+                pnp2_path = "" if proj.pnp2_fname == "" else os.path.join(os.path.dirname(proj.bom_path), proj.pnp2_fname)
+                self.pnp_view.load_pnp(pnp_path, pnp2_path)
+            except Exception as e:
+                logging.error(f"Cannot load PnP: {e}")
+                return
+
         bom_cfg.text_grid = proj.bom_grid
         bom_cfg.designator_col = proj.profile.bom_designator_col
         bom_cfg.comment_col = proj.profile.bom_comment_col
@@ -906,6 +938,11 @@ class ReportView(customtkinter.CTkFrame):
             self.save_report_to_file()
         except Exception as e:
             logging.error(f"Report generator error: {e}")
+        finally:
+            # mark as potentially dirty, meaning that the files could have been changed manually
+            # since the last cross-check was performed so the local copy is out-of-date
+            proj.bom_grid_dirty = True
+            proj.pnp_grid_dirty = True
 
     def save_report_to_file(self):
         report_dir = os.path.dirname(proj.bom_path)
@@ -980,7 +1017,7 @@ class CtkApp(customtkinter.CTk):
         tab_pnp.grid_rowconfigure(0, weight=1)
 
         # panel with the report
-        self.report_view = ReportView(tab_report)
+        self.report_view = ReportView(tab_report, bom_view=self.bom_view, pnp_view=self.pnp_view)
         self.report_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
         proj_frame.report_view = self.report_view
 

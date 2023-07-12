@@ -2,6 +2,14 @@
 
 See the description: https://keepachangelog.com/en/1.0.0/
 
+## 0.6.0 - 2023-07-10
+
+* Added
+* Changed
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.5.1 - 2023-06-28
 
 * Added

@@ -74,7 +74,7 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
     # html/body tags not necessary, moreover disadviced when used with the `klembord`
     output = __html_title(f'Cross-check report for: <em>{proj_name}</em>')
     # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
-    output += __html_p(f"Generated: <b>{time.strftime('%Y-%m-%d %H:%M:%S')}</b>")
+    output += __html_p(f"Generated: <b>{time.strftime('%Y-%m-%d, %H:%M:%S')}</b>")
 
     ### 1st section:
     section = __html_header(f'BOM parts missing in the PnP: {len(ccresult.bom_parst_missing_in_pnp)}')
