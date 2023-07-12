@@ -5,6 +5,8 @@ See the description: https://keepachangelog.com/en/1.0.0/
 ## 0.6.0 - 2023-07-10
 
 * Added
+  * once the BOM and PnP files are loaded successfully, every time you click the `Cross-check the files` will reload these files before comparison
+  * item comment comparison: text diff library used to detect differences char-by-char
 * Changed
 * Deprecated
 * Removed

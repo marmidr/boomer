@@ -1,5 +1,6 @@
 import time
-import logging
+# import logging
+import difflib
 
 from text_grid import *
 import cross_check
@@ -19,7 +20,7 @@ def __html_header(content: str) -> str:
 
 def __html_section_begin() -> str:
     # https://www.w3schools.com/tags/tag_pre.asp
-    return f'<pre style="font-family: Consolas; font-size: 80%">{EOL}'
+    return f'<pre style="font-family: Consolas, monospace; font-size: 80%">{EOL}'
 
 def __html_section_end() -> str:
     return f'</pre>{EOL}'
@@ -31,30 +32,37 @@ def __html_span_red(content: str) -> str:
     return f'<span style="color: IndianRed">{content}</span>'
 
 def __html_span_green(content: str) -> str:
-    return f'<span style="color: ForestGreen">{content}</span>'
+    return f'<span style="color: LimeGreen">{content}</span>'
+
+def __html_span_blue(content: str) -> str:
+    return f'<span style="color: DodgerBlue">{content}</span>'
 
 def __html_span_gray(content: str) -> str:
     return f'<span style="color: Gray">{content}</span>'
 
 def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str) -> str:
-    # sourcery skip: inline-immediately-returned-variable
-    ### format BOM comment:
-    pnp_in_bom_idx = bom_cmnt.lower().find(pnp_cmnt.lower())
-    if pnp_in_bom_idx > -1:
-        before = bom_cmnt[:pnp_in_bom_idx]
-        after = bom_cmnt[pnp_in_bom_idx + len(pnp_cmnt):]
-        bom_comment = __html_span_red(before) + pnp_cmnt + __html_span_red(after)
-        bom_comment += ' ' * max(0, bom_w - len(bom_cmnt))
-    else:
-        bom_comment = bom_cmnt + ' ' * max(0, bom_w - len(bom_cmnt))
+    bom_comment = ""
+    pnp_comment = ""
 
-    ### format PnP comment:
-    pnp_comment = pnp_cmnt
-    bom_in_pnp_idx = pnp_comment.lower().find(bom_cmnt.lower())
-    if bom_in_pnp_idx > -1:
-        before = pnp_comment[:bom_in_pnp_idx]
-        after = pnp_comment[bom_in_pnp_idx + len(bom_cmnt):]
-        pnp_comment = __html_span_green(before) + bom_cmnt + __html_span_green(after)
+    # https://docs.python.org/3/library/difflib.html
+    sm = difflib.SequenceMatcher(None, bom_cmnt, pnp_cmnt)
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == 'replace':
+            # a[i1:i2] should be replaced by b[j1:j2].
+            bom_comment += __html_span_blue(bom_cmnt[i1:i2])
+            pnp_comment += __html_span_blue(pnp_cmnt[j1:j2])
+        elif tag == 'delete':
+            # a[i1:i2] should be deleted. Note that j1 == j2 in this case.
+            bom_comment += __html_span_red(bom_cmnt[i1:i2])
+        elif tag == 'insert':
+            # b[j1:j2] should be inserted at a[i1:i1]. Note that i1 == i2 in this case.
+            pnp_comment += __html_span_green(pnp_cmnt[j1:j2])
+        elif tag == 'equal':
+            # a[i1:i2] == b[j1:j2] (the sub-sequences are equal).
+            bom_comment += bom_cmnt[i1:i2]
+            pnp_comment += pnp_cmnt[j1:j2]
+
+    bom_comment += ' ' * max(0, bom_w - len(bom_cmnt))
 
     ### output:
     out = '{desgn:{w}}: {bom}{bom_comment} {pnp}{pnp_comment}{eol}'.format(
