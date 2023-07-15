@@ -21,44 +21,56 @@ class CrossCheckResult:
 # -----------------------------------------------------------------------------
 
 def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, str]:
-    # TODO: case when the file does not contains a column titles, thus column indexes are used instead
-    if type(grid.designator_col) is not str:
-        raise ValueError(f"{grid_name} designator column id must be a string")
-    if type(grid.comment_col) is not str:
-        raise ValueError(f"{grid_name} comment column id must be a string")
+    if grid.has_column_headers:
+        if type(grid.designator_col) is not str:
+            raise ValueError(f"{grid_name} designator column id must be a string")
+        if type(grid.comment_col) is not str:
+            raise ValueError(f"{grid_name} comment column id must be a string")
+    else:
+        if type(grid.designator_col) is not int:
+            raise ValueError(f"{grid_name} designator column id must be an int")
+        if type(grid.comment_col) is not int:
+            raise ValueError(f"{grid_name} comment column id must be an int")
 
-    designator_col_idx = next(
-        (
-            i
-            for i in range(grid.text_grid.ncols)
-            if grid.text_grid.rows[grid.first_row][i] == grid.designator_col
-        ),
-        -1,
-    )
+    if grid.has_column_headers:
+        # find the designator column index basing on a column title
+        designator_col_idx = next(
+            (
+                i
+                for i in range(grid.text_grid.ncols)
+                if grid.text_grid.rows[grid.first_row][i] == grid.designator_col
+            ),
+            -1,
+        )
+        # find the comment column index basing on a column title
+        comment_col_idx = next(
+            (
+                i
+                for i in range(grid.text_grid.ncols)
+                if grid.text_grid.rows[grid.first_row][i] == grid.comment_col
+            ),
+            -1,
+        )
 
-    comment_col_idx = next(
-        (
-            i
-            for i in range(grid.text_grid.ncols)
-            if grid.text_grid.rows[grid.first_row][i] == grid.comment_col
-        ),
-        -1,
-    )
+        if designator_col_idx == -1:
+            raise ValueError(f"{grid_name} designator column not found")
+        if comment_col_idx == -1:
+            raise ValueError(f"{grid_name} comment column not found")
 
-    if designator_col_idx == -1:
-        raise ValueError(f"{grid_name} designator column not found")
-    if comment_col_idx == -1:
-        raise ValueError(f"{grid_name} comment column not found")
-
-    logging.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
-    logging.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
+        logging.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
+        logging.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
+    else:
+        designator_col_idx = grid.designator_col
+        comment_col_idx = grid.comment_col
 
     output = {}
+    first_row = grid.first_row + (1 if grid.has_column_headers else 0)
     last_row = grid.text_grid.nrows if grid.last_row == -1 else grid.last_row
+
     if last_row > grid.text_grid.nrows:
         raise ValueError(f"{grid_name} last row > number of rows")
 
-    for row in range(grid.first_row+1, last_row):
+    for row in range(first_row, last_row):
         dsgn = grid.text_grid.rows[row][designator_col_idx]
         cmnt = grid.text_grid.rows[row][comment_col_idx]
         dsgn = dsgn.split(',')

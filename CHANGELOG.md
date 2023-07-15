@@ -1,6 +1,15 @@
 # Changelog
 
-See the description: https://keepachangelog.com/en/1.0.0/
+See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
+
+## 0.7.0 - 2023-07-15
+
+* Added
+  * BOM and PnP column can be selected by index, if file has no column headers
+* Changed
+* Deprecated
+* Removed
+* Fixed
 
 ## 0.6.0 - 2023-07-10
 

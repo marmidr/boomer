@@ -70,6 +70,7 @@ class ConfiguredTextGrid:
     Determines data range to be imported
     """
     text_grid: TextGrid
+    has_column_headers: bool
     designator_col: str
     comment_col: str
     first_row: int

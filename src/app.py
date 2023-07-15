@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.6.0"
+APP_NAME = "BOM vs PnP Cross Checker v0.7.0"
 
 # -----------------------------------------------------------------------------
 
@@ -570,6 +570,7 @@ class BOMConfig(customtkinter.CTkFrame):
             self.column_selector.destroy()
         self.column_selector = ColumnsSelectorWindow(self,
                                     columns=columns, callback=self.column_selector_callback,
+                                    has_column_headers=proj.profile.bom_has_column_headers,
                                     designator_default=proj.profile.bom_designator_col,
                                     comment_default=proj.profile.bom_comment_col)
 
@@ -577,6 +578,7 @@ class BOMConfig(customtkinter.CTkFrame):
         logging.info(f"Selected BOM columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.bom_designator_col = result.designator_col
         proj.profile.bom_comment_col = result.comment_col
+        proj.profile.bom_has_column_headers = result.has_column_headers
         self.update_lbl_columns()
         self.btn_save.configure(state=tkinter.NORMAL)
 
@@ -801,6 +803,7 @@ class PnPConfig(customtkinter.CTkFrame):
             self.column_selector.destroy()
         self.column_selector = ColumnsSelectorWindow(self,
                                     columns=columns, callback=self.column_selector_callback,
+                                    has_column_headers=proj.profile.pnp_has_column_headers,
                                     designator_default=proj.profile.pnp_designator_col,
                                     comment_default=proj.profile.pnp_comment_col)
         # self.wnd_column_selector.focusmodel(model="active")
@@ -809,6 +812,7 @@ class PnPConfig(customtkinter.CTkFrame):
         logging.info(f"Selected PnP columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
+        proj.profile.pnp_has_column_headers = result.has_column_headers
         self.update_lbl_columns()
         self.btn_save.configure(state=tkinter.NORMAL)
 
@@ -897,7 +901,6 @@ class ReportView(customtkinter.CTkFrame):
         logging.info("Performing cross-check...")
         self.clear_preview()
 
-        bom_cfg = text_grid.ConfiguredTextGrid()
         if proj.bom_grid and proj.bom_grid_dirty:
             # reload file if manual load was successful
             try:
@@ -918,7 +921,9 @@ class ReportView(customtkinter.CTkFrame):
                 logging.error(f"Cannot load PnP: {e}")
                 return
 
+        bom_cfg = text_grid.ConfiguredTextGrid()
         bom_cfg.text_grid = proj.bom_grid
+        bom_cfg.has_column_headers = proj.profile.bom_has_column_headers
         bom_cfg.designator_col = proj.profile.bom_designator_col
         bom_cfg.comment_col = proj.profile.bom_comment_col
         bom_cfg.first_row = proj.profile.bom_first_row
@@ -926,6 +931,7 @@ class ReportView(customtkinter.CTkFrame):
 
         pnp_cfg = text_grid.ConfiguredTextGrid()
         pnp_cfg.text_grid = proj.pnp_grid
+        pnp_cfg.has_column_headers = proj.profile.pnp_has_column_headers
         pnp_cfg.designator_col = proj.profile.pnp_designator_col
         pnp_cfg.comment_col = proj.profile.pnp_comment_col
         pnp_cfg.first_row = proj.profile.pnp_first_row
