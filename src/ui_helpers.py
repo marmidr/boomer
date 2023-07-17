@@ -8,7 +8,7 @@ def textbox_find_text(textbox: customtkinter.CTkTextbox, needle: str) -> int:
     """Search and highlight the text in the TextBox"""
 
     textbox.tag_delete("search")
-    textbox.tag_config("search", background="aqua")
+    textbox.tag_config("search", background="yellow")
     start = 1.0
     pos = textbox.search(pattern=needle, index=start, stopindex=tkinter.END, nocase=True)
     found_cnt = 0

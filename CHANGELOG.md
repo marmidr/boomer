@@ -2,6 +2,17 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.7.1 - 2023-07-17
+
+* Added
+* Changed
+  * search string highlight color: aqua -> yellow
+* Deprecated
+* Removed
+* Fixed
+  * xls/xlsx - prevent formatting of digits-only cells, like '100', as float numbers '100.0'
+  * xls/xlsx - cells containing multiple rows are transformed into single-line with '⏎' character
+
 ## 0.7.0 - 2023-07-15
 
 * Added

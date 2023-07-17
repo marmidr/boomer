@@ -26,7 +26,12 @@ def read_xls_sheet(path: str) -> TextGrid:
             if cell is None:
                 cell = ""
             elif type(cell) is float or type(cell) is int:
+                if type(cell) is float and int(cell) == float(cell):
+                    # prevent the conversion of '100' to '100.0'
+                    cell = int(cell)
                 cell = repr(cell)
+            # change multiline cells into single-line
+            cell = cell.replace("\n", " ⏎ ")
             row_cells.append(cell.strip())
 
         # ignore rows with empty cell 'A'

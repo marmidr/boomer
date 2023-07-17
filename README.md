@@ -72,6 +72,14 @@ From PowerShell:
 python.exe src/app.py
 ```
 
+To get colored logs, use Linux-like terminal, eg. [MSys2](msys2.org/), but still using the Windows installation of the Python:
+
+```sh
+$ /c/Program\ Files/Python39/python.exe src/app.py
+```
+
+![msys2con](doc/msys2-console.png)
+
 ## Trouble shooting
 
 * *ModuleNotFoundError: No module named 'tkinter'*

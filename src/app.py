@@ -2,8 +2,8 @@
 #
 # The purpose of this application is to read the PCB BillOfMaterial file
 # together with the corresponding PickAndPlace file(s), and check the contents against
-# differences in an electronic parts listed in both files, plus verify if the
-# parts comments (values) matches.
+# differences in an electronic parts listed in both files, and additionally
+# verify that the part comments (values) match.
 #
 # (c) 2023 Mariusz Midor
 # https://github.com/marmidr/boomer
@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.7.0"
+APP_NAME = "BOM vs PnP Cross Checker v0.7.1"
 
 # -----------------------------------------------------------------------------
 
