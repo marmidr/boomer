@@ -1,5 +1,6 @@
 import customtkinter
-import logging
+import tkinter
+# import logging
 import typing
 
 # -----------------------------------------------------------------------------
@@ -21,10 +22,13 @@ class MessageBox(customtkinter.CTkToplevel):
 
         super().__init__(*args, **kwargs)
         self.geometry("400x150")
-
+        #
         lbl_message = customtkinter.CTkLabel(self, text=self.message)
         lbl_message.grid(row=0, column=0, pady=15, padx=15, sticky="wens", columnspan=3)
-
+        #
+        sep_h = tkinter.ttk.Separator(self, orient='horizontal')
+        sep_h.grid(row=1, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
+        #
         if self.dialog_type == "yn":
             self.btn_yes = customtkinter.CTkButton(self, text="Yes", command=self.button_yes_event)
             self.btn_yes.grid(row=2, column=0, pady=5, padx=5, sticky="we")

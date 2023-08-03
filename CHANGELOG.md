@@ -2,6 +2,13 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.8.0 - 2023-08-03
+* Changed
+  * column selector for PnP: part X:Y coordinates columns
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.7.2 - 2023-08-02
 
 * Added

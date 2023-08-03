@@ -23,6 +23,8 @@ class Profile:
         self.pnp_separator = "COMMA"
         self.pnp_designator_col = "?"
         self.pnp_comment_col = "?"
+        self.pnp_coord_x_col = "?"
+        self.pnp_coord_y_col = "?"
         #
         self.__config = cfgparser
 
@@ -43,7 +45,7 @@ class Profile:
                 if self.bom_has_column_headers == False:
                     self.bom_designator_col = int(self.bom_designator_col)
                     self.bom_comment_col = int(self.bom_comment_col)
-
+                #
                 self.pnp_has_column_headers = section.get("pnp_has_column_headers", "True") == "True"
                 self.pnp_first_row = int(section.get("pnp_first_row", "0"))
                 self.pnp_last_row = -1
@@ -53,7 +55,8 @@ class Profile:
                 if self.pnp_has_column_headers == False:
                     self.pnp_designator_col = int(self.pnp_designator_col)
                     self.pnp_comment_col = int(self.pnp_comment_col)
-
+                self.pnp_coord_x_col = section.get("pnp_coord_x_col", "?")
+                self.pnp_coord_y_col = section.get("pnp_coord_y_col", "?")
             else:
                 logging.warning(f"No section {self.name} in config file")
         else:
@@ -67,11 +70,14 @@ class Profile:
             "bom_separator": self.bom_separator,
             "bom_designator_col": self.bom_designator_col,
             "bom_comment_col": self.bom_comment_col,
+            #
             "pnp_has_column_headers": self.pnp_has_column_headers,
             "pnp_first_row": self.pnp_first_row,
             "pnp_separator": self.pnp_separator,
             "pnp_designator_col": self.pnp_designator_col,
             "pnp_comment_col": self.pnp_comment_col,
+            "pnp_coord_x_col": self.pnp_coord_x_col,
+            "pnp_coord_y_col": self.pnp_coord_y_col,
         }
         with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)

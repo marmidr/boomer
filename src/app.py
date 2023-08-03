@@ -32,7 +32,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.7.2"
+APP_NAME = "BOM vs PnP Cross Checker v0.8.0"
 
 # -----------------------------------------------------------------------------
 
@@ -463,16 +463,14 @@ class BOMView(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class BOMConfig(customtkinter.CTkFrame):
-    bom_view: BOMView = None
-    column_selector: ColumnsSelector = None
-
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
-        self.bom_view = kwargs.pop("bom_view")
+        self.bom_view: BOMView = kwargs.pop("bom_view")
         assert isinstance(self.bom_view, BOMView)
 
         super().__init__(master, **kwargs)
 
+        self.column_selector: ColumnsSelector = None
         #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
@@ -529,7 +527,9 @@ class BOMConfig(customtkinter.CTkFrame):
         self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
-        self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.bom_designator_col}\n• {proj.profile.bom_comment_col}")
+        self.lbl_columns.configure(text=f"COLUMNS:\n"\
+                                    f"• DSGN: {proj.profile.bom_designator_col}\n"\
+                                    f"• CMNT: {proj.profile.bom_comment_col}")
 
     def opt_separator_event(self, new_sep: str):
         logging.info(f"  BOM separator: {new_sep}")
@@ -575,7 +575,8 @@ class BOMConfig(customtkinter.CTkFrame):
                                     comment_default=proj.profile.bom_comment_col)
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
-        logging.info(f"Selected BOM columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
+        logging.info("Selected BOM columns: "\
+                    f"dsgn='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.bom_designator_col = result.designator_col
         proj.profile.bom_comment_col = result.comment_col
         proj.profile.bom_has_column_headers = result.has_column_headers
@@ -696,16 +697,14 @@ class PnPView(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class PnPConfig(customtkinter.CTkFrame):
-    pnp_view: PnPView = None
-    column_selector: ColumnsSelector = None
-
     def __init__(self, master, **kwargs):
         assert "pnp_view" in kwargs
-        self.pnp_view = kwargs.pop("pnp_view")
+        self.pnp_view: PnPView = kwargs.pop("pnp_view")
         assert isinstance(self.pnp_view, PnPView)
 
         super().__init__(master, **kwargs)
 
+        self.column_selector: ColumnsSelector = None
         #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
         lbl_separator.grid(row=0, column=0, pady=5, padx=5, sticky="")
@@ -762,7 +761,11 @@ class PnPConfig(customtkinter.CTkFrame):
         self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
-        self.lbl_columns.configure(text=f"COLUMNS:\n• {proj.profile.pnp_designator_col}\n• {proj.profile.pnp_comment_col}")
+        self.lbl_columns.configure(text=f"COLUMNS:\n"\
+            f"• DSGN: {proj.profile.pnp_designator_col}\n"\
+            f"• CMNT: {proj.profile.pnp_comment_col}\n"\
+            f"• X: {proj.profile.pnp_coord_x_col}\n"\
+            f"• Y: {proj.profile.pnp_coord_y_col}")
 
     def opt_separator_event(self, new_sep: str):
         logging.info(f"  PnP separator: {new_sep}")
@@ -805,14 +808,21 @@ class PnPConfig(customtkinter.CTkFrame):
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.pnp_has_column_headers,
                                     designator_default=proj.profile.pnp_designator_col,
-                                    comment_default=proj.profile.pnp_comment_col)
+                                    comment_default=proj.profile.pnp_comment_col,
+                                    coord_x_default=proj.profile.pnp_coord_x_col,
+                                    coord_y_default=proj.profile.pnp_coord_y_col
+                                )
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
-        logging.info(f"Selected PnP columns: des='{result.designator_col}', cmnt='{result.comment_col}'")
+        logging.info("Selected PnP columns: "\
+                    f"dsgn='{result.designator_col}', cmnt='{result.comment_col}', "\
+                    f"x='{result.coord_x_col}', y='{result.coord_y_col}'")
+        proj.profile.pnp_has_column_headers = result.has_column_headers
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
-        proj.profile.pnp_has_column_headers = result.has_column_headers
+        proj.profile.pnp_coord_x_col = result.coord_x_col
+        proj.profile.pnp_coord_y_col = result.coord_y_col
         self.update_lbl_columns()
         self.btn_save.configure(state=tkinter.NORMAL)
 
@@ -846,17 +856,13 @@ class PnPConfig(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class ReportView(customtkinter.CTkFrame):
-    report_html: str = ""
-    bom_view: BOMView = None
-    pnp_view: PnPView = None
-
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
-        self.bom_view = kwargs.pop("bom_view")
+        self.bom_view: BOMView = kwargs.pop("bom_view")
         assert isinstance(self.bom_view, BOMView)
 
         assert "pnp_view" in kwargs
-        self.pnp_view = kwargs.pop("pnp_view")
+        self.pnp_view: PnPView = kwargs.pop("pnp_view")
         assert isinstance(self.pnp_view, PnPView)
         super().__init__(master, **kwargs)
 
