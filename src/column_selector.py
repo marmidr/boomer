@@ -6,10 +6,6 @@ import typing
 # -----------------------------------------------------------------------------
 
 class ColumnsSelectorResult:
-    designator_col: str
-    comment_col: str
-    has_column_headers: bool
-
     def __init__(self):
         self.designator_col = ""
         self.comment_col = ""
@@ -18,8 +14,6 @@ class ColumnsSelectorResult:
 # -----------------------------------------------------------------------------
 
 class ColumnsSelector(customtkinter.CTkToplevel):
-    callback: typing.Callable
-
     def __init__(self, *args, **kwargs):
         assert "columns" in kwargs
         columns = kwargs.pop("columns")
@@ -27,7 +21,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         assert type(columns) is list
         # logging.debug("columns: {}".format(self.columns))
         assert "callback" in kwargs
-        self.callback = kwargs.pop("callback")
+        self.callback: typing.Callable = kwargs.pop("callback")
 
         assert "has_column_headers" in kwargs
         has_column_headers = kwargs.pop("has_column_headers")

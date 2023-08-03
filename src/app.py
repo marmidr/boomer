@@ -32,33 +32,26 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.7.1"
+APP_NAME = "BOM vs PnP Cross Checker v0.7.2"
 
 # -----------------------------------------------------------------------------
 
 class Project:
-    bom_path: str = "<bom_path>"
-    pnp_fname: str = "<pnp_fname>"
-    pnp2_fname: str = ""
-    __config: configparser.ConfigParser
-    profile: Profile
-    bom_grid: text_grid.TextGrid = None
-    bom_grid_dirty: bool = False
-    pnp_grid: text_grid.TextGrid = None
-    pnp_grid_dirty: bool = False
-    loading: bool = False
-
     def __init__(self):
+        self.bom_path = "<bom_path>"
+        self.pnp_fname = "<pnp_fname>"
+        self.pnp2_fname = ""
+        self.bom_grid = text_grid.TextGrid()
+        self.bom_grid_dirty = False
+        self.pnp_grid = text_grid.TextGrid()
+        self.pnp_grid_dirty = False
+        self.loading = False
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
-
         if os.path.isfile(Profile.CONFIG_FILE_NAME):
             self.__config.read(Profile.CONFIG_FILE_NAME)
         else:
-            self.__config['common'] = {
-                "initial_dir": "",
-            }
-
+            self.__config['common'] = {}
         self.profile = Profile(cfgparser=self.__config)
 
     def get_name(self) -> str:

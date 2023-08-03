@@ -43,5 +43,4 @@ def test_no_bom():
 def test_no_pnp():
     with pytest.raises(ValueError):
         bom = text_grid.ConfiguredTextGrid()
-        bom.text_grid = []
         ccr = cross_check.compare(bom, None)

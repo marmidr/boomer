@@ -7,44 +7,30 @@ import os
 class Profile:
     CONFIG_FILE_NAME: str = "boomer.ini"
 
-    name: str
-    bom_has_column_headers: bool
-    bom_first_row: int # 0-based
-    bom_last_row: int # 0-based
-    bom_separator: str
-    bom_designator_col: str
-    bom_comment_col: str
-    pnp_has_column_headers: bool
-    pnp_first_row: int # 0-based
-    pnp_last_row: int # 0-based
-    pnp_separator: str
-    pnp_designator_col: str
-    pnp_comment_col: str
-    __config: configparser.ConfigParser
-
     def __init__(self, cfgparser: configparser.ConfigParser):
         self.name = "initial-profile"
 
         self.bom_has_column_headers = True
-        self.bom_first_row = 0
-        self.bom_last_row = -1 # not saved in config file
+        self.bom_first_row = 0 # 0-based
+        self.bom_last_row = -1 # 0-based, not saved in config file
         self.bom_separator = "COMMA"
         self.bom_designator_col = "?"
         self.bom_comment_col = "?"
-
+        #
         self.pnp_has_column_headers = True
-        self.pnp_first_row = 0
-        self.pnp_last_row = -1 # not saved in config file
+        self.pnp_first_row = 0 # 0-based
+        self.pnp_last_row = -1 # 0-based, not saved in config file
         self.pnp_separator = "COMMA"
         self.pnp_designator_col = "?"
         self.pnp_comment_col = "?"
-
+        #
         self.__config = cfgparser
 
     def load(self, name: str):
         if os.path.isfile(self.CONFIG_FILE_NAME):
             logging.info(f"Load profile: {name}")
             self.name = name
+
             if self.__config.has_section(f'profile.{self.name}'):
                 section = self.__config[f'profile.{self.name}']
 

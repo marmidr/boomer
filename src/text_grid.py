@@ -4,14 +4,10 @@ class TextGrid:
     Represents data read from the XLS/XLSX/ODS/CSV
     """
 
-    nrows: int
-    ncols: int
-    rows: list[list[str]]
-
     def __init__(self):
         self.nrows = 0
         self.ncols = 0
-        self.rows = []
+        self.rows: list[list[str]] = []
 
     @staticmethod
     def format_cell(cell) -> str:
@@ -69,9 +65,11 @@ class ConfiguredTextGrid:
     """
     Determines data range to be imported
     """
-    text_grid: TextGrid
-    has_column_headers: bool
-    designator_col: str
-    comment_col: str
-    first_row: int
-    last_row: int
+
+    def __init__(self):
+        self.text_grid = TextGrid()
+        self.has_column_headers = True
+        self.designator_col = ""
+        self.comment_col = ""
+        self.first_row = 0
+        self.last_row = 0
