@@ -40,7 +40,7 @@ def __html_span_blue(content: str) -> str:
 def __html_span_gray(content: str) -> str:
     return f'<span style="color: Gray">{content}</span>'
 
-def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str) -> str:
+def __format_comment_diff(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str) -> str:
     bom_comment = ""
     pnp_comment = ""
 
@@ -76,6 +76,20 @@ def __format_comment(designator: str, designator_w: int, bom_cmnt: str, bom_w: i
     # logging.debug(f"'{out}'")
     return out
 
+def __format_distance(dsgn1: str, dsgn1_w: int, dsgn2: str, dsgn2_w: int, distance: float) -> str:
+    ### output:
+    # https://docs.python.org/3.9/library/string.html?=#format-specification-mini-language
+    unit_mm = __html_span_gray("mm")
+    out = '{dsgn1:>{w1}} <--> {dsgn2:{w2}} = {distance:.1f}{unit}{eol}'.format(
+                dsgn1=dsgn1, w1=dsgn1_w,
+                dsgn2=dsgn2, w2=dsgn2_w,
+                distance=distance,
+                unit=unit_mm,
+                eol=PRE_EOL
+            )
+    # logging.debug(f"'{out}'")
+    return out
+
 # -----------------------------------------------------------------------------
 
 def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) -> str:
@@ -88,13 +102,13 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
     section = __html_header(f'BOM parts missing in the PnP: {len(ccresult.bom_parst_missing_in_pnp)}')
     section += __html_section_begin()
     # determine columns width
-    dsgn_w = 0
+    dsgn1_w = 0
     for item in ccresult.bom_parst_missing_in_pnp:
-        dsgn_w = max(len(item[0]), dsgn_w)
+        dsgn1_w = max(len(item[0]), dsgn1_w)
     # format the output
     for item in ccresult.bom_parst_missing_in_pnp:
         section += '{desgn:{w}}: {cmnt}{eol}'.format(
-            desgn=item[0], w=dsgn_w, cmnt=item[1], eol=PRE_EOL
+            desgn=item[0], w=dsgn1_w, cmnt=item[1], eol=PRE_EOL
         )
     section += __html_section_end()
     output += section
@@ -103,13 +117,13 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
     section = __html_header(f'PnP parts missing in the BOM: {len(ccresult.pnp_parst_missing_in_bom)}')
     section += __html_section_begin()
     # determine columns width
-    dsgn_w = 0
+    dsgn1_w = 0
     for pnp_part in ccresult.pnp_parst_missing_in_bom:
-        dsgn_w = max(len(pnp_part[0]), dsgn_w)
+        dsgn1_w = max(len(pnp_part[0]), dsgn1_w)
     # format the output
     for pnp_part in ccresult.pnp_parst_missing_in_bom:
         section += '{desgn:{w}}: {cmnt}{eol}'.format(
-            desgn=pnp_part[0], w=dsgn_w, cmnt=pnp_part[1], eol=PRE_EOL
+            desgn=pnp_part[0], w=dsgn1_w, cmnt=pnp_part[1], eol=PRE_EOL
         )
     section += __html_section_end()
     output += section
@@ -118,16 +132,32 @@ def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) 
     section = __html_header(f'BOM and PnP comment mismatch: {len(ccresult.parts_comment_mismatch)}')
     section += __html_section_begin()
     # determine columns width
-    dsgn_w = 0
+    dsgn1_w = 0
     bom_w = 0
     for item in ccresult.parts_comment_mismatch:
-        dsgn_w = max(len(item[0]), dsgn_w)
+        dsgn1_w = max(len(item[0]), dsgn1_w)
         bom_w = max(len(item[1]) + 2, bom_w)
     # format the output
     for item in ccresult.parts_comment_mismatch:
-        section += __format_comment(item[0], dsgn_w,
+        section += __format_comment_diff(item[0], dsgn1_w,
                                     item[1], bom_w,
                                     item[2])
+    section += __html_section_end()
+    output += section
+
+    ### 4th section:
+    section = __html_header(f'PnP close coordinates: {len(ccresult.parts_coord_conflicts)}')
+    section += __html_section_begin()
+    # determine columns width
+    dsgn1_w = 0
+    dsgn2_w = 0
+    for item in ccresult.parts_coord_conflicts:
+        dsgn1_w = max(len(item[0]), dsgn1_w)
+        dsgn2_w = max(len(item[1]), dsgn2_w)
+    # format the output
+    for item in ccresult.parts_coord_conflicts:
+        section += __format_distance(item[0], dsgn1_w, item[1], dsgn2_w, item[2])
+
     section += __html_section_end()
     output += section
 

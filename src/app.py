@@ -942,6 +942,8 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.comment_col = proj.profile.pnp_comment_col
         pnp_cfg.first_row = proj.profile.pnp_first_row
         pnp_cfg.last_row = proj.profile.pnp_last_row
+        pnp_cfg.coord_x_col = proj.profile.pnp_coord_x_col
+        pnp_cfg.coord_y_col = proj.profile.pnp_coord_y_col
 
         try:
             ccresult = cross_check.compare(bom_cfg, pnp_cfg)

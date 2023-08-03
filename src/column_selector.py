@@ -29,37 +29,30 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         has_column_headers = kwargs.pop("has_column_headers")
         assert type(has_column_headers) is bool
 
+        # ----------
+
         assert "designator_default" in kwargs
         designator_default = kwargs.pop("designator_default")
-        if has_column_headers:
-            # prepend column title with its index
-            try:
-                designator_default_idx = columns.index(designator_default)
-            except ValueError as e:
-                designator_default_idx = 0
-            designator_default = f"{designator_default_idx}. {designator_default}"
-        else:
-            # designator is a column index
-            designator_default = f"{designator_default}. {columns[designator_default]}"
+        designator_default = self.__format_column(has_column_headers, columns, designator_default)
+
+        # ----------
 
         assert "comment_default" in kwargs
         comment_default = kwargs.pop("comment_default")
-        if has_column_headers:
-            try:
-                comment_default_idx = columns.index(comment_default)
-            except ValueError as e:
-                comment_default_idx = 0
-            comment_default = f"{comment_default_idx}. {comment_default}"
-        else:
-            comment_default = f"{comment_default}. {columns[comment_default]}"
+        comment_default = self.__format_column(has_column_headers, columns, comment_default)
 
+        # ----------
+
+        # optional, only for PnP
         if "coord_x_default" in kwargs and "coord_y_default" in kwargs:
             coord_x_default = kwargs.pop("coord_x_default")
+            coord_x_default = self.__format_column(has_column_headers, columns, coord_x_default)
             coord_y_default = kwargs.pop("coord_y_default")
+            coord_y_default = self.__format_column(has_column_headers, columns, coord_y_default)
             self.show_coords = True
         else:
-            coord_x_default = None
-            coord_y_default = None
+            coord_x_default = ""
+            coord_y_default = ""
             self.show_coords = False
 
         # ----------
@@ -104,7 +97,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         lbl_coord_x = customtkinter.CTkLabel(self, text="X-center")
         lbl_coord_x.grid(row=3, column=0, pady=5, padx=5, sticky="w")
 
-        self.opt_coord_x_var = customtkinter.StringVar(value=coord_x_default or "")
+        self.opt_coord_x_var = customtkinter.StringVar(value=coord_x_default)
         if self.show_coords:
             opt_coord_x = customtkinter.CTkOptionMenu(self, values=columns,
                                                     command=self.opt_event,
@@ -115,7 +108,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         lbl_coord_y = customtkinter.CTkLabel(self, text="Y-center")
         lbl_coord_y.grid(row=4, column=0, pady=5, padx=5, sticky="w")
 
-        self.opt_coord_y_var = customtkinter.StringVar(value=coord_y_default or "")
+        self.opt_coord_y_var = customtkinter.StringVar(value=coord_y_default)
         if self.show_coords:
             opt_coord_y = customtkinter.CTkOptionMenu(self, values=columns,
                                                     command=self.opt_event,
@@ -138,6 +131,20 @@ class ColumnsSelector(customtkinter.CTkToplevel):
 
         # enable "always-on-top" for this popup window
         self.attributes('-topmost', True)
+
+    def __format_column(self, has_headers: bool, columns: list[str], col_default: str) -> str:
+        if has_headers:
+            # prepend column title with its index
+            try:
+                default_idx = columns.index(col_default)
+            except ValueError as e:
+                default_idx = 0
+            col_default = f"{default_idx}. {col_default}"
+        else:
+            # designator is a column index
+            col_default = f"{col_default}. {columns[col_default]}"
+
+        return col_default
 
     def chbx_event(self):
         self.btn_ok.configure(state="enabled")

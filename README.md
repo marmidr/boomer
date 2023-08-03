@@ -21,6 +21,7 @@ The following checks are performed:
 * BOM contains element that is missing in the PnP file
 * PnP contains reference to element that is not present in the BOM
 * Part comment (value) differs between BOM and PnP files
+* Checks if the center of any two components in PnP file are closer that 3mm (120mils)
 
 ## Supported formats
 

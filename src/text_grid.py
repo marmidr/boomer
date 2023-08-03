@@ -73,3 +73,6 @@ class ConfiguredTextGrid:
         self.comment_col = ""
         self.first_row = 0
         self.last_row = 0
+        # only for PnP:
+        self.coord_x_col = ""
+        self.coord_y_col = ""

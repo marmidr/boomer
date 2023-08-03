@@ -26,6 +26,6 @@
 [x] klikniecie Porównaj przeładowuje pliki BOM i PnP
 [x] porównywanie komentarzy biblioteką difflib: dodane/usunięte/zmienione/takie same
 [x] wybór kolumn bez nagłówka - po indeksie
-[ ] sprawdzanie zduplikowanych współrzędnych
+[x] sprawdzanie kolidujących współrzędnych
 [x] xls/xlsx - komórki zawierające liczbę np 100, są czytane jako '100.0' -> usunąć część dziesiętną
 [x] xls/xlsx - komórki zawierające kilka wierszy -> scalać do jednej linii
