@@ -1,8 +1,8 @@
 # BOM and PnP verifier
 
-The purpose of this project is to help an electronic manufacturer in preparation of the new <abbr title="Printed Circuit Board">PCB</abbr> elements.
+The purpose of this project is to help an electronic manufacturer in preparation of the new [PCB](Printed Circuit Board) elements.
 
-It reads the <abbr title="Bill Of Materials">BOM</abbr> and the accompanying <abbr title="Pick And Place">PnP</abbr> files, performing cross-checking to ensure if those files contents matches.
+It reads the [BOM](Bill Of Materials) and the accompanying [PnP](Pick And Place) files, performing cross-checking to ensure if those files contents matches.
 
 Project selection:
 ![sshot1](doc/sshot1.png)

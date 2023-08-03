@@ -2,6 +2,16 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.7.2 - 2023-08-02
+
+* Added
+* Changed
+  * new profile name: default taken from the project dir name
+  * cosmetic changes
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.7.1 - 2023-07-17
 
 * Added

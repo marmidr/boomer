@@ -14,6 +14,7 @@ import logging
 import os
 import configparser
 import sys
+import time
 from tkhtmlview import HTMLScrolledText
 import klembord
 
@@ -24,7 +25,7 @@ import ods_reader
 import text_grid
 import cross_check
 import report_generator
-from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
+from column_selector import ColumnsSelector, ColumnsSelectorResult
 from prj_profile import Profile
 from msg_box import MessageBox
 import ui_helpers
@@ -166,7 +167,13 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
     def button_clone_event(self):
         logging.debug("Clone profile as...")
         dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
+        # set the default value:
+        time.sleep(0.1) # widgets are created with delay
+        dialog.update()
+        profilename = os.path.basename(os.path.dirname(proj.bom_path)) # project dir name as a new profile name
+        dialog._entry.insert(0, profilename or "")
         new_profile_name = dialog.get_input().strip()
+
         if '[' in new_profile_name or ']' in new_profile_name:
             logging.error("Profile name cannot contain square bracket characters: []")
             return
@@ -464,7 +471,7 @@ class BOMView(customtkinter.CTkFrame):
 
 class BOMConfig(customtkinter.CTkFrame):
     bom_view: BOMView = None
-    column_selector: ColumnsSelectorWindow = None
+    column_selector: ColumnsSelector = None
 
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
@@ -568,7 +575,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self,
+        self.column_selector = ColumnsSelector(self,
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.bom_has_column_headers,
                                     designator_default=proj.profile.bom_designator_col,
@@ -697,7 +704,7 @@ class PnPView(customtkinter.CTkFrame):
 
 class PnPConfig(customtkinter.CTkFrame):
     pnp_view: PnPView = None
-    column_selector: ColumnsSelectorWindow = None
+    column_selector: ColumnsSelector = None
 
     def __init__(self, master, **kwargs):
         assert "pnp_view" in kwargs
@@ -801,7 +808,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self,
+        self.column_selector = ColumnsSelector(self,
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.pnp_has_column_headers,
                                     designator_default=proj.profile.pnp_designator_col,

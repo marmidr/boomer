@@ -1,4 +1,5 @@
 import customtkinter
+import tkinter
 import logging
 import typing
 
@@ -16,7 +17,7 @@ class ColumnsSelectorResult:
 
 # -----------------------------------------------------------------------------
 
-class ColumnsSelectorWindow(customtkinter.CTkToplevel):
+class ColumnsSelector(customtkinter.CTkToplevel):
     callback: typing.Callable
 
     def __init__(self, *args, **kwargs):
@@ -90,8 +91,9 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
                                                 variable=self.opt_comment_var)
         opt_comment.grid(row=2, column=1, pady=5, padx=5, sticky="we")
 
-        lbl_hline = customtkinter.CTkLabel(self, text="—" * 50)
-        lbl_hline.grid(row=3, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
+        #
+        sep_h = tkinter.ttk.Separator(self, orient='horizontal')
+        sep_h.grid(row=3, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
 
         self.btn_cancel = customtkinter.CTkButton(self, text="Cancel",
                                                    command=self.button_cancel_event)
