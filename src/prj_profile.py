@@ -7,21 +7,6 @@ import os
 class Profile:
     CONFIG_FILE_NAME: str = "boomer.ini"
 
-    name: str
-    bom_has_column_headers: bool
-    bom_first_row: int # 0-based
-    bom_last_row: int # 0-based
-    bom_separator: str
-    bom_designator_col: str
-    bom_comment_col: str
-    pnp_has_column_headers: bool
-    pnp_first_row: int # 0-based
-    pnp_last_row: int # 0-based
-    pnp_separator: str
-    pnp_designator_col: str
-    pnp_comment_col: str
-    __config: configparser.ConfigParser
-
     def __init__(self, cfgparser: configparser.ConfigParser):
         self.name = "initial-profile"
 

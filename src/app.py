@@ -31,23 +31,22 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.7.1"
+APP_NAME = "BOM vs PnP Cross Checker v0.7.2"
 
 # -----------------------------------------------------------------------------
 
 class Project:
-    bom_path: str = "<bom_path>"
-    pnp_fname: str = "<pnp_fname>"
-    pnp2_fname: str = ""
-    __config: configparser.ConfigParser
-    profile: Profile
-    bom_grid: text_grid.TextGrid = None
-    bom_grid_dirty: bool = False
-    pnp_grid: text_grid.TextGrid = None
-    pnp_grid_dirty: bool = False
-    loading: bool = False
-
+    """Represents configuration and data of currently selected BOM+PnP files"""
     def __init__(self):
+        self.bom_path = "<bom_path>"
+        self.pnp_fname = "<pnp_fname>"
+        self.pnp2_fname = ""
+        self.bom_grid: text_grid.TextGrid = None
+        self.bom_grid_dirty = False
+        self.pnp_grid: text_grid.TextGrid = None
+        self.pnp_grid_dirty = False
+        self.loading = False
+
         # https://docs.python.org/3/library/configparser.html
         self.__config = configparser.ConfigParser()
 
@@ -136,6 +135,7 @@ class Project:
             self.__config.write(f)
 
 # global instance
+# TODO: use static method instance()
 proj = Project()
 
 # -----------------------------------------------------------------------------
@@ -204,19 +204,14 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class ProjectFrame(customtkinter.CTkFrame):
-    # bom_config: BOMConfig = None
-    # pnp_config: PnPConfig = None
-    # bom_view: BOMView = None
-    # pnp_view: PnPView = None
-    # report_view: ReportView = None
-    bom_config = None
-    pnp_config = None
-    bom_view = None
-    pnp_view = None
-    report_view = None
-
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
+
+        self.bom_config = None
+        self.pnp_config = None
+        self.bom_view = None
+        self.pnp_view = None
+        self.report_view = None
 
         self.grid_columnconfigure(1, weight=1)
         # self.grid_rowconfigure(0, weight=1)
@@ -463,15 +458,14 @@ class BOMView(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class BOMConfig(customtkinter.CTkFrame):
-    bom_view: BOMView = None
-    column_selector: ColumnsSelectorWindow = None
-
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
-        self.bom_view = kwargs.pop("bom_view")
+        self.bom_view: BOMView = kwargs.pop("bom_view")
         assert isinstance(self.bom_view, BOMView)
-
+        # kwargs cleared from unexpected arguments -> call init
         super().__init__(master, **kwargs)
+
+        self.column_selector: ColumnsSelectorWindow = None
 
         #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
@@ -503,21 +497,25 @@ class BOMConfig(customtkinter.CTkFrame):
         self.btn_load.grid(row=0, column=6, pady=5, padx=5, sticky="e")
 
         #
+        sep_v = tkinter.ttk.Separator(self, orient='vertical')
+        sep_v.grid(row=0, column=7, pady=2, padx=5, sticky="ns")
+
+        #
         self.lbl_columns = customtkinter.CTkLabel(self, text="", justify="left")
-        self.lbl_columns.grid(row=0, column=7, pady=5, padx=(15,5), sticky="w")
+        self.lbl_columns.grid(row=0, column=8, pady=5, padx=(15,5), sticky="w")
         self.update_lbl_columns()
 
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumns...",
                                                    command=self.button_columns_event)
-        self.btn_columns.grid(row=0, column=8, pady=5, padx=5, sticky="")
+        self.btn_columns.grid(row=0, column=9, pady=5, padx=5, sticky="")
         self.btn_columns.configure(state=tkinter.DISABLED)
 
         #
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
-        self.btn_save.grid(row=0, column=9, pady=5, padx=5, sticky="e")
+        self.btn_save.grid(row=0, column=10, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state=tkinter.DISABLED)
-        self.grid_columnconfigure(9, weight=1)
+        self.grid_columnconfigure(10, weight=1)
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.bom_separator)
@@ -696,15 +694,14 @@ class PnPView(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class PnPConfig(customtkinter.CTkFrame):
-    pnp_view: PnPView = None
-    column_selector: ColumnsSelectorWindow = None
-
     def __init__(self, master, **kwargs):
         assert "pnp_view" in kwargs
-        self.pnp_view = kwargs.pop("pnp_view")
+        self.pnp_view: PnPView = kwargs.pop("pnp_view")
         assert isinstance(self.pnp_view, PnPView)
-
+        # kwargs cleared from unexpected arguments -> call init
         super().__init__(master, **kwargs)
+
+        self.column_selector: ColumnsSelectorWindow = None
 
         #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
@@ -736,21 +733,25 @@ class PnPConfig(customtkinter.CTkFrame):
         self.btn_load.grid(row=0, column=6, pady=5, padx=5, sticky="e")
 
         #
+        sep_v = tkinter.ttk.Separator(self, orient='vertical')
+        sep_v.grid(row=0, column=7, pady=2, padx=5, sticky="ns")
+
+        #
         self.lbl_columns = customtkinter.CTkLabel(self, text="", justify="left")
-        self.lbl_columns.grid(row=0, column=7, pady=5, padx=(15,5), sticky="w")
+        self.lbl_columns.grid(row=0, column=8, pady=5, padx=(15,5), sticky="w")
         self.update_lbl_columns()
 
         self.btn_columns = customtkinter.CTkButton(self, text="Select\ncolumn...",
                                                    command=self.button_columns_event)
-        self.btn_columns.grid(row=0, column=8, pady=5, padx=5, sticky="")
+        self.btn_columns.grid(row=0, column=9, pady=5, padx=5, sticky="")
         self.btn_columns.configure(state=tkinter.DISABLED)
 
         #
         self.btn_save = customtkinter.CTkButton(self, text="Save profile",
                                                 command=self.button_save_event)
-        self.btn_save.grid(row=0, column=9, pady=5, padx=5, sticky="e")
+        self.btn_save.grid(row=0, column=10, pady=5, padx=5, sticky="e")
         self.btn_save.configure(state=tkinter.DISABLED)
-        self.grid_columnconfigure(9, weight=1)
+        self.grid_columnconfigure(10, weight=1)
 
     def load_profile(self):
         self.opt_separator_var.set(proj.profile.pnp_separator)
@@ -846,10 +847,6 @@ class PnPConfig(customtkinter.CTkFrame):
 # -----------------------------------------------------------------------------
 
 class ReportView(customtkinter.CTkFrame):
-    report_html: str = ""
-    bom_view: BOMView = None
-    pnp_view: PnPView = None
-
     def __init__(self, master, **kwargs):
         assert "bom_view" in kwargs
         self.bom_view = kwargs.pop("bom_view")
@@ -858,7 +855,13 @@ class ReportView(customtkinter.CTkFrame):
         assert "pnp_view" in kwargs
         self.pnp_view = kwargs.pop("pnp_view")
         assert isinstance(self.pnp_view, PnPView)
+
+        # kwargs cleared from unexpected arguments -> call init
         super().__init__(master, **kwargs)
+
+        self.report_html = ""
+        self.bom_view: BOMView = None
+        self.pnp_view: PnPView = None
 
         self.report_html = """
             <h1>The PRE element</h1>

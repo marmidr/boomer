@@ -2,6 +2,16 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.7.2 - 2023-08-14
+
+* Added
+* Changed
+  * UI improvements
+* Deprecated
+* Removed
+* Fixed
+  * refactoring: removed static class members
+
 ## 0.7.1 - 2023-07-17
 
 * Added

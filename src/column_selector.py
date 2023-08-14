@@ -1,14 +1,11 @@
 import customtkinter
+import tkinter
 import logging
 import typing
 
 # -----------------------------------------------------------------------------
 
 class ColumnsSelectorResult:
-    designator_col: str
-    comment_col: str
-    has_column_headers: bool
-
     def __init__(self):
         self.designator_col = ""
         self.comment_col = ""
@@ -17,8 +14,6 @@ class ColumnsSelectorResult:
 # -----------------------------------------------------------------------------
 
 class ColumnsSelectorWindow(customtkinter.CTkToplevel):
-    callback: typing.Callable
-
     def __init__(self, *args, **kwargs):
         assert "columns" in kwargs
         columns = kwargs.pop("columns")
@@ -26,7 +21,7 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         assert type(columns) is list
         # logging.debug("columns: {}".format(self.columns))
         assert "callback" in kwargs
-        self.callback = kwargs.pop("callback")
+        self.callback: typing.Callable = kwargs.pop("callback")
 
         assert "has_column_headers" in kwargs
         has_column_headers = kwargs.pop("has_column_headers")
@@ -90,8 +85,8 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
                                                 variable=self.opt_comment_var)
         opt_comment.grid(row=2, column=1, pady=5, padx=5, sticky="we")
 
-        lbl_hline = customtkinter.CTkLabel(self, text="—" * 50)
-        lbl_hline.grid(row=3, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
+        sep_h = tkinter.ttk.Separator(self, orient='horizontal')
+        sep_h.grid(row=3, column=0, columnspan=2, pady=5, padx=5, sticky="we")
 
         self.btn_cancel = customtkinter.CTkButton(self, text="Cancel",
                                                    command=self.button_cancel_event)
