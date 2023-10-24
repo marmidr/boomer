@@ -3,26 +3,34 @@ import tkinter
 # import logging
 import typing
 
+import ui_helpers
+
 # -----------------------------------------------------------------------------
 
 class MessageBox(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
         """
         Opens a new MessageBox popup:
+        app=main wnd, so we know how to center the popup
         dialog_type=str - 'yn', 'ync', 'o', 'oc'
         message=str - text of the message
         callback=typing.Callable[[str], None] - function receiving "y", "n", "o", "c"
         """
+        assert "app" in kwargs
+        app = kwargs.pop("app")
+
         assert "dialog_type" in kwargs
         self.dialog_type = kwargs.pop("dialog_type")
+
         assert "message" in kwargs
         self.message = kwargs.pop("message")
+
         assert "callback" in kwargs
         self.callback: typing.Callable[[str], None] = kwargs.pop("callback")
 
         super().__init__(*args, **kwargs)
-        self.geometry("400x150")
-        #
+        ui_helpers.window_set_centered(app, self, 400, 150)
+
         lbl_message = customtkinter.CTkLabel(self, text=self.message)
         lbl_message.grid(row=0, column=0, pady=15, padx=15, sticky="wens", columnspan=3)
         #

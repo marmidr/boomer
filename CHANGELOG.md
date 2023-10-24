@@ -5,6 +5,7 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 ## 0.8.1 - 2023-08-14
 
 * Added
+  * Popup windows are centered on main App window
 * Changed
   * UI improvements
 * Deprecated

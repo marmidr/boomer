@@ -3,6 +3,8 @@ import tkinter
 import logging
 import typing
 
+import ui_helpers
+
 # -----------------------------------------------------------------------------
 
 class ColumnsSelectorResult:
@@ -17,6 +19,9 @@ class ColumnsSelectorResult:
 
 class ColumnsSelectorWindow(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
+        assert "app" in kwargs
+        app = kwargs.pop("app")
+
         assert "columns" in kwargs
         columns = kwargs.pop("columns")
 
@@ -58,7 +63,7 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         # ----------
 
         super().__init__(*args, **kwargs)
-        self.geometry("400x250")
+        ui_helpers.window_set_centered(app, self, 400, 250)
 
         # prepend column titles with their corresponding index
         columns = [f"{idx}. {item}" for (idx,item) in enumerate(columns)]
