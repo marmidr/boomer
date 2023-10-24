@@ -15,8 +15,8 @@ def test_default():
     tg = TextGrid()
     assert tg.nrows == 0
     assert tg.ncols == 0
-    assert type(tg.rows) is list
-    assert len(tg.rows) == 0
+    assert type(tg.rows_raw()) is list
+    assert len(tg.rows_raw()) == 0
 
 def test_full_features():
     expected_lines = (
@@ -29,18 +29,18 @@ def test_full_features():
     )
 
     tg = TextGrid()
-    tg.rows.append(["List of materials"])
-    tg.rows.append(["ID", "Val", "Comment"])
-    tg.rows.append(["#", None, ""])
-    tg.rows.append(["R1", "15k", "resistor"])
-    tg.rows.append(["R3", 1.2, None])
-    tg.rows.append(["Jumper", ""])
-    tg.rows.append(["U1", "STM32F12345678", 4321])
-    tg.nrows = len(tg.rows)
+    tg.rows_raw().append(["List of materials"])
+    tg.rows_raw().append(["ID", "Val", "Comment"])
+    tg.rows_raw().append(["#", None, ""])
+    tg.rows_raw().append(["R1", "15k", "resistor"])
+    tg.rows_raw().append(["R3", 1.2, None])
+    tg.rows_raw().append(["Jumper", ""])
+    tg.rows_raw().append(["U1", "STM32F12345678", 4321])
+    tg.nrows = len(tg.rows_raw())
     tg.ncols = 3
     tg.align_number_of_columns()
-    assert tg.rows[0][1] == ""
-    assert tg.rows[0][2] == ""
+    assert tg.rows_raw()[0][1] == ""
+    assert tg.rows_raw()[0][2] == ""
     formatted = tg.format_grid(1)
     # print()
     # print(txt)

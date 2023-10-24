@@ -19,6 +19,6 @@ def test_bom():
     grid = ods_reader.read_ods_sheet(f"{tests_path}/assets/bom.ods")
     assert grid.nrows == 24-1
     assert grid.ncols == 15
-    assert grid.rows[-3][2] == "100n"
+    assert grid.rows_raw()[-3][2] == "100n"
     # check if empty cells were appended
-    assert grid.rows[0][14] == ""
+    assert grid.rows_raw()[0][14] == ""

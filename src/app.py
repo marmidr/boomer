@@ -476,8 +476,8 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def button_columns_event(self):
         logging.debug("Select BOM columns...")
-        if proj.bom_grid and len(proj.bom_grid.rows) >= proj.profile.bom_first_row:
-            columns = proj.bom_grid.rows[proj.profile.bom_first_row]
+        if proj.bom_grid and len(proj.bom_grid.rows_raw()) >= proj.profile.bom_first_row:
+            columns = proj.bom_grid.rows_raw()[proj.profile.bom_first_row]
         else:
             columns = ["..."]
 
@@ -597,7 +597,7 @@ class PnPView(customtkinter.CTkFrame):
                 ))
 
             proj.pnp_grid.nrows += pnp2_grid.nrows
-            proj.pnp_grid.rows.extend(pnp2_grid.rows)
+            proj.pnp_grid.rows_raw().extend(pnp2_grid.rows_raw())
 
         pnp_txt_grid = proj.pnp_grid.format_grid(proj.profile.pnp_first_row, proj.profile.pnp_last_row)
         self.textbox.insert("0.0", pnp_txt_grid)
@@ -723,8 +723,8 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def button_columns_event(self):
         logging.debug("Select PnP columns...")
-        if proj.pnp_grid and len(proj.pnp_grid.rows) >= proj.profile.pnp_first_row:
-            columns = proj.pnp_grid.rows[proj.profile.pnp_first_row]
+        if proj.pnp_grid and len(proj.pnp_grid.rows_raw()) >= proj.profile.pnp_first_row:
+            columns = proj.pnp_grid.rows_raw()[proj.profile.pnp_first_row]
         else:
             columns = ["..."]
 

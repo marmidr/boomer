@@ -20,7 +20,7 @@ def test_bom():
     grid = xls_reader.read_xls_sheet(f"{tests_path}/assets/bom.xls")
     assert grid.nrows == 57-7 # skip lines with empty column A
     assert grid.ncols == 10
-    assert grid.rows[0][9] == "50"
-    assert grid.rows[-1][2] == "HC-49U"
+    assert grid.rows_raw()[0][9] == "50"
+    assert grid.rows_raw()[-1][2] == "HC-49U"
     # check if empty cells were appended
-    assert grid.rows[1][9] == ""
+    assert grid.rows_raw()[1][9] == ""

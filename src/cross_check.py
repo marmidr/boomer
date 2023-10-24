@@ -49,7 +49,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             (
                 i
                 for i in range(grid.text_grid.ncols)
-                if grid.text_grid.rows[grid.first_row][i] == grid.designator_col
+                if grid.text_grid.rows_raw()[grid.first_row][i] == grid.designator_col
             ),
             -1,
         )
@@ -58,7 +58,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             (
                 i
                 for i in range(grid.text_grid.ncols)
-                if grid.text_grid.rows[grid.first_row][i] == grid.comment_col
+                if grid.text_grid.rows_raw()[grid.first_row][i] == grid.comment_col
             ),
             -1,
         )
@@ -71,7 +71,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
                 (
                     i
                     for i in range(grid.text_grid.ncols)
-                    if grid.text_grid.rows[grid.first_row][i] == grid.coord_x_col
+                    if grid.text_grid.rows_raw()[grid.first_row][i] == grid.coord_x_col
                 ),
                 -1,
             )
@@ -80,7 +80,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
                 (
                     i
                     for i in range(grid.text_grid.ncols)
-                    if grid.text_grid.rows[grid.first_row][i] == grid.coord_y_col
+                    if grid.text_grid.rows_raw()[grid.first_row][i] == grid.coord_y_col
                 ),
                 -1,
             )
@@ -106,17 +106,18 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
         raise ValueError(f"{grid_name} last row > number of rows")
 
     for row in range(first_row, last_row):
-        designators = grid.text_grid.rows[row][designator_col_idx]
-        cmnt = grid.text_grid.rows[row][comment_col_idx]
+        dsgn = grid.text_grid.rows_raw()[row][designator_col_idx]
+        cmnt = grid.text_grid.rows_raw()[row][comment_col_idx]
         if coord_x_col_idx > -1 and coord_y_col_idx > -1:
-            cx = grid.text_grid.rows[row][coord_x_col_idx]
-            cy = grid.text_grid.rows[row][coord_y_col_idx]
+            cx = grid.text_grid.rows_raw()[row][coord_x_col_idx]
+            cy = grid.text_grid.rows_raw()[row][coord_y_col_idx]
         else:
             cx = cy = ""
+
         # in BOM, designator column used to have a number of items
-        designators = designators.split(',')
+        dsgn = dsgn.split(',')
         # logging.debug(f"designators: '{dsgn}'")
-        for d in designators:
+        for d in dsgn:
             d = d.strip()
             output[d] = (cmnt, cx, cy)
 
