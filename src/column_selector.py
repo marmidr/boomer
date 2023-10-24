@@ -17,7 +17,7 @@ class ColumnsSelectorResult:
 
 # -----------------------------------------------------------------------------
 
-class ColumnsSelectorWindow(customtkinter.CTkToplevel):
+class ColumnsSelector(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
         assert "app" in kwargs
         app = kwargs.pop("app")
@@ -66,8 +66,8 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         ui_helpers.window_set_centered(app, self, 400, 250)
 
         # prepend column titles with their corresponding index
-        columns = [f"{idx}. {item}" for (idx,item) in enumerate(columns)]
-        #
+        columns = [f"{idx+1}. {item}" for (idx,item) in enumerate(columns)]
+
         lbl_col_headers = customtkinter.CTkLabel(self, text="File has column headers")
         lbl_col_headers.grid(row=0, column=0, pady=5, padx=5, sticky="w")
 
@@ -144,10 +144,10 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
                 default_idx = columns.index(col_default)
             except ValueError as e:
                 default_idx = 0
-            col_default = f"{default_idx}. {col_default}"
+            col_default = f"{default_idx+1}. {col_default}"
         else:
             # designator is a column index
-            col_default = f"{col_default}. {columns[col_default]}"
+            col_default = f"{col_default+1}. {columns[col_default]}"
 
         return col_default
 
@@ -179,9 +179,13 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         else:
             # extract column index
             result.designator_col = int(result.designator_col.split(sep=". ")[0])
+            result.designator_col -= 1
             result.comment_col = int(result.comment_col.split(sep=". ")[0])
-            if not self.show_coords:
+            result.comment_col -= 1
+            if self.show_coords:
                 result.coord_x_col = int(result.coord_x_col.split(sep=". ")[0])
+                result.coord_x_col -= 1
                 result.coord_y_col = int(result.coord_y_col.split(sep=". ")[0])
+                result.coord_y_col -= 1
         self.callback(result)
         self.destroy()

@@ -2,10 +2,11 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
-## 0.8.1 - 2023-08-14
+## 0.8.1 - 2023-10-24
 
 * Added
   * Popup windows are centered on main App window
+  * Column selector: indexes starts from 1
 * Changed
   * UI improvements
 * Deprecated

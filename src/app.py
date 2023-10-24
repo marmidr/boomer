@@ -24,7 +24,7 @@ import ods_reader
 import text_grid
 import cross_check
 import report_generator
-from column_selector import ColumnsSelectorWindow, ColumnsSelectorResult
+from column_selector import ColumnsSelector, ColumnsSelectorResult
 from project import *
 from msg_box import MessageBox
 import ui_helpers
@@ -380,7 +380,7 @@ class BOMConfig(customtkinter.CTkFrame):
         # kwargs cleared from unexpected arguments -> call init
         super().__init__(master, **kwargs)
 
-        self.column_selector: ColumnsSelectorWindow = None
+        self.column_selector: ColumnsSelector = None
 
         #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
@@ -483,7 +483,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self, app=self.app,
+        self.column_selector = ColumnsSelector(self, app=self.app,
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.bom_has_column_headers,
                                     designator_default=proj.profile.bom_designator_col,
@@ -625,7 +625,7 @@ class PnPConfig(customtkinter.CTkFrame):
         # kwargs cleared from unexpected arguments -> call init
         super().__init__(master, **kwargs)
 
-        self.column_selector: ColumnsSelectorWindow = None
+        self.column_selector: ColumnsSelector = None
 
         #
         lbl_separator = customtkinter.CTkLabel(self, text="CSV\nSeparator:")
@@ -730,7 +730,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self, app=self.app,
+        self.column_selector = ColumnsSelector(self, app=self.app,
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.pnp_has_column_headers,
                                     designator_default=proj.profile.pnp_designator_col,
