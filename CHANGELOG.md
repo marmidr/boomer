@@ -2,7 +2,18 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.8.1 - 2023-08-14
+
+* Added
+* Changed
+  * UI improvements
+* Deprecated
+* Removed
+* Fixed
+  * refactoring: removed static class members
+
 ## 0.8.0 - 2023-08-03
+
 * Changed
   * column selector for PnP: part X:Y coordinates columns
   * report: list of items that are < 3mm apart

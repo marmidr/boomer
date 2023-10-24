@@ -15,7 +15,7 @@ class ColumnsSelectorResult:
 
 # -----------------------------------------------------------------------------
 
-class ColumnsSelector(customtkinter.CTkToplevel):
+class ColumnsSelectorWindow(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
         assert "columns" in kwargs
         columns = kwargs.pop("columns")
