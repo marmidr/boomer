@@ -2,6 +2,8 @@ import configparser
 import logging
 import os
 
+import text_grid
+
 # -----------------------------------------------------------------------------
 
 class Profile:
@@ -122,8 +124,111 @@ class Profile:
         else:
             raise RuntimeError("Unknown CSV separator")
 
-    def get_bom_delimiter(self) -> str:
+    @property
+    def bom_delimiter(self) -> str:
         return self.translate_separator(self.bom_separator)
 
-    def get_pnp_delimiter(self) -> str:
+    @property
+    def pnp_delimiter(self) -> str:
         return self.translate_separator(self.pnp_separator)
+
+# -----------------------------------------------------------------------------
+
+class Project:
+    """Represents configuration and data of currently selected BOM+PnP files"""
+    def __init__(self):
+        self.bom_path = "<bom_path>"
+        self.pnp_fname = "<pnp_fname>"
+        self.pnp2_fname = ""
+        self.bom_grid: text_grid.TextGrid = None
+        self.bom_grid_dirty = False
+        self.pnp_grid: text_grid.TextGrid = None
+        self.pnp_grid_dirty = False
+        self.loading = False
+
+        # https://docs.python.org/3/library/configparser.html
+        self.__config = configparser.ConfigParser()
+
+        if os.path.isfile(Profile.CONFIG_FILE_NAME):
+            self.__config.read(Profile.CONFIG_FILE_NAME)
+        else:
+            self.__config['common'] = {
+                "initial_dir": "",
+            }
+
+        self.profile = Profile(cfgparser=self.__config)
+
+    def get_name(self) -> str:
+        return os.path.basename(self.bom_path)
+
+    def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
+        try:
+            self.__config[sect_name]
+        except Exception:
+            self.__config[sect_name] = {}
+
+        return self.__config[sect_name]
+
+    def get_projects(self) -> list[str]:
+        projects = [
+            sect.removeprefix("project.")
+            for sect in self.__config.sections()
+            if sect.startswith("project.")
+        ]
+        for prj_path in reversed(projects):
+            if not os.path.exists(prj_path):
+                logging.info(f"Project '{prj_path}' not found - removed")
+                projects.remove(prj_path)
+                self.del_project(prj_path)
+
+        projects.sort()
+        return projects
+
+    def del_project(self, proj_path: str):
+        sect_name = f"project.{proj_path}"
+        if sect_name in self.__config.sections():
+            self.__config.remove_section(sect_name)
+            with open(Profile.CONFIG_FILE_NAME, 'w') as f:
+                self.__config.write(f)
+        else:
+            logging.warning(f"Project '{proj_path}' not found")
+
+    def del_profile(self, name):
+        sect_name = f"profile.{name}"
+        if sect_name in self.__config.sections():
+            self.__config.remove_section(sect_name)
+            with open(Profile.CONFIG_FILE_NAME, 'w') as f:
+                self.__config.write(f)
+            # reset profile
+            self.profile = Profile(cfgparser=self.__config)
+        else:
+            logging.warning(f"Profile '{name}' not found")
+
+    def cfg_count_profile(self, profile_name: str) -> int:
+        cnt = 0
+        projs = self.get_projects()
+        for prj in projs:
+            section = self.cfg_get_section(f"project.{prj}")
+            if section["profile"] == profile_name:
+                cnt += 1
+        return cnt
+
+    def cfg_get_profiles(self) -> list[str]:
+        profiles = [
+            sect.removeprefix("profile.")
+            for sect in self.__config.sections()
+            if sect.startswith("profile.")
+        ]
+        if not profiles:
+            profiles.append("default-profile")
+
+        profiles.sort()
+        return profiles
+
+    def cfg_save_project(self):
+        section = self.cfg_get_section(f"project.{self.bom_path}")
+        section["pnp"] = self.pnp_fname
+        section["pnp2"] = self.pnp2_fname
+        section["profile"] = self.profile.name
+        with open(Profile.CONFIG_FILE_NAME, 'w') as f:
+            self.__config.write(f)
