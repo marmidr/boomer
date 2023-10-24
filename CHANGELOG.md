@@ -8,6 +8,7 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
   * Popup windows are centered on main App window
   * Column selector: indexes starts from 1
 * Changed
+  * CSV/XLS/XLSX/ODS readers update from Yedytor 0.6.3
 * Deprecated
 * Removed
 * Fixed
