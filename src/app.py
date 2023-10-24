@@ -30,7 +30,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.7.2"
+APP_NAME = "BOM vs PnP Cross Checker v0.7.3"
 
 # -----------------------------------------------------------------------------
 
@@ -104,6 +104,9 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
 
 class ProjectFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
+        assert "app" in kwargs
+        self.app = kwargs.pop("app")
+
         super().__init__(master, **kwargs)
 
         self.bom_config = None
@@ -299,6 +302,9 @@ class ProjectFrame(customtkinter.CTkFrame):
 
 class BOMView(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
+        assert "app" in kwargs
+        self.app = kwargs.pop("app")
+
         super().__init__(master, **kwargs)
 
         self.textbox = customtkinter.CTkTextbox(self,
@@ -358,6 +364,9 @@ class BOMView(customtkinter.CTkFrame):
 
 class BOMConfig(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
+        assert "app" in kwargs
+        self.app = kwargs.pop("app")
+
         assert "bom_view" in kwargs
         self.bom_view: BOMView = kwargs.pop("bom_view")
         assert isinstance(self.bom_view, BOMView)
@@ -465,7 +474,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self,
+        self.column_selector = ColumnsSelectorWindow(self, app=self.app,
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.bom_has_column_headers,
                                     designator_default=proj.profile.bom_designator_col,
@@ -481,9 +490,9 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def button_save_event(self):
         if (n := proj.cfg_count_profile(proj.profile.name)) > 1:
-            mb = MessageBox(dialog_type="yn",
-                            message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
-                            callback=self.onmsgbox_on_click)
+            MessageBox(self.app, dialog_type="yn",
+                        message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
+                        callback=self.onmsgbox_on_click)
             return
 
         self.btn_save.configure(state=tkinter.DISABLED)
@@ -508,6 +517,9 @@ class BOMConfig(customtkinter.CTkFrame):
 
 class PnPView(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
+        assert "app" in kwargs
+        self.app = kwargs.pop("app")
+
         super().__init__(master, **kwargs)
 
         self.textbox = customtkinter.CTkTextbox(self,
@@ -594,6 +606,9 @@ class PnPView(customtkinter.CTkFrame):
 
 class PnPConfig(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
+        assert "app" in kwargs
+        self.app = kwargs.pop("app")
+
         assert "pnp_view" in kwargs
         self.pnp_view: PnPView = kwargs.pop("pnp_view")
         assert isinstance(self.pnp_view, PnPView)
@@ -701,7 +716,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
         if self.column_selector:
             self.column_selector.destroy()
-        self.column_selector = ColumnsSelectorWindow(self,
+        self.column_selector = ColumnsSelectorWindow(self, app=self.app,
                                     columns=columns, callback=self.column_selector_callback,
                                     has_column_headers=proj.profile.pnp_has_column_headers,
                                     designator_default=proj.profile.pnp_designator_col,
@@ -718,9 +733,9 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def button_save_event(self):
         if (n := proj.cfg_count_profile(proj.profile.name)) > 1:
-            mb = MessageBox(dialog_type="yn",
-                            message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
-                            callback=self.onmsgbox_on_click)
+            MessageBox(self.app, dialog_type="yn",
+                        message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
+                        callback=self.onmsgbox_on_click)
             return
 
         self.btn_save.configure(state=tkinter.DISABLED)
@@ -747,6 +762,9 @@ class PnPConfig(customtkinter.CTkFrame):
 
 class ReportView(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
+        assert "app" in kwargs
+        self.app = kwargs.pop("app")
+
         assert "bom_view" in kwargs
         self.bom_view = kwargs.pop("bom_view")
         assert isinstance(self.bom_view, BOMView)
@@ -897,15 +915,15 @@ class CtkApp(customtkinter.CTk):
         tabview.set("Project")  # set currently visible tab
 
         # panel with predefined configs
-        proj_frame = ProjectFrame(tab_prj)
+        proj_frame = ProjectFrame(tab_prj, app=self)
         proj_frame.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
         tab_prj.grid_columnconfigure(0, weight=1)
         tab_prj.grid_rowconfigure(0, weight=1)
 
         # panel with the BOM
-        self.bom_view = BOMView(tab_bom)
+        self.bom_view = BOMView(tab_bom, app=self)
         self.bom_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
-        self.bom_config = BOMConfig(tab_bom, bom_view=self.bom_view)
+        self.bom_config = BOMConfig(tab_bom, app=self, bom_view=self.bom_view)
         self.bom_config.grid(row=1, column=0, pady=5, padx=5, sticky="we")
         proj_frame.bom_config = self.bom_config
         proj_frame.bom_view = self.bom_view
@@ -914,9 +932,9 @@ class CtkApp(customtkinter.CTk):
         tab_bom.grid_rowconfigure(0, weight=1)
 
         # panel with the PnP
-        self.pnp_view = PnPView(tab_pnp)
+        self.pnp_view = PnPView(tab_pnp, app=self)
         self.pnp_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
-        self.pnp_config = PnPConfig(tab_pnp, pnp_view=self.pnp_view)
+        self.pnp_config = PnPConfig(tab_pnp, app=self, pnp_view=self.pnp_view)
         self.pnp_config.grid(row=1, column=0, padx=5, pady=5, sticky="we")
         proj_frame.pnp_config = self.pnp_config
         proj_frame.pnp_view = self.pnp_view
@@ -925,7 +943,7 @@ class CtkApp(customtkinter.CTk):
         tab_pnp.grid_rowconfigure(0, weight=1)
 
         # panel with the report
-        self.report_view = ReportView(tab_report, bom_view=self.bom_view, pnp_view=self.pnp_view)
+        self.report_view = ReportView(tab_report, app=self, bom_view=self.bom_view, pnp_view=self.pnp_view)
         self.report_view.grid(row=0, column=0, padx=5, pady=5, sticky="wens")
         proj_frame.report_view = self.report_view
 

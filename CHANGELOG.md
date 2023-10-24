@@ -2,6 +2,15 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.7.3 - 2023-10-24
+
+* Added
+  * Popup windows are centered on main App window
+* Changed
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.7.2 - 2023-08-14
 
 * Added
