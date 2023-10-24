@@ -40,10 +40,10 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
                 designator_default_idx = columns.index(designator_default)
             except ValueError as e:
                 designator_default_idx = 0
-            designator_default = f"{designator_default_idx}. {designator_default}"
+            designator_default = f"{designator_default_idx+1}. {designator_default}"
         else:
             # designator is a column index
-            designator_default = f"{designator_default}. {columns[designator_default]}"
+            designator_default = f"{designator_default+1}. {columns[designator_default]}"
 
         assert "comment_default" in kwargs
         comment_default = kwargs.pop("comment_default")
@@ -52,15 +52,15 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
                 comment_default_idx = columns.index(comment_default)
             except ValueError as e:
                 comment_default_idx = 0
-            comment_default = f"{comment_default_idx}. {comment_default}"
+            comment_default = f"{comment_default_idx+1}. {comment_default}"
         else:
-            comment_default = f"{comment_default}. {columns[comment_default]}"
+            comment_default = f"{comment_default+1}. {columns[comment_default]}"
 
         super().__init__(*args, **kwargs)
         ui_helpers.window_set_centered(app, self, 400, 195)
 
         # prepend column titles with their corresponding index
-        columns = [f"{idx}. {item}" for (idx,item) in enumerate(columns)]
+        columns = [f"{idx+1}. {item}" for (idx,item) in enumerate(columns)]
 
         lbl_col_headers = customtkinter.CTkLabel(self, text="File has column headers")
         lbl_col_headers.grid(row=0, column=0, pady=5, padx=5, sticky="w")
@@ -128,6 +128,8 @@ class ColumnsSelectorWindow(customtkinter.CTkToplevel):
         else:
             # extract column index
             result.designator_col = int(result.designator_col.split(sep=". ")[0])
+            result.designator_col -= 1
             result.comment_col = int(result.comment_col.split(sep=". ")[0])
+            result.comment_col -= 1
         self.callback(result)
         self.destroy()

@@ -6,6 +6,7 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
 * Added
   * Popup windows are centered on main App window
+  * Column selector: indexes starts from 1
 * Changed
 * Deprecated
 * Removed
