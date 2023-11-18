@@ -26,7 +26,7 @@ class TextGrid:
         """
         Returns a list of each column width, in chars
         """
-        col_max_w = [0 for _ in range(self.ncols)]
+        col_max_w = [0 for _ in range(self.ncols+1)]
         for r, row in enumerate(self.__rows):
             if r >= first_row:
                 for c, cell in enumerate(row):
@@ -85,3 +85,4 @@ class ConfiguredTextGrid:
         # only for PnP:
         self.coord_x_col = ""
         self.coord_y_col = ""
+        self.layer_col = ""

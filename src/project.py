@@ -27,6 +27,7 @@ class Profile:
         self.pnp_comment_col = "?"
         self.pnp_coord_x_col = "?"
         self.pnp_coord_y_col = "?"
+        self.pnp_layer_col = "?"
         #
         self.__config = cfgparser
 
@@ -56,6 +57,7 @@ class Profile:
                 self.pnp_comment_col = section.get("pnp_comment_col", "?")
                 self.pnp_coord_x_col = section.get("pnp_coord_x_col", "?")
                 self.pnp_coord_y_col = section.get("pnp_coord_y_col", "?")
+                self.pnp_layer_col = section.get("pnp_layer_col", "?")
                 if not self.pnp_has_column_headers:
                     self.pnp_designator_col = int(self.pnp_designator_col)
                     self.pnp_comment_col = int(self.pnp_comment_col)
@@ -82,6 +84,7 @@ class Profile:
             "pnp_comment_col": self.pnp_comment_col,
             "pnp_coord_x_col": self.pnp_coord_x_col,
             "pnp_coord_y_col": self.pnp_coord_y_col,
+            "pnp_layer_col": self.pnp_layer_col,
         }
         with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
@@ -153,15 +156,22 @@ class Project:
 
         if os.path.isfile(Profile.CONFIG_FILE_NAME):
             self.__config.read(Profile.CONFIG_FILE_NAME)
-        else:
-            self.__config['common'] = {
-                "initial_dir": "",
-            }
+
+        section = self.cfg_get_section("common")
+        if section.get('initial_dir', "") == "":
+            section['initial_dir'] = "."
+        if section.get("components_min_distance", "") == "":
+            section['components_min_distance'] = "3.0"
 
         self.profile = Profile(cfgparser=self.__config)
 
     def get_name(self) -> str:
         return os.path.basename(self.bom_path)
+
+    def get_min_distance(self) -> float:
+        section = self.cfg_get_section("common")
+        dist = section.get("components_min_distance", "3.0")
+        return float(dist)
 
     def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
         try:

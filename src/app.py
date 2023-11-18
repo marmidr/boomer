@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.8.1"
+APP_NAME = "BOM vs PnP Cross Checker v0.8.2"
 
 # -----------------------------------------------------------------------------
 
@@ -597,6 +597,12 @@ class PnPView(customtkinter.CTkFrame):
                     proj.pnp_grid.ncols, pnp2_grid.ncols
                 ))
 
+            # add a layer column (only for 2 separate files)
+            for row in proj.pnp_grid.rows_raw():
+                row.append("t")
+            for row in pnp2_grid.rows_raw():
+                row.append("b")
+
             proj.pnp_grid.nrows += pnp2_grid.nrows
             proj.pnp_grid.rows_raw().extend(pnp2_grid.rows_raw())
 
@@ -692,8 +698,8 @@ class PnPConfig(customtkinter.CTkFrame):
         self.lbl_columns.configure(text=f"COLUMNS:\n"\
             f"• DSGN: {prepare_id(proj.profile.pnp_designator_col)}\n"\
             f"• CMNT: {prepare_id(proj.profile.pnp_comment_col)}\n"\
-            f"• X:    {prepare_id(proj.profile.pnp_coord_x_col)}\n"\
-            f"• Y:    {prepare_id(proj.profile.pnp_coord_y_col)}")
+            f"• X: {prepare_id(proj.profile.pnp_coord_x_col)} • Y: {prepare_id(proj.profile.pnp_coord_y_col)}\n"\
+            f"• LR: {prepare_id(proj.profile.pnp_layer_col)}")
 
     def opt_separator_event(self, new_sep: str):
         logging.info(f"  PnP separator: {new_sep}")
@@ -738,19 +744,21 @@ class PnPConfig(customtkinter.CTkFrame):
                                     designator_default=proj.profile.pnp_designator_col,
                                     comment_default=proj.profile.pnp_comment_col,
                                     coord_x_default=proj.profile.pnp_coord_x_col,
-                                    coord_y_default=proj.profile.pnp_coord_y_col
+                                    coord_y_default=proj.profile.pnp_coord_y_col,
+                                    layer_default=proj.profile.pnp_layer_col
                                 )
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
         logging.info("Selected PnP columns: "\
                     f"dsgn='{result.designator_col}', cmnt='{result.comment_col}', "\
-                    f"x='{result.coord_x_col}', y='{result.coord_y_col}'")
+                    f"x='{result.coord_x_col}', y='{result.coord_y_col}', lr='{result.layer_col}'")
         proj.profile.pnp_has_column_headers = result.has_column_headers
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
         proj.profile.pnp_coord_x_col = result.coord_x_col
         proj.profile.pnp_coord_y_col = result.coord_y_col
+        proj.profile.pnp_layer_col = result.layer_col
         self.update_lbl_columns()
         self.btn_save.configure(state=tkinter.NORMAL)
 
@@ -877,9 +885,10 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.last_row = proj.profile.pnp_last_row
         pnp_cfg.coord_x_col = proj.profile.pnp_coord_x_col
         pnp_cfg.coord_y_col = proj.profile.pnp_coord_y_col
+        pnp_cfg.layer_col = proj.profile.pnp_layer_col
 
         try:
-            ccresult = cross_check.compare(bom_cfg, pnp_cfg)
+            ccresult = cross_check.compare(bom_cfg, pnp_cfg, proj.get_min_distance())
             self.report_html = report_generator.prepare_html_report(proj.get_name(), ccresult)
             self.htmlview.set_html(self.report_html)
             self.save_report_to_file()

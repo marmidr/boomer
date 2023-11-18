@@ -5,8 +5,11 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 ## 0.8.2 - 2023-11-18
 
 * Added
+  * Report: distance checker - minimum distance taken from the config file:
+    [common]->"components_min_distance"
 * Changed
   * BOM and PnP columns in status bar: when numeric column ID is used, indexes starts from 1, not 0
+  * Report: distance checker - only components from the same layer checked
 * Deprecated
 * Removed
 * Fixed

@@ -13,6 +13,7 @@ class ColumnsSelectorResult:
         self.comment_col = ""
         self.coord_x_col = ""
         self.coord_y_col = ""
+        self.layer_col = ""
         self.has_column_headers = True
 
 # -----------------------------------------------------------------------------
@@ -49,21 +50,24 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         # ----------
 
         # optional, only for PnP
-        if "coord_x_default" in kwargs and "coord_y_default" in kwargs:
+        if "coord_x_default" in kwargs and "coord_y_default" in kwargs and "layer_default" in kwargs:
             coord_x_default = kwargs.pop("coord_x_default")
             coord_x_default = self.__format_column(has_column_headers, columns, coord_x_default)
             coord_y_default = kwargs.pop("coord_y_default")
             coord_y_default = self.__format_column(has_column_headers, columns, coord_y_default)
+            layer_default = kwargs.pop("layer_default")
+            layer_default = self.__format_column(has_column_headers, columns, layer_default)
             self.show_coords = True
         else:
             coord_x_default = ""
             coord_y_default = ""
+            layer_default = ""
             self.show_coords = False
 
         # ----------
 
         super().__init__(*args, **kwargs)
-        ui_helpers.window_set_centered(app, self, 400, 250)
+        ui_helpers.window_set_centered(app, self, 400, 290)
 
         # prepend column titles with their corresponding index
         columns = [f"{idx+1}. {item}" for (idx,item) in enumerate(columns)]
@@ -121,17 +125,28 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             opt_coord_y.grid(row=4, column=1, pady=5, padx=5, sticky="we")
 
         #
+        lbl_layer = customtkinter.CTkLabel(self, text="Layer")
+        lbl_layer.grid(row=5, column=0, pady=5, padx=5, sticky="w")
+
+        self.opt_layer_var = customtkinter.StringVar(value=layer_default)
+        if self.show_coords:
+            opt_layer = customtkinter.CTkOptionMenu(self, values=columns,
+                                                    command=self.opt_event,
+                                                    variable=self.opt_layer_var)
+            opt_layer.grid(row=5, column=1, pady=5, padx=5, sticky="we")
+
+        #
         sep_h = tkinter.ttk.Separator(self, orient='horizontal')
-        sep_h.grid(row=5, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
+        sep_h.grid(row=6, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
 
         self.btn_cancel = customtkinter.CTkButton(self, text="Cancel",
                                                    command=self.button_cancel_event)
         #
-        self.btn_cancel.grid(row=6, column=0, pady=5, padx=5, sticky="")
+        self.btn_cancel.grid(row=7, column=0, pady=5, padx=5, sticky="")
 
         self.btn_ok = customtkinter.CTkButton(self, text="OK",
                                                 command=self.button_ok_event)
-        self.btn_ok.grid(row=6, column=1, pady=5, padx=5, sticky="we")
+        self.btn_ok.grid(row=7, column=1, pady=5, padx=5, sticky="we")
         self.btn_ok.configure(state="disabled")
 
         # enable "always-on-top" for this popup window
@@ -148,7 +163,8 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         else:
             # designator is a column index
             if type(col_default) is not int:
-                raise ValueError(f"Column selector: if no headers, column id '{col_default}' must be an int")
+                col_default = 0
+                # raise ValueError(f"Column selector: if no headers, column id '{col_default}' must be an int")
             col_default = f"{col_default+1}. {columns[col_default]}"
 
         return col_default
@@ -171,6 +187,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         result.comment_col = self.opt_comment_var.get()
         result.coord_x_col = self.opt_coord_x_var.get()
         result.coord_y_col = self.opt_coord_y_var.get()
+        result.layer_col = self.opt_layer_var.get()
         if result.has_column_headers:
             # extract column name
             result.designator_col = result.designator_col.split(sep=". ")[1]
@@ -178,6 +195,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             if self.show_coords:
                 result.coord_x_col = result.coord_x_col.split(sep=". ")[1]
                 result.coord_y_col = result.coord_y_col.split(sep=". ")[1]
+                result.layer_col = result.layer_col.split(sep=". ")[1]
         else:
             # extract column index
             result.designator_col = int(result.designator_col.split(sep=". ")[0])
@@ -189,5 +207,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
                 result.coord_x_col -= 1
                 result.coord_y_col = int(result.coord_y_col.split(sep=". ")[0])
                 result.coord_y_col -= 1
+                result.layer_col = int(result.layer_col.split(sep=". ")[0])
+                result.layer_col -= 1
         self.callback(result)
         self.destroy()

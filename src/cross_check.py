@@ -22,8 +22,8 @@ class CrossCheckResult:
 
 # -----------------------------------------------------------------------------
 
-def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, str, str)]:
-    """Returns dictionary: {Designator : (Comment, Coord-X, Coord-Y)}"""
+def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, str, str, str)]:
+    """Returns dictionary: {Designator : (Comment, Coord-X, Coord-Y, Layer)}"""
     if grid.has_column_headers:
         if type(grid.designator_col) is not str:
             raise ValueError(f"{grid_name} designator column id must be a string")
@@ -63,7 +63,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             -1,
         )
 
-        coord_x_col_idx = coord_y_col_idx = -1
+        coord_x_col_idx = coord_y_col_idx = layer_col_idx = -1
 
         if grid_name == "PnP":
             # find the x column index basing on a column title
@@ -84,6 +84,15 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
                 ),
                 -1,
             )
+            # find the layer column index basing on a column title
+            layer_col_idx = next(
+                (
+                    i
+                    for i in range(grid.text_grid.ncols)
+                    if grid.text_grid.rows_raw()[grid.first_row][i] == grid.layer_col
+                ),
+                -1,
+            )
 
         if designator_col_idx == -1:
             raise ValueError(f"{grid_name} designator column not found")
@@ -97,8 +106,9 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
         comment_col_idx = grid.comment_col
         coord_x_col_idx = grid.coord_x_col
         coord_y_col_idx = grid.coord_y_col
+        layer_col_idx = -1
 
-    output: dict[str, (str, str, str)] = {}
+    output: dict[str, (str, str, str, str)] = {}
     first_row = grid.first_row + (1 if grid.has_column_headers else 0)
     last_row = grid.text_grid.nrows if grid.last_row == -1 else grid.last_row
 
@@ -114,19 +124,29 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
         else:
             cx = cy = ""
 
+        if grid_name == "PnP":
+            if layer_col_idx >= 0:
+                # layer column specified
+                lr = grid.text_grid.rows_raw()[row][layer_col_idx]
+            else:
+                # two separate files loaded for Top and Bottom
+                lr = grid.text_grid.rows_raw()[row][-1]
+        else:
+            lr = ""
+
         # in BOM, designator column used to have a number of items
         dsgn = dsgn.split(',')
         # logging.debug(f"designators: '{dsgn}'")
         for d in dsgn:
             d = d.strip()
-            output[d] = (cmnt, cx, cy)
+            output[d] = (cmnt, cx, cy, lr)
 
     return output
 
-def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, (str, str, str)]:
+def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, (str, str, str, str)]:
     return __extract_grid(bom, "BOM")
 
-def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, (str, str, str)]:
+def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, (str, str, str, str)]:
     return __extract_grid(pnp, "PnP")
 
 def __txt_to_mm(coord: (str, str)) -> (float, float):
@@ -145,19 +165,16 @@ def __txt_to_mm(coord: (str, str)) -> (float, float):
         logging.warn(f"Conversion error at: {coord[0]}:{coord[1]}")
         return (0, 0)
 
-def __check_distances(pnp_parts: dict[str, (str, str, str)]) -> list[(str, str, float)]:
-    MIN_DISTANCE = 3.0 #mm
-
+def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: float) -> list[(str, str, float)]:
     # decoded coords cache
     decoded_coords: dict[str, (float, float)] = {}
     parts_checked: dict[str, list[str]] = {}
     output = []
 
-    # TODO: check only TOP vs TOP, BOTTOM vs BOTTOM
-
     for key_a in pnp_parts:
         for key_b in pnp_parts:
-            if key_b != key_a:
+            # compare only components from the same layer
+            if key_b != key_a and pnp_parts[key_a][3] == pnp_parts[key_b][3]:
                 # check if B vs A already performed
                 if key_a in parts_checked.get(key_b, []):
                     # logging.debug(f"Skip {key_a} vs {key_b}")
@@ -183,12 +200,14 @@ def __check_distances(pnp_parts: dict[str, (str, str, str)]) -> list[(str, str, 
 
                 dist = ((coord_a[0] - coord_b[0])**2.0) + ((coord_a[1] - coord_b[1])**2.0)
                 dist = math.sqrt(dist)
-                if dist < MIN_DISTANCE:
+                if dist < min_distance:
                     logging.debug(f"{key_a}({coord_a[0]:.1f}, {coord_a[1]:.1f}) <--> {key_b}({coord_b[0]:.1f}, {coord_b[1]:.1f}) = {dist:0.1f}mm")
                     output.append((key_a, key_b, dist))
     return output
 
-def __compare(bom_parts: dict[str, (str, str, str)], pnp_parts: dict[str, (str, str, str)]) -> CrossCheckResult:
+def __compare(bom_parts: dict[str, (str, str, str, str)],
+              pnp_parts: dict[str, (str, str, str, str)],
+              min_distance: float) -> CrossCheckResult:
     result = CrossCheckResult()
 
     # check for items present in BOM, but missing in the PnP
@@ -213,7 +232,7 @@ def __compare(bom_parts: dict[str, (str, str, str)], pnp_parts: dict[str, (str, 
 
     # check for conflicting PnP coordinates
     logging.info("Calculate parts center distances...")
-    result.parts_coord_conflicts = __check_distances(pnp_parts)
+    result.parts_coord_conflicts = __check_distances(pnp_parts, min_distance)
     result.parts_coord_conflicts = natsort.natsorted(result.parts_coord_conflicts)
 
     #
@@ -221,7 +240,7 @@ def __compare(bom_parts: dict[str, (str, str, str)], pnp_parts: dict[str, (str, 
 
 # -----------------------------------------------------------------------------
 
-def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid) -> CrossCheckResult:
+def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid, min_distance: float) -> CrossCheckResult:
     """Performs BOM and PnP cross check"""
 
     if bom is None or bom.text_grid is None:
@@ -231,4 +250,4 @@ def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid) -> CrossCheckResul
 
     bom_parts = __extract_bom_parts(bom)
     pnp_parts = __extract_pnp_parts(pnp)
-    return __compare(bom_parts, pnp_parts)
+    return __compare(bom_parts, pnp_parts, min_distance)
