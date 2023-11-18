@@ -29,3 +29,5 @@
 [x] sprawdzanie kolidujących współrzędnych
 [x] xls/xlsx - komórki zawierające liczbę np 100, są czytane jako '100.0' -> usunąć część dziesiętną
 [x] xls/xlsx - komórki zawierające kilka wierszy -> scalać do jednej linii
+[x] sprawdzanie dystansów: powtórzenia  (C1 vs C2, C2 vs C1)
+[ ] sprawdzanie dystansów: TOP vs TOP, BOTTOM vs BOTTOM

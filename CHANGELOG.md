@@ -2,6 +2,17 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.8.2 - 2023-11-18
+
+* Added
+* Changed
+  * BOM and PnP columns in status bar: when numeric column ID is used, indexes starts from 1, not 0
+* Deprecated
+* Removed
+* Fixed
+  * PnP column selector - fixed when column is selected by it's index
+  * Report: distance checker - duplicate checks (C1 vs C2, C2 vs C1) removed
+
 ## 0.8.1 - 2023-10-24
 
 * Added

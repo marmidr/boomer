@@ -150,11 +150,24 @@ def __check_distances(pnp_parts: dict[str, (str, str, str)]) -> list[(str, str, 
 
     # decoded coords cache
     decoded_coords: dict[str, (float, float)] = {}
+    parts_checked: dict[str, list[str]] = {}
     output = []
+
+    # TODO: check only TOP vs TOP, BOTTOM vs BOTTOM
 
     for key_a in pnp_parts:
         for key_b in pnp_parts:
             if key_b != key_a:
+                # check if B vs A already performed
+                if key_a in parts_checked.get(key_b, []):
+                    # logging.debug(f"Skip {key_a} vs {key_b}")
+                    continue
+                else:
+                    if lst := parts_checked.get(key_a):
+                        lst.append(key_b)
+                    else:
+                        parts_checked[key_a] = [key_b]
+
                 # x
                 if coord := decoded_coords.get(key_a):
                     coord_a = coord

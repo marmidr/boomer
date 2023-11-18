@@ -137,7 +137,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         # enable "always-on-top" for this popup window
         self.attributes('-topmost', True)
 
-    def __format_column(self, has_headers: bool, columns: list[str], col_default: str) -> str:
+    def __format_column(self, has_headers: bool, columns: list[str], col_default) -> str:
         if has_headers:
             # prepend column title with its index
             try:
@@ -147,6 +147,8 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             col_default = f"{default_idx+1}. {col_default}"
         else:
             # designator is a column index
+            if type(col_default) is not int:
+                raise ValueError(f"Column selector: if no headers, column id '{col_default}' must be an int")
             col_default = f"{col_default+1}. {columns[col_default]}"
 
         return col_default

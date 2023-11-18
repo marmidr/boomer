@@ -442,9 +442,10 @@ class BOMConfig(customtkinter.CTkFrame):
         self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
+        prepare_id = lambda id: id if type(id) is str else id+1
         self.lbl_columns.configure(text=f"COLUMNS:\n"\
-                                    f"• DSGN: {proj.profile.bom_designator_col}\n"\
-                                    f"• CMNT: {proj.profile.bom_comment_col}")
+                                    f"• DSGN: {prepare_id(proj.profile.bom_designator_col)}\n"\
+                                    f"• CMNT: {prepare_id(proj.profile.bom_comment_col)}")
 
     def opt_separator_event(self, new_sep: str):
         logging.info(f"  BOM separator: {new_sep}")
@@ -687,11 +688,12 @@ class PnPConfig(customtkinter.CTkFrame):
         self.btn_save.configure(text="Save profile" + "\n" + proj.profile.name)
 
     def update_lbl_columns(self):
+        prepare_id = lambda id: id if type(id) is str else id+1
         self.lbl_columns.configure(text=f"COLUMNS:\n"\
-            f"• DSGN: {proj.profile.pnp_designator_col}\n"\
-            f"• CMNT: {proj.profile.pnp_comment_col}\n"\
-            f"• X: {proj.profile.pnp_coord_x_col}\n"\
-            f"• Y: {proj.profile.pnp_coord_y_col}")
+            f"• DSGN: {prepare_id(proj.profile.pnp_designator_col)}\n"\
+            f"• CMNT: {prepare_id(proj.profile.pnp_comment_col)}\n"\
+            f"• X:    {prepare_id(proj.profile.pnp_coord_x_col)}\n"\
+            f"• Y:    {prepare_id(proj.profile.pnp_coord_y_col)}")
 
     def opt_separator_event(self, new_sep: str):
         logging.info(f"  PnP separator: {new_sep}")
@@ -796,10 +798,6 @@ class ReportView(customtkinter.CTkFrame):
 
         # kwargs cleared from unexpected arguments -> call init
         super().__init__(master, **kwargs)
-
-        self.report_html = ""
-        self.bom_view: BOMView = None
-        self.pnp_view: PnPView = None
 
         self.report_html = """
             <h1>The PRE element</h1>

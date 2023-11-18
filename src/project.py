@@ -54,11 +54,13 @@ class Profile:
                 self.pnp_separator = section.get("pnp_separator", "COMMA")
                 self.pnp_designator_col = section.get("pnp_designator_col", "?")
                 self.pnp_comment_col = section.get("pnp_comment_col", "?")
-                if self.pnp_has_column_headers == False:
-                    self.pnp_designator_col = int(self.pnp_designator_col)
-                    self.pnp_comment_col = int(self.pnp_comment_col)
                 self.pnp_coord_x_col = section.get("pnp_coord_x_col", "?")
                 self.pnp_coord_y_col = section.get("pnp_coord_y_col", "?")
+                if not self.pnp_has_column_headers:
+                    self.pnp_designator_col = int(self.pnp_designator_col)
+                    self.pnp_comment_col = int(self.pnp_comment_col)
+                    self.pnp_coord_x_col = int(self.pnp_coord_x_col)
+                    self.pnp_coord_y_col = int(self.pnp_coord_y_col)
             else:
                 logging.warning(f"No section {self.name} in config file")
         else:
