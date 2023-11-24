@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.8.2"
+APP_NAME = "BOM vs PnP Cross Checker v0.8.3"
 
 # -----------------------------------------------------------------------------
 
@@ -501,7 +501,7 @@ class BOMConfig(customtkinter.CTkFrame):
 
     def button_save_event(self):
         if (n := proj.cfg_count_profile(proj.profile.name)) > 1:
-            MessageBox(self.app, dialog_type="yn",
+            MessageBox(app=self.app, dialog_type="yn",
                         message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
                         callback=self.onmsgbox_on_click)
             return
@@ -764,7 +764,7 @@ class PnPConfig(customtkinter.CTkFrame):
 
     def button_save_event(self):
         if (n := proj.cfg_count_profile(proj.profile.name)) > 1:
-            MessageBox(self.app, dialog_type="yn",
+            MessageBox(app=self.app, dialog_type="yn",
                         message=f"Profile '{proj.profile.name}' is used in {n} projects.\nDo you want to overwrite it?",
                         callback=self.onmsgbox_on_click)
             return
@@ -867,6 +867,20 @@ class ReportView(customtkinter.CTkFrame):
             except Exception as e:
                 logging.error(f"Cannot load PnP: {e}")
                 return
+
+        bom_cols_ok = proj.profile.checkBomColumns()
+        if not bom_cols_ok[0]:
+            MessageBox(app=self.app, dialog_type="o",
+                        message=bom_cols_ok[1],
+                        callback=lambda btn: btn)
+            return
+
+        pnp_cols_ok = proj.profile.checkPnpColumns()
+        if not pnp_cols_ok[0]:
+            MessageBox(app=self.app, dialog_type="o",
+                        message=pnp_cols_ok[1],
+                        callback=lambda btn: btn)
+            return
 
         bom_cfg = text_grid.ConfiguredTextGrid()
         bom_cfg.text_grid = proj.bom_grid

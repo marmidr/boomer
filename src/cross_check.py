@@ -29,19 +29,25 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             raise ValueError(f"{grid_name} designator column id must be a string")
         if type(grid.comment_col) is not str:
             raise ValueError(f"{grid_name} comment column id must be a string")
-        if type(grid.coord_x_col) is not str:
-            raise ValueError(f"{grid_name} x column id must be a string")
-        if type(grid.coord_y_col) is not str:
-            raise ValueError(f"{grid_name} y column id must be a string")
+
+        if grid_name == "PnP":
+            if type(grid.coord_x_col) is not str:
+                raise ValueError(f"{grid_name} x column id must be a string")
+            if type(grid.coord_y_col) is not str:
+                raise ValueError(f"{grid_name} y column id must be a string")
     else:
         if type(grid.designator_col) is not int:
             raise ValueError(f"{grid_name} designator column id must be an int")
         if type(grid.comment_col) is not int:
             raise ValueError(f"{grid_name} comment column id must be an int")
-        if type(grid.coord_x_col) is not int:
-            raise ValueError(f"{grid_name} x column id must be an int")
-        if type(grid.coord_y_col) is not int:
-            raise ValueError(f"{grid_name} y column id must be an int")
+
+        if grid_name == "PnP":
+            if type(grid.coord_x_col) is not int:
+                raise ValueError(f"{grid_name} x column id must be an int")
+            if type(grid.coord_y_col) is not int:
+                raise ValueError(f"{grid_name} y column id must be an int")
+
+    coord_x_col_idx = coord_y_col_idx = layer_col_idx = -1
 
     if grid.has_column_headers:
         # find the designator column index basing on a column title
@@ -62,8 +68,6 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             ),
             -1,
         )
-
-        coord_x_col_idx = coord_y_col_idx = layer_col_idx = -1
 
         if grid_name == "PnP":
             # find the x column index basing on a column title
@@ -104,9 +108,10 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
     else:
         designator_col_idx = grid.designator_col
         comment_col_idx = grid.comment_col
-        coord_x_col_idx = grid.coord_x_col
-        coord_y_col_idx = grid.coord_y_col
-        layer_col_idx = -1
+        if grid_name == "PnP":
+            coord_x_col_idx = grid.coord_x_col
+            coord_y_col_idx = grid.coord_y_col
+            layer_col_idx = -1 # the last one
 
     output: dict[str, (str, str, str, str)] = {}
     first_row = grid.first_row + (1 if grid.has_column_headers else 0)

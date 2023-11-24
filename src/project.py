@@ -58,11 +58,12 @@ class Profile:
                 self.pnp_coord_x_col = section.get("pnp_coord_x_col", "?")
                 self.pnp_coord_y_col = section.get("pnp_coord_y_col", "?")
                 self.pnp_layer_col = section.get("pnp_layer_col", "?")
-                if not self.pnp_has_column_headers:
+                if self.pnp_has_column_headers == False:
                     self.pnp_designator_col = int(self.pnp_designator_col)
                     self.pnp_comment_col = int(self.pnp_comment_col)
                     self.pnp_coord_x_col = int(self.pnp_coord_x_col)
                     self.pnp_coord_y_col = int(self.pnp_coord_y_col)
+                    self.pnp_layer_col = int(self.pnp_layer_col)
             else:
                 logging.warning(f"No section {self.name} in config file")
         else:
@@ -88,6 +89,29 @@ class Profile:
         }
         with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
+
+    def checkBomColumns(self) -> (bool, str):
+        unspecified = ""
+        if self.bom_designator_col == "?": unspecified += "Designator, "
+        if self.bom_comment_col == "?": unspecified += "Comment"
+
+        if unspecified != "":
+            return (False, f"BOM columns: {unspecified}\nare unspecified")
+        else:
+            return (True, "")
+
+    def checkPnpColumns(self) -> (bool, str):
+        unspecified = ""
+        if self.pnp_designator_col == "?": unspecified += "Designator, "
+        if self.pnp_comment_col == "?": unspecified += "Comment, "
+        if self.pnp_coord_x_col == "?": unspecified += "X, "
+        if self.pnp_coord_y_col == "?": unspecified += "Y, "
+        if self.pnp_layer_col == "?": unspecified += "Layer"
+
+        if unspecified != "":
+            return (False, f"PnP columns: {unspecified}\nare unspecified")
+        else:
+            return (True, "")
 
     @staticmethod
     def get_separator_names() -> list[str]:

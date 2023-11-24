@@ -2,6 +2,17 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.8.3 - 2023-11-24
+
+* Added
+  * Report: check if the BOM and PnP configurations have columns selected,
+    show MessageBox if not
+* Changed
+* Deprecated
+* Removed
+* Fixed
+  * Report: don't check the X, Y columns when parsing the BOM grid
+
 ## 0.8.2 - 2023-11-18
 
 * Added
