@@ -31,4 +31,4 @@
 [x] xls/xlsx - komórki zawierające kilka wierszy -> scalać do jednej linii
 [x] sprawdzanie dystansów: powtórzenia  (C1 vs C2, C2 vs C1)
 [x] sprawdzanie dystansów: TOP vs TOP, BOTTOM vs BOTTOM
-[ ]
+[x] sprawdź po wczytaniu CSV czy nie użyto innego niż " znaku quotechar

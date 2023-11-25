@@ -2,6 +2,15 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.8.4 - 2023-11-25
+
+* Added
+  * CSV reader: detect if ' is used as a quote char instad of "
+* Changed
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.8.3 - 2023-11-24
 
 * Added
