@@ -26,7 +26,8 @@ def __html_section_end() -> str:
     return f'</pre>{EOL}'
 
 def __html_p(content: str) -> str:
-    return f'<p style="font-size: 80%">{content}</p>{EOL}'
+    # return f'<p style="font-size: 80%">{content}</p>{EOL}'
+    return f'<p style="font-size: 80%">{content}</p>'
 
 def __html_span_red(content: str) -> str:
     return f'<span style="color: IndianRed">{content}</span>'
@@ -92,9 +93,16 @@ def __format_distance(dsgn1: str, dsgn1_w: int, dsgn2: str, dsgn2_w: int, distan
 
 # -----------------------------------------------------------------------------
 
-def prepare_html_report(proj_name: str, ccresult: cross_check.CrossCheckResult) -> str:
+def prepare_html_report(bom_name: str, pnp_names: (str, str), ccresult: cross_check.CrossCheckResult) -> str:
     # html/body tags not necessary, moreover disadviced when used with the `klembord`
-    output = __html_title(f'Cross-check report for: <em>{proj_name}</em>')
+    output = __html_title(f'Cross-check report for: <em>{bom_name}</em>')
+
+    if pnp_names[1] == "":
+        output += __html_p(f"PnP: <em><b>{pnp_names[0]}</b></em>")
+    else:
+        output += __html_p(f"PnP 1: <em><b>{pnp_names[0]}</b></em>")
+        output += __html_p(f"PnP 2: <em><b>{pnp_names[1]}</b></em>")
+
     # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
     output += __html_p(f"Generated: <b>{time.strftime('%Y-%m-%d, %H:%M:%S')}</b>")
 

@@ -903,7 +903,8 @@ class ReportView(customtkinter.CTkFrame):
 
         try:
             ccresult = cross_check.compare(bom_cfg, pnp_cfg, proj.get_min_distance())
-            self.report_html = report_generator.prepare_html_report(proj.get_name(), ccresult)
+            pnps = (proj.pnp_fname, proj.pnp2_fname)
+            self.report_html = report_generator.prepare_html_report(proj.get_name(), pnps, ccresult)
             self.htmlview.set_html(self.report_html)
             self.save_report_to_file()
         except Exception as e:
