@@ -7,6 +7,7 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 * Added
   * CSV reader: detect if ' is used as a quote char instad of "
   * Report: include PnP file names
+  * Report: include the minimum distance between component centers
 * Changed
 * Deprecated
 * Removed
