@@ -31,7 +31,7 @@ import ui_helpers
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.8.4"
+APP_NAME = "BOM vs PnP Cross Checker v0.8.5"
 
 # -----------------------------------------------------------------------------
 
@@ -599,9 +599,9 @@ class PnPView(customtkinter.CTkFrame):
 
             # add a layer column (only for 2 separate files)
             for row in proj.pnp_grid.rows_raw():
-                row.append("t")
+                row.append("top")
             for row in pnp2_grid.rows_raw():
-                row.append("b")
+                row.append("bot")
 
             proj.pnp_grid.nrows += pnp2_grid.nrows
             proj.pnp_grid.rows_raw().extend(pnp2_grid.rows_raw())

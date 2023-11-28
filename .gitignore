@@ -10,3 +10,4 @@ examples/*/*.html
 __pycache__/
 example_ctk/
 htmlcov/
+src/odfpy
