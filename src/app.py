@@ -5,12 +5,11 @@
 # differences in an electronic parts listed in both files, and additionally
 # verify that the part comments (values) match.
 #
-# (c) 2023 Mariusz Midor
+# (c) 2023-2024 Mariusz Midor
 # https://github.com/marmidr/boomer
 
 import customtkinter
 import tkinter
-import logging
 import os
 import sys
 import time
@@ -28,10 +27,11 @@ from column_selector import ColumnsSelector, ColumnsSelectorResult
 from project import *
 from msg_box import MessageBox
 import ui_helpers
+import logger
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.8.5"
+APP_NAME = "BOM vs PnP Cross Checker v0.8.6"
 
 # -----------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         btn_delete.configure(state=tkinter.DISABLED)
 
     def button_clone_event(self):
-        logging.debug("Clone profile as...")
+        logger.debug("Clone profile as...")
         dialog = customtkinter.CTkInputDialog(text="Save profile as:", title="BOM & PnP profile", )
         # set the default value:
         time.sleep(0.1) # widgets are created with delay
@@ -74,7 +74,7 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
         new_profile_name = dialog.get_input().strip()
 
         if '[' in new_profile_name or ']' in new_profile_name:
-            logging.error("Profile name cannot contain square bracket characters: []")
+            logger.error("Profile name cannot contain square bracket characters: []")
             return
 
         if len(new_profile_name) >= 3:
@@ -86,18 +86,18 @@ class ProjectProfileFrame(customtkinter.CTkFrame):
             # update list of profiles
             self.opt_profile.configure(values=proj.cfg_get_profiles())
         else:
-            logging.error("Profile name length must be 3 or more")
+            logger.error("Profile name length must be 3 or more")
 
     def button_del_event(self):
         prof = self.opt_profile_var.get()
         if prof != "":
             # FIXME: app behavior with this action is hardly predictable
-            logging.debug(f"Del profile: {prof}")
+            logger.debug(f"Del profile: {prof}")
             proj.del_profile(prof)
             self.opt_profile_var.set("")
 
     def opt_profile_event(self, new_profile: str):
-        logging.info(f"Select profile: {new_profile}")
+        logger.info(f"Select profile: {new_profile}")
         proj.profile.load(new_profile)
         proj.cfg_save_project()
         try:
@@ -170,6 +170,21 @@ class ProjectFrame(customtkinter.CTkFrame):
         self.config_frame.project_frame = self
         # self.config_frame.configure(state=tkinter.DISABLED)
 
+        #
+        self.config_logs = customtkinter.CTkFrame(self)
+        self.config_logs.grid(row=4, column=0, pady=5, padx=5, columnspan=1, sticky="wns")
+        self.config_logs.lbl_font = customtkinter.CTkLabel(self.config_logs, text="Console:")
+        self.config_logs.lbl_font.grid(row=0, column=0, pady=5, padx=5, sticky="w")
+
+        self.config_logs.colorlogs_var = customtkinter.BooleanVar(value=proj.color_logs)
+        self.config_logs.chx_color_logs = customtkinter.CTkCheckBox(self.config_logs,
+                                                        text="Colorful logs",
+                                                        command=self.checkbox_colorfulogs_event,
+                                                        variable=self.config_logs.colorlogs_var,
+                                                        checkbox_width=18, checkbox_height=18)
+        self.config_logs.chx_color_logs.grid(row=0, column=0, pady=5, padx=5, sticky="w")
+
+
     def clear_previews(self):
         self.opt_pnp_var.set("")
         self.opt_pnp2_var.set("")
@@ -181,11 +196,11 @@ class ProjectFrame(customtkinter.CTkFrame):
         if os.path.isfile(bom_path):
             # load all files from the BOM directory to the PnP list
             bom_dir = os.path.dirname(bom_path)
-            logging.debug(f"Search PnP in: {bom_dir}")
+            logger.debug(f"Search PnP in: {bom_dir}")
             self.opt_pnp_var.set("")
             self.pnp_names = [""]
             for de in os.scandir(bom_dir):
-                # logging.debug("PnP path: " + de.path)
+                # logger.debug("PnP path: " + de.path)
                 # take only the file name
                 pnp_fname = os.path.basename(de.path)
                 if pnp_fname != os.path.basename(bom_path):
@@ -197,7 +212,7 @@ class ProjectFrame(customtkinter.CTkFrame):
 
     def opt_bom_event(self, bom_path: str):
         # sourcery skip: extract-method, use-fstring-for-concatenation
-        logging.debug(f"Open BOM: {bom_path}")
+        logger.debug(f"Open BOM: {bom_path}")
         self.clear_previews()
 
         # reset entire project
@@ -211,7 +226,7 @@ class ProjectFrame(customtkinter.CTkFrame):
                 self.opt_bom_var.set(bom_path)
                 # set pnp file name
                 self.find_pnp_files(bom_path)
-                section = proj.cfg_get_section("project." + proj.bom_path)
+                section = proj.get_section("project." + proj.bom_path)
                 proj.pnp_fname = section.get("pnp", "???")
                 self.opt_pnp_var.set(proj.pnp_fname)
                 proj.pnp2_fname = section.get("pnp2", "")
@@ -223,26 +238,26 @@ class ProjectFrame(customtkinter.CTkFrame):
                 proj.profile.load(profile_name)
                 self.config_frames_load_profile()
             else:
-                logging.error(f"File '{bom_path}' does not exists")
+                logger.error(f"File '{bom_path}' does not exists")
         except Exception as e:
-            logging.error(f"Cannot open project: {e}")
+            logger.error(f"Cannot open project: {e}")
         finally:
             proj.loading = False
 
     def opt_pnp_event(self, pnp_fname: str):
-        logging.debug(f"Select PnP: {pnp_fname}")
+        logger.debug(f"Select PnP: {pnp_fname}")
         # update config
         proj.pnp_fname = pnp_fname
         proj.cfg_save_project()
 
     def opt_pnp2_event(self, pnp_fname: str):
-        logging.debug(f"Select PnP2: {pnp_fname}")
+        logger.debug(f"Select PnP2: {pnp_fname}")
         # update config
         proj.pnp2_fname = pnp_fname
         proj.cfg_save_project()
 
     def button_browse_event(self):  # sourcery skip: de-morgan, extract-method
-        logging.debug("Browse BOM")
+        logger.debug("Browse BOM")
         self.clear_previews()
 
         # https://docs.python.org/3/library/dialog.html
@@ -255,7 +270,7 @@ class ProjectFrame(customtkinter.CTkFrame):
                 ("All (*.*)", "*.*")
             ),
         )
-        logging.info(f"Selected path: {bom_path}")
+        logger.info(f"Selected path: {bom_path}")
 
         if os.path.isfile(bom_path):
             try:
@@ -274,18 +289,23 @@ class ProjectFrame(customtkinter.CTkFrame):
                 proj.cfg_save_project()
                 self.activate_csv_separator_for_bom_pnp()
             except Exception as e:
-                logging.error(f"Cannot open project: {e}")
+                logger.error(f"Cannot open project: {e}")
             finally:
                 proj.loading = False
         else:
-            logging.error(f"Cannot access the file '{bom_path}'")
+            logger.error(f"Cannot access the file '{bom_path}'")
 
     def button_remove_event(self):
-        logging.debug("Remove project from list")
+        logger.debug("Remove project from list")
         proj.del_project(self.opt_bom_var.get())
         self.opt_bom_var.set("")
         self.bom_paths = proj.get_projects()
         self.opt_bom_path.configure(values=self.bom_paths)
+
+    def checkbox_colorfulogs_event(self):
+        proj.color_logs = self.config_logs.colorlogs_var.get()
+        # logger.debug(f"CHBX event: {Config.instance().color_logs}")
+        proj.save()
 
     def config_frames_load_profile(self):
         self.bom_config.load_profile()
@@ -352,7 +372,7 @@ class BOMView(customtkinter.CTkFrame):
         else:
             raise RuntimeError("Unknown file type")
 
-        logging.info(f"BOM: {proj.bom_grid.nrows} rows x {proj.bom_grid.ncols} cols")
+        logger.info(f"BOM: {proj.bom_grid.nrows} rows x {proj.bom_grid.ncols} cols")
 
         bom_txt_grid = proj.bom_grid.format_grid(proj.profile.bom_first_row, proj.profile.bom_last_row)
         self.textbox.insert("0.0", bom_txt_grid)
@@ -363,7 +383,7 @@ class BOMView(customtkinter.CTkFrame):
 
     def button_find_event(self):
         txt = self.entry_search.get()
-        logging.info(f"Find '{txt}'")
+        logger.info(f"Find '{txt}'")
         cnt = ui_helpers.textbox_find_text(self.textbox, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
 
@@ -448,7 +468,7 @@ class BOMConfig(customtkinter.CTkFrame):
                                     f"• CMNT: {prepare_id(proj.profile.bom_comment_col)}")
 
     def opt_separator_event(self, new_sep: str):
-        logging.info(f"  BOM separator: {new_sep}")
+        logger.info(f"  BOM separator: {new_sep}")
         proj.profile.bom_separator = new_sep
         self.btn_save.configure(state=tkinter.NORMAL)
         self.button_load_event()
@@ -457,26 +477,26 @@ class BOMConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.bom_first_row = int(new_first_row) - 1
-            logging.info(f"  BOM 1st row: {proj.profile.bom_first_row+1}")
+            logger.info(f"  BOM 1st row: {proj.profile.bom_first_row+1}")
             self.btn_save.configure(state=tkinter.NORMAL)
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"  Invalid row number: {e}")
+            logger.error(f"  Invalid row number: {e}")
 
     def var_last_row_event(self, sv: customtkinter.StringVar):
         new_last_row = sv.get().strip()
         try:
             # last row is optional, so it may be an empty string
             proj.profile.bom_last_row = -1 if new_last_row == "" else int(new_last_row) - 1
-            logging.info(f"  BOM last row: {proj.profile.bom_last_row+1}")
+            logger.info(f"  BOM last row: {proj.profile.bom_last_row+1}")
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"  Invalid row number: {e}")
+            logger.error(f"  Invalid row number: {e}")
 
     def button_columns_event(self):
-        logging.debug("Select BOM columns...")
+        logger.debug("Select BOM columns...")
         if proj.bom_grid and len(proj.bom_grid.rows_raw()) >= proj.profile.bom_first_row:
             columns = proj.bom_grid.rows_raw()[proj.profile.bom_first_row]
         else:
@@ -491,7 +511,7 @@ class BOMConfig(customtkinter.CTkFrame):
                                     comment_default=proj.profile.bom_comment_col)
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
-        logging.info("Selected BOM columns: "\
+        logger.info("Selected BOM columns: "\
                     f"dsgn='{result.designator_col}', cmnt='{result.comment_col}'")
         proj.profile.bom_designator_col = result.designator_col
         proj.profile.bom_comment_col = result.comment_col
@@ -514,15 +534,15 @@ class BOMConfig(customtkinter.CTkFrame):
             self.btn_save.configure(state=tkinter.DISABLED)
             proj.profile.save()
         else:
-            logging.info("Profile NOT saved")
+            logger.info("Profile NOT saved")
 
     def button_load_event(self):
-        logging.debug("Load BOM...")
+        logger.debug("Load BOM...")
         self.btn_columns.configure(state=tkinter.NORMAL)
         try:
             self.bom_view.load_bom(proj.bom_path)
         except Exception as e:
-            logging.error(f"Cannot load BOM: {e}")
+            logger.error(f"Cannot load BOM: {e}")
 
 # -----------------------------------------------------------------------------
 
@@ -572,7 +592,7 @@ class PnPView(customtkinter.CTkFrame):
             delim = proj.profile.pnp_delimiter
             proj.pnp_grid = csv_reader.read_csv(path, delim)
 
-        log_f = logging.info if proj.pnp_grid.nrows > 0 else logging.warning
+        log_f = logger.info if proj.pnp_grid.nrows > 0 else logger.warning
         log_f(f"PnP: {proj.pnp_grid.nrows} rows x {proj.pnp_grid.ncols} cols")
 
         # load the optional second PnP file
@@ -588,7 +608,7 @@ class PnPView(customtkinter.CTkFrame):
                 delim = proj.profile.pnp_delimiter
                 pnp2_grid = csv_reader.read_csv(path2, delim)
 
-            log_f = logging.info if pnp2_grid.nrows > 0 else logging.warning
+            log_f = logger.info if pnp2_grid.nrows > 0 else logger.warning
             log_f("PnP2: {} rows x {} cols".format(pnp2_grid.nrows, pnp2_grid.ncols))
 
             # merge
@@ -615,7 +635,7 @@ class PnPView(customtkinter.CTkFrame):
 
     def button_find_event(self):
         txt = self.entry_search.get()
-        logging.info(f"Find '{txt}'")
+        logger.info(f"Find '{txt}'")
         cnt = ui_helpers.textbox_find_text(self.textbox, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
 
@@ -702,7 +722,7 @@ class PnPConfig(customtkinter.CTkFrame):
             f"• LR: {prepare_id(proj.profile.pnp_layer_col)}")
 
     def opt_separator_event(self, new_sep: str):
-        logging.info(f"  PnP separator: {new_sep}")
+        logger.info(f"  PnP separator: {new_sep}")
         proj.profile.pnp_separator = new_sep
         self.btn_save.configure(state=tkinter.NORMAL)
         self.button_load_event()
@@ -711,26 +731,26 @@ class PnPConfig(customtkinter.CTkFrame):
         new_first_row = sv.get().strip()
         try:
             proj.profile.pnp_first_row = int(new_first_row) - 1
-            logging.info(f"  PnP 1st row: {proj.profile.pnp_first_row+1}")
+            logger.info(f"  PnP 1st row: {proj.profile.pnp_first_row+1}")
             self.btn_save.configure(state=tkinter.NORMAL)
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"  Invalid row number: {e}")
+            logger.error(f"  Invalid row number: {e}")
 
     def var_last_row_event(self, sv: customtkinter.StringVar):
         new_last_row = sv.get().strip()
         try:
             # last row is optional, so it may be an empty string
             proj.profile.pnp_last_row = -1 if new_last_row == "" else int(new_last_row) - 1
-            logging.info(f"  PnP last row: {proj.profile.pnp_last_row+1}")
+            logger.info(f"  PnP last row: {proj.profile.pnp_last_row+1}")
             if not proj.loading:
                 self.button_load_event()
         except Exception as e:
-            logging.error(f"  Invalid row number: {e}")
+            logger.error(f"  Invalid row number: {e}")
 
     def button_columns_event(self):
-        logging.debug("Select PnP columns...")
+        logger.debug("Select PnP columns...")
         if proj.pnp_grid and len(proj.pnp_grid.rows_raw()) >= proj.profile.pnp_first_row:
             columns = proj.pnp_grid.rows_raw()[proj.profile.pnp_first_row]
         else:
@@ -750,7 +770,7 @@ class PnPConfig(customtkinter.CTkFrame):
         # self.wnd_column_selector.focusmodel(model="active")
 
     def column_selector_callback(self, result: ColumnsSelectorResult):
-        logging.info("Selected PnP columns: "\
+        logger.info("Selected PnP columns: "\
                     f"dsgn='{result.designator_col}', cmnt='{result.comment_col}', "\
                     f"x='{result.coord_x_col}', y='{result.coord_y_col}', lr='{result.layer_col}'")
         proj.profile.pnp_has_column_headers = result.has_column_headers
@@ -777,17 +797,17 @@ class PnPConfig(customtkinter.CTkFrame):
             self.btn_save.configure(state=tkinter.DISABLED)
             proj.profile.save()
         else:
-            logging.info("Profile NOT saved")
+            logger.info("Profile NOT saved")
 
     def button_load_event(self):
-        logging.debug("Load PnP...")
+        logger.debug("Load PnP...")
         self.btn_columns.configure(state=tkinter.NORMAL)
         pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
         pnp2_path = "" if proj.pnp2_fname == "" else os.path.join(os.path.dirname(proj.bom_path), proj.pnp2_fname)
         try:
             self.pnp_view.load_pnp(pnp_path, pnp2_path)
         except Exception as e:
-            logging.error(f"Cannot load PnP: {e}")
+            logger.error(f"Cannot load PnP: {e}")
 
 # -----------------------------------------------------------------------------
 
@@ -845,27 +865,27 @@ class ReportView(customtkinter.CTkFrame):
         self.htmlview.delete("0.0", tkinter.END)
 
     def button_crosscheck_event(self):
-        logging.info("Performing cross-check...")
+        logger.info("Performing cross-check...")
         self.clear_preview()
 
         if proj.bom_grid and proj.bom_grid_dirty:
             # reload file if manual load was successful
             try:
-                logging.info("Reload BOM...")
+                logger.info("Reload BOM...")
                 self.bom_view.load_bom(proj.bom_path)
             except Exception as e:
-                logging.error(f"Cannot load BOM: {e}")
+                logger.error(f"Cannot load BOM: {e}")
                 return
 
         if proj.pnp_grid and proj.pnp_grid_dirty:
             # reload file if manual load was successful
             try:
-                logging.info("Reload PnP...")
+                logger.info("Reload PnP...")
                 pnp_path = os.path.join(os.path.dirname(proj.bom_path), proj.pnp_fname)
                 pnp2_path = "" if proj.pnp2_fname == "" else os.path.join(os.path.dirname(proj.bom_path), proj.pnp2_fname)
                 self.pnp_view.load_pnp(pnp_path, pnp2_path)
             except Exception as e:
-                logging.error(f"Cannot load PnP: {e}")
+                logger.error(f"Cannot load PnP: {e}")
                 return
 
         bom_cols_ok = proj.profile.checkBomColumns()
@@ -908,7 +928,7 @@ class ReportView(customtkinter.CTkFrame):
             self.htmlview.set_html(self.report_html)
             self.save_report_to_file()
         except Exception as e:
-            logging.error(f"Report generator error: {e}")
+            logger.error(f"Report generator error: {e}")
         finally:
             # mark as potentially dirty, meaning that the files could have been changed manually
             # since the last cross-check was performed so the local copy is out-of-date
@@ -920,21 +940,21 @@ class ReportView(customtkinter.CTkFrame):
         report_fname = os.path.splitext(os.path.basename(proj.bom_path))[0]
         report_fname += "_report.html"
         report_path = os.path.join(report_dir, report_fname)
-        logging.debug("Saving to .html file...")
+        logger.debug("Saving to .html file...")
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write('<html>\n<body>\n')
             f.write(self.report_html)
             f.write('</body>\n</html>\n')
-            logging.info(f"Report saved to: {report_path}")
+            logger.info(f"Report saved to: {report_path}")
 
     def button_copyhtml_event(self):
-        logging.debug("Copy as HTML")
+        logger.debug("Copy as HTML")
         plain_txt = self.htmlview.get("0.0", tkinter.END)
         klembord.set_with_rich_text(text=plain_txt, html=self.report_html)
 
     def button_find_event(self):
         txt = self.entry_search.get()
-        logging.info(f"Find '{txt}'")
+        logger.info(f"Find '{txt}'")
         cnt = ui_helpers.textbox_find_text(self.htmlview, txt)
         self.lbl_occurences.configure(text=f"Found: {cnt}")
 
@@ -942,7 +962,7 @@ class ReportView(customtkinter.CTkFrame):
 
 class CtkApp(customtkinter.CTk):
     def __init__(self):
-        logging.info('Ctk app is starting')
+        logger.info('Ctk app is starting')
         super().__init__()
 
         self.title(f"{APP_NAME}")
@@ -996,36 +1016,19 @@ class CtkApp(customtkinter.CTk):
         tab_report.grid_rowconfigure(0, weight=1)
 
         # UI ready
-        logging.info('Application ready.')
+        logger.info('Application ready.')
 
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # logger config with dimmed time
-    # https://docs.python.org/3/howto/logging.html
-    logging.basicConfig(format='\033[30m%(asctime)s\033[39m %(levelname)s: %(message)s',
-                        datefmt='%H:%M:%S',
-                        level=logging.DEBUG)
-    # https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
-
-    ANSI_FG_WHITE=  "\033[1;37m"
-    ANSI_FG_YELLOW= "\033[1;33m"
-    ANSI_FG_RED=    "\033[1;31m"
-    ANSI_FG_DEFAULT="\033[1;0m"
-
-    # logging.addLevelName(logging.INFO,    "\033[1;37m%s\033[1;0m" % logging.getLevelName(logging.INFO))
-    logging.addLevelName(logging.DEBUG,    "DEBUG")
-    logging.addLevelName(logging.INFO,    f"{ANSI_FG_WHITE}INFO {ANSI_FG_DEFAULT}")
-    logging.addLevelName(logging.WARNING, f"{ANSI_FG_YELLOW}WARN {ANSI_FG_DEFAULT}")
-    logging.addLevelName(logging.ERROR,   f"{ANSI_FG_RED}ERROR{ANSI_FG_DEFAULT}")
-
-    logging.info(f"{APP_NAME}   (c) 2023")
+    logger.config(proj.color_logs)
+    logger.info(f"{APP_NAME}   (c) 2023-2024")
 
     if (sys.version_info.major < 3) or (sys.version_info.minor < 9):
-        logging.error("Required Python version 3.9 or later!")
+        logger.error("Required Python version 3.9 or later!")
         exit()
     else:
-        logging.info(
+        logger.info(
             f"Python version: {sys.version_info.major}.{sys.version_info.minor}"
         )
 
@@ -1036,3 +1039,5 @@ if __name__ == "__main__":
     klembord.init()
     ctkapp = CtkApp()
     ctkapp.mainloop()
+
+    logger.info('Program ended.')

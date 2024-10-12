@@ -1,5 +1,5 @@
 import time
-# import logging
+# import logger
 import difflib
 
 from text_grid import *
@@ -74,7 +74,7 @@ def __format_comment_diff(designator: str, designator_w: int, bom_cmnt: str, bom
                 pnp_comment=pnp_comment,
                 eol=PRE_EOL
             )
-    # logging.debug(f"'{out}'")
+    # logger.debug(f"'{out}'")
     return out
 
 def __format_distance(dsgn1: str, dsgn1_w: int, dsgn2: str, dsgn2_w: int, distance: float) -> str:
@@ -88,7 +88,7 @@ def __format_distance(dsgn1: str, dsgn1_w: int, dsgn2: str, dsgn2_w: int, distan
                 unit=unit_mm,
                 eol=PRE_EOL
             )
-    # logging.debug(f"'{out}'")
+    # logger.debug(f"'{out}'")
     return out
 
 # -----------------------------------------------------------------------------

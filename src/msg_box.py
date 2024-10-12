@@ -1,6 +1,6 @@
 import customtkinter
 import tkinter
-# import logging
+# import logger
 import typing
 
 import ui_helpers
@@ -65,21 +65,21 @@ class MessageBox(customtkinter.CTkToplevel):
         self.attributes('-topmost', True)
 
     def button_yes_event(self):
-        # logging.debug("Yes")
+        # logger.debug("Yes")
         self.callback("y")
         self.destroy()
 
     def button_no_event(self):
-        # logging.debug("No")
+        # logger.debug("No")
         self.callback("n")
         self.destroy()
 
     def button_cancel_event(self):
-        # logging.debug("Cancel")
+        # logger.debug("Cancel")
         self.callback("c")
         self.destroy()
 
     def button_ok_event(self):
-        # logging.debug("Ok")
+        # logger.debug("Ok")
         self.callback("o")
         self.destroy()

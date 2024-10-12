@@ -6,7 +6,8 @@ boomer.ini
 # TODO.*
 # .vscode/bookmarks.json
 examples/*/*.html
-
+examples2/
+logs/
 __pycache__/
 example_ctk/
 htmlcov/

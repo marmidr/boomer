@@ -1,4 +1,4 @@
-import logging
+import logger
 import natsort
 import math
 
@@ -103,8 +103,8 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
         if comment_col_idx == -1:
             raise ValueError(f"{grid_name} comment column not found")
 
-        logging.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
-        logging.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
+        logger.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
+        logger.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
     else:
         designator_col_idx = grid.designator_col
         comment_col_idx = grid.comment_col
@@ -141,7 +141,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
 
         # in BOM, designator column used to have a number of items
         dsgn = dsgn.split(',')
-        # logging.debug(f"designators: '{dsgn}'")
+        # logger.debug(f"designators: '{dsgn}'")
         for d in dsgn:
             d = d.strip()
             output[d] = (cmnt, cx, cy, lr)
@@ -154,7 +154,7 @@ def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, (str, str, str, st
 def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, (str, str, str, str)]:
     return __extract_grid(pnp, "PnP")
 
-def __txt_to_mm(coord: (str, str)) -> (float, float):
+def __txt_to_mm(coord: tuple[str, str]) -> tuple[float, float]:
     MIL_PER_MM = 1000/25.4
 
     try:
@@ -164,10 +164,10 @@ def __txt_to_mm(coord: (str, str)) -> (float, float):
             return (float(coord[0][:-3]) / MIL_PER_MM, float(coord[1][:-3]) / MIL_PER_MM)
         else:
             # no suffix - assume mm
-            # logging.warn(f"Invalid distance unit(s): {coord[0]}:{coord[1]}")
+            # logger.warning(f"Invalid distance unit(s): {coord[0]}:{coord[1]}")
             return (float(coord[0]), float(coord[1]))
     except Exception as e:
-        logging.warn(f"Conversion error at: {coord[0]}:{coord[1]}")
+        logger.warning(f"Conversion error at: {coord[0]}:{coord[1]}")
         return (0, 0)
 
 def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: float) -> list[(str, str, float)]:
@@ -182,7 +182,7 @@ def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: 
             if key_b != key_a and pnp_parts[key_a][3] == pnp_parts[key_b][3]:
                 # check if B vs A already performed
                 if key_a in parts_checked.get(key_b, []):
-                    # logging.debug(f"Skip {key_a} vs {key_b}")
+                    # logger.debug(f"Skip {key_a} vs {key_b}")
                     continue
                 else:
                     if lst := parts_checked.get(key_a):
@@ -206,7 +206,7 @@ def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: 
                 dist = ((coord_a[0] - coord_b[0])**2.0) + ((coord_a[1] - coord_b[1])**2.0)
                 dist = math.sqrt(dist)
                 if dist < min_distance:
-                    logging.debug(f"{key_a}({coord_a[0]:.1f}, {coord_a[1]:.1f}) <--> {key_b}({coord_b[0]:.1f}, {coord_b[1]:.1f}) = {dist:0.1f}mm")
+                    logger.debug(f"{key_a}({coord_a[0]:.1f}, {coord_a[1]:.1f}) <--> {key_b}({coord_b[0]:.1f}, {coord_b[1]:.1f}) = {dist:0.1f}mm")
                     output.append((key_a, key_b, dist))
     return output
 
@@ -236,7 +236,7 @@ def __compare(bom_parts: dict[str, (str, str, str, str)],
     result.parts_comment_mismatch = natsort.natsorted(result.parts_comment_mismatch)
 
     # check for conflicting PnP coordinates
-    logging.info("Calculate parts center distances...")
+    logger.info("Calculate parts center distances...")
     result.parts_coord_conflicts = __check_distances(pnp_parts, min_distance)
     result.parts_coord_conflicts = natsort.natsorted(result.parts_coord_conflicts)
 

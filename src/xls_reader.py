@@ -2,7 +2,7 @@
 # https://xlrd.readthedocs.io/en/latest/
 
 import xlrd
-import logging
+import logger
 
 from text_grid import TextGrid
 
@@ -13,7 +13,7 @@ def read_xls_sheet(path: str) -> TextGrid:
     Reads entire sheet 0
     """
     assert path is not None
-    logging.info(f"Reading file '{path}'")
+    logger.info(f"Reading file '{path}'")
     book = xlrd.open_workbook(filename=path)
     sheet = book.sheet_by_index(0)
     tg = TextGrid()

@@ -1,6 +1,6 @@
 import customtkinter
 import tkinter
-import logging
+import logger
 import typing
 
 import ui_helpers
@@ -27,7 +27,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         columns = kwargs.pop("columns")
 
         assert type(columns) is list
-        # logging.debug("columns: {}".format(self.columns))
+        # logger.debug("columns: {}".format(self.columns))
         assert "callback" in kwargs
         self.callback: typing.Callable = kwargs.pop("callback")
 
@@ -177,7 +177,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             self.btn_ok.configure(state="enabled")
 
     def button_cancel_event(self):
-        logging.info("Column selector: cancelled")
+        logger.info("Column selector: cancelled")
         self.destroy()
 
     def button_ok_event(self):

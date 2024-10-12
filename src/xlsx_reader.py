@@ -2,7 +2,7 @@
 # https://openpyxl.readthedocs.io/en/stable/tutorial.html
 
 import openpyxl
-import logging
+import logger
 
 from text_grid import TextGrid
 
@@ -13,7 +13,7 @@ def read_xlsx_sheet(path: str) -> TextGrid:
     Reads entire sheet 0
     """
     assert path is not None
-    logging.info(f"Reading file '{path}'")
+    logger.info(f"Reading file '{path}'")
     # Define variable to load the wookbook
     wookbook = openpyxl.load_workbook(path)
     sheet = wookbook.active

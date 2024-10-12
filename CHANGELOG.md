@@ -2,6 +2,15 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.8.6 - 2024-10-12
+
+* Added
+  * logs/ folder for Python logger output
+* Changed
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.8.5 - 2023-11-29
 
 * Added

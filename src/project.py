@@ -1,5 +1,5 @@
 import configparser
-import logging
+import logger
 import os
 
 import text_grid
@@ -33,7 +33,7 @@ class Profile:
 
     def load(self, name: str):
         if os.path.isfile(self.CONFIG_FILE_NAME):
-            logging.info(f"Load profile: {name}")
+            logger.info(f"Load profile: {name}")
             self.name = name
 
             if self.__config.has_section(f'profile.{self.name}'):
@@ -65,12 +65,12 @@ class Profile:
                     self.pnp_coord_y_col = int(self.pnp_coord_y_col)
                     self.pnp_layer_col = int(self.pnp_layer_col)
             else:
-                logging.warning(f"No section {self.name} in config file")
+                logger.warning(f"No section {self.name} in config file")
         else:
-            logging.error(f"Config file {self.CONFIG_FILE_NAME} not found")
+            logger.error(f"Config file {self.CONFIG_FILE_NAME} not found")
 
     def save(self):
-        logging.info(f"Save profile: {self.name}")
+        logger.info(f"Save profile: {self.name}")
         self.__config[f"profile.{self.name}"] = {
             "bom_has_column_headers": self.bom_has_column_headers,
             "bom_first_row": self.bom_first_row,
@@ -181,7 +181,7 @@ class Project:
         if os.path.isfile(Profile.CONFIG_FILE_NAME):
             self.__config.read(Profile.CONFIG_FILE_NAME)
 
-        section = self.cfg_get_section("common")
+        section = self.get_section("common")
         if section.get('initial_dir', "") == "":
             section['initial_dir'] = "."
         if section.get("components_min_distance", "") == "":
@@ -193,17 +193,36 @@ class Project:
         return os.path.basename(self.bom_path)
 
     def get_min_distance(self) -> float:
-        section = self.cfg_get_section("common")
-        dist = section.get("components_min_distance", "3.0")
+        section = self.get_section("common")
+        dist = section.get("components_min_distance", fallback="3.0")
         return float(dist)
 
-    def cfg_get_section(self, sect_name: str) -> configparser.SectionProxy:
+    @property
+    def color_logs(self) -> bool:
+        section = self.get_section("common")
+        enabled = section.get("color_logs", fallback=False)
+        return enabled == "True"
+
+    @color_logs.setter
+    def color_logs(self, enable: bool):
+        new_en = str(enable)
+        section = self.get_section("common")
+        section["color_logs"] = new_en
+
+    def save(self):
+        with open(Profile.CONFIG_FILE_NAME, 'w', encoding="utf-8") as f:
+            self.__config.write(f)
+
+
+    def get_section(self, sect_name: str) -> configparser.SectionProxy:
         try:
             self.__config[sect_name]
         except Exception:
             self.__config[sect_name] = {}
 
         return self.__config[sect_name]
+
+    # ---
 
     def get_projects(self) -> list[str]:
         projects = [
@@ -213,7 +232,7 @@ class Project:
         ]
         for prj_path in reversed(projects):
             if not os.path.exists(prj_path):
-                logging.info(f"Project '{prj_path}' not found - removed")
+                logger.info(f"Project '{prj_path}' not found - removed")
                 projects.remove(prj_path)
                 self.del_project(prj_path)
 
@@ -227,7 +246,7 @@ class Project:
             with open(Profile.CONFIG_FILE_NAME, 'w') as f:
                 self.__config.write(f)
         else:
-            logging.warning(f"Project '{proj_path}' not found")
+            logger.warning(f"Project '{proj_path}' not found")
 
     def del_profile(self, name):
         sect_name = f"profile.{name}"
@@ -238,13 +257,13 @@ class Project:
             # reset profile
             self.profile = Profile(cfgparser=self.__config)
         else:
-            logging.warning(f"Profile '{name}' not found")
+            logger.warning(f"Profile '{name}' not found")
 
     def cfg_count_profile(self, profile_name: str) -> int:
         cnt = 0
         projs = self.get_projects()
         for prj in projs:
-            section = self.cfg_get_section(f"project.{prj}")
+            section = self.get_section(f"project.{prj}")
             if section["profile"] == profile_name:
                 cnt += 1
         return cnt
@@ -262,9 +281,8 @@ class Project:
         return profiles
 
     def cfg_save_project(self):
-        section = self.cfg_get_section(f"project.{self.bom_path}")
+        section = self.get_section(f"project.{self.bom_path}")
         section["pnp"] = self.pnp_fname
         section["pnp2"] = self.pnp2_fname
         section["profile"] = self.profile.name
-        with open(Profile.CONFIG_FILE_NAME, 'w') as f:
-            self.__config.write(f)
+        self.save()
