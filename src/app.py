@@ -5,7 +5,7 @@
 # differences in an electronic parts listed in both files, and additionally
 # verify that the part comments (values) match.
 #
-# (c) 2023-2024 Mariusz Midor
+# (c) 2023-2025 Mariusz Midor
 # https://github.com/marmidr/boomer
 
 import customtkinter
@@ -31,7 +31,8 @@ import logger
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.8.6"
+APP_NAME = "BOM vs PnP Cross Checker v0.9.0"
+APP_DATE = "(c) 2023-2025"
 
 # -----------------------------------------------------------------------------
 
@@ -173,6 +174,7 @@ class ProjectFrame(customtkinter.CTkFrame):
         #
         self.config_logs = customtkinter.CTkFrame(self)
         self.config_logs.grid(row=4, column=0, pady=5, padx=5, columnspan=1, sticky="wns")
+
         self.config_logs.lbl_font = customtkinter.CTkLabel(self.config_logs, text="Console:")
         self.config_logs.lbl_font.grid(row=0, column=0, pady=5, padx=5, sticky="w")
 
@@ -182,7 +184,7 @@ class ProjectFrame(customtkinter.CTkFrame):
                                                         command=self.checkbox_colorfulogs_event,
                                                         variable=self.config_logs.colorlogs_var,
                                                         checkbox_width=18, checkbox_height=18)
-        self.config_logs.chx_color_logs.grid(row=0, column=0, pady=5, padx=5, sticky="w")
+        self.config_logs.chx_color_logs.grid(row=1, column=0, pady=5, padx=5, sticky="w")
 
 
     def clear_previews(self):
@@ -888,14 +890,14 @@ class ReportView(customtkinter.CTkFrame):
                 logger.error(f"Cannot load PnP: {e}")
                 return
 
-        bom_cols_ok = proj.profile.checkBomColumns()
+        bom_cols_ok = proj.profile.check_bom_columns()
         if not bom_cols_ok[0]:
             MessageBox(app=self.app, dialog_type="o",
                         message=bom_cols_ok[1],
                         callback=lambda btn: btn)
             return
 
-        pnp_cols_ok = proj.profile.checkPnpColumns()
+        pnp_cols_ok = proj.profile.check_pnp_columns()
         if not pnp_cols_ok[0]:
             MessageBox(app=self.app, dialog_type="o",
                         message=pnp_cols_ok[1],
@@ -1022,11 +1024,11 @@ class CtkApp(customtkinter.CTk):
 
 if __name__ == "__main__":
     logger.config(proj.color_logs)
-    logger.info(f"{APP_NAME}   (c) 2023-2024")
+    logger.info(f"{APP_NAME}   {APP_DATE}")
 
-    if (sys.version_info.major < 3) or (sys.version_info.minor < 9):
+    if (sys.version_info.major < 3) or (sys.version_info.major == 3 and sys.version_info.minor < 9):
         logger.error("Required Python version 3.9 or later!")
-        exit()
+        sys.exit()
     else:
         logger.info(
             f"Python version: {sys.version_info.major}.{sys.version_info.minor}"

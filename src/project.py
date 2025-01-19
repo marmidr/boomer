@@ -90,7 +90,7 @@ class Profile:
         with open(self.CONFIG_FILE_NAME, 'w') as f:
             self.__config.write(f)
 
-    def checkBomColumns(self) -> (bool, str):
+    def check_bom_columns(self) -> tuple[bool, str]:
         unspecified = ""
         if self.bom_designator_col == "?": unspecified += "Designator, "
         if self.bom_comment_col == "?": unspecified += "Comment"
@@ -100,7 +100,7 @@ class Profile:
         else:
             return (True, "")
 
-    def checkPnpColumns(self) -> (bool, str):
+    def check_pnp_columns(self) -> tuple[bool, str]:
         unspecified = ""
         if self.pnp_designator_col == "?": unspecified += "Designator, "
         if self.pnp_comment_col == "?": unspecified += "Comment, "
