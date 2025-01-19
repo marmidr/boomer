@@ -2,6 +2,15 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.9.0 - 2025-01-20
+
+* Added
+* Changed
+  * CSV/ODS/XLS/XLSX reader: document parsing stops when row cells A,B,C are empty
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.8.6 - 2024-10-12
 
 * Added

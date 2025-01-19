@@ -1,12 +1,22 @@
+#
+# 2025-01-19
+#
+
+import logger
+
 # https://linuxhint.com/read-excel-file-python/
 # https://openpyxl.readthedocs.io/en/stable/tutorial.html
-
 import openpyxl
-import logger
 
 from text_grid import TextGrid
 
 # -----------------------------------------------------------------------------
+
+def __check_row_valid(row_cells: list[str]) -> bool:
+    # ignore rows with empty cells 'A,B,C' or cell 'A' with a long horizontal line
+    row_valid = (len(row_cells) > 3) and (row_cells[0] or row_cells[1] or row_cells[2])
+    row_valid = row_valid and not row_cells[0].startswith("___")
+    return row_valid
 
 def read_xlsx_sheet(path: str) -> TextGrid:
     """
@@ -25,8 +35,8 @@ def read_xlsx_sheet(path: str) -> TextGrid:
         for cell in row:
             if cell is None:
                 cell = ""
-            elif type(cell) is float or type(cell) is int:
-                if type(cell) is float and int(cell) == float(cell):
+            elif isinstance(cell, float) or isinstance(cell, int):
+                if isinstance(cell, float) and int(cell) == float(cell):
                     # prevent the conversion of '100' to '100.0'
                     cell = int(cell)
                 cell = repr(cell)
@@ -34,9 +44,10 @@ def read_xlsx_sheet(path: str) -> TextGrid:
             cell = cell.replace("\n", " ⏎ ")
             row_cells.append(cell.strip())
 
-        # ignore rows with empty cell 'A'
-        if row_cells and row_cells[0] != "":
-            tg.rows_raw().append(row_cells)
+        if not __check_row_valid(row_cells):
+            break
+
+        tg.rows_raw().append(row_cells)
 
     tg.nrows = len(tg.rows_raw())
     tg.ncols = sheet.max_column
