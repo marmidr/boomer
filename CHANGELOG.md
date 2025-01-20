@@ -11,6 +11,8 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 * Deprecated
 * Removed
 * Fixed
+  * ODS reader: detects if cell repeats more that 25 times
+  * XLS reader: converts float cell to a string
 
 ## 0.8.6 - 2024-10-12
 
