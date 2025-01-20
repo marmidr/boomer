@@ -93,7 +93,7 @@ def __format_distance(dsgn1: str, dsgn1_w: int, dsgn2: str, dsgn2_w: int, distan
 
 # -----------------------------------------------------------------------------
 
-def prepare_html_report(bom_name: str, pnp_names: (str, str), min_distance: float, ccresult: cross_check.CrossCheckResult) -> str:
+def prepare_html_report(bom_name: str, pnp_names: tuple[str, str], min_distance: float, ccresult: cross_check.CrossCheckResult) -> str:
     # html/body tags not necessary, moreover disadviced when used with the `klembord`
     output = __html_title(f'Cross-check report for: <em>{bom_name}</em>')
 

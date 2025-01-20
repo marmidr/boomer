@@ -5,6 +5,7 @@ See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 ## 0.9.0 - 2025-01-20
 
 * Added
+  * Column selector: choose between coord units mils/mm
 * Changed
   * CSV/ODS/XLS/XLSX reader: document parsing stops when row cells A,B,C are empty
 * Deprecated

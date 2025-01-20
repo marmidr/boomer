@@ -6,9 +6,12 @@ boomer.ini
 # TODO.*
 # .vscode/bookmarks.json
 examples/*/*.html
+examples/SmoCharger/
 examples2/
+*_edited.csv
 logs/
 __pycache__/
 example_ctk/
 htmlcov/
 src/odfpy
+bookmarks.json

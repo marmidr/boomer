@@ -14,6 +14,7 @@ class ColumnsSelectorResult:
         self.coord_x_col = ""
         self.coord_y_col = ""
         self.layer_col = ""
+        self.coord_unit_mils = True
         self.has_column_headers = True
 
 # -----------------------------------------------------------------------------
@@ -64,10 +65,16 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             layer_default = ""
             self.show_coords = False
 
+        if "coord_mils_default" in kwargs:
+            coord_unit_idx = kwargs.pop("coord_mils_default")
+            coord_unit_idx = 0 if coord_unit_idx else 1
+        else:
+            coord_unit_idx = 0 # mils
+
         # ----------
 
         super().__init__(*args, **kwargs)
-        ui_helpers.window_set_centered(app, self, 400, 290)
+        ui_helpers.window_set_centered(app, self, 400, 330)
 
         # prepend column titles with their corresponding index
         columns = [f"{idx+1}. {item}" for (idx,item) in enumerate(columns)]
@@ -125,29 +132,51 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             opt_coord_y.grid(row=4, column=1, pady=5, padx=5, sticky="we")
 
         #
+        lbl_unit = customtkinter.CTkLabel(self, text="Coords unit")
+        lbl_unit.grid(row=5, column=0, pady=5, padx=5, sticky="w")
+
+        self.rb_unit_var = tkinter.IntVar(value=coord_unit_idx)
+
+        if self.show_coords:
+            #
+            self.config_unit = customtkinter.CTkFrame(self)
+            self.config_unit.grid(row=5, column=1, pady=5, padx=5, columnspan=1, sticky="we")
+            #
+            self.rb_unit_mils = customtkinter.CTkRadioButton(self.config_unit, text="mils",
+                                                        variable=self.rb_unit_var,
+                                                        value=0, command=self.radiobutton_unit_event)
+            #
+            self.rb_unit_mils.grid(row=0, column=0, pady=5, padx=5, sticky="w")
+            #
+            self.rb_unit_mm = customtkinter.CTkRadioButton(self.config_unit, text="mm",
+                                                        variable=self.rb_unit_var,
+                                                        value=1, command=self.radiobutton_unit_event)
+            self.rb_unit_mm.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+
+        #
         lbl_layer = customtkinter.CTkLabel(self, text="Layer")
-        lbl_layer.grid(row=5, column=0, pady=5, padx=5, sticky="w")
+        lbl_layer.grid(row=6, column=0, pady=5, padx=5, sticky="w")
 
         self.opt_layer_var = customtkinter.StringVar(value=layer_default)
         if self.show_coords:
             opt_layer = customtkinter.CTkOptionMenu(self, values=columns,
                                                     command=self.opt_event,
                                                     variable=self.opt_layer_var)
-            opt_layer.grid(row=5, column=1, pady=5, padx=5, sticky="we")
+            opt_layer.grid(row=6, column=1, pady=5, padx=5, sticky="we")
 
         #
         sep_h = tkinter.ttk.Separator(self, orient='horizontal')
-        sep_h.grid(row=6, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
+        sep_h.grid(row=7, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
 
         self.btn_cancel = customtkinter.CTkButton(self, text="Cancel",
                                                    command=self.button_cancel_event)
         #
-        self.btn_cancel.grid(row=7, column=0, pady=5, padx=5, sticky="")
+        self.btn_cancel.grid(row=8, column=0, pady=5, padx=5, sticky="")
 
         self.btn_ok = customtkinter.CTkButton(self, text="OK",
                                                 command=self.button_ok_event)
-        self.btn_ok.grid(row=7, column=1, pady=5, padx=5, sticky="we")
-        self.btn_ok.configure(state="disabled")
+        self.btn_ok.grid(row=8, column=1, pady=5, padx=5, sticky="we")
+        self.btn_ok.configure(state=tkinter.DISABLED)
 
         # enable "always-on-top" for this popup window
         self.attributes('-topmost', True)
@@ -170,11 +199,14 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         return col_default
 
     def chbx_event(self):
-        self.btn_ok.configure(state="enabled")
+        self.btn_ok.configure(state=tkinter.NORMAL)
 
     def opt_event(self, _new_choice: str):
         if self.opt_designator_var.get() != "" and self.opt_comment_var.get() != "":
-            self.btn_ok.configure(state="enabled")
+            self.btn_ok.configure(state=tkinter.NORMAL)
+
+    def radiobutton_unit_event(self):
+        self.btn_ok.configure(state=tkinter.NORMAL)
 
     def button_cancel_event(self):
         logger.info("Column selector: cancelled")
@@ -187,6 +219,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         result.comment_col = self.opt_comment_var.get()
         result.coord_x_col = self.opt_coord_x_var.get()
         result.coord_y_col = self.opt_coord_y_var.get()
+        result.coord_unit_mils = self.rb_unit_var.get() == 0
         result.layer_col = self.opt_layer_var.get()
         if result.has_column_headers:
             # extract column name

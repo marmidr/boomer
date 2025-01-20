@@ -1,6 +1,7 @@
 import logger
 import natsort
 import math
+import re
 
 from text_grid import *
 
@@ -154,23 +155,26 @@ def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, (str, str, str, st
 def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, (str, str, str, str)]:
     return __extract_grid(pnp, "PnP")
 
-def __txt_to_mm(coord: tuple[str, str]) -> tuple[float, float]:
+def __txt_to_mm(coord: tuple[str, str], coord_unit_mils: bool) -> tuple[float, float]:
     MIL_PER_MM = 1000/25.4
 
     try:
-        if coord[0].endswith("mm") and coord[1].endswith("mm"):
-            return (float(coord[0][:-2]), float(coord[1][:-2]))
-        elif coord[0].endswith("mil") and coord[1].endswith("mil"):
-            return (float(coord[0][:-3]) / MIL_PER_MM, float(coord[1][:-3]) / MIL_PER_MM)
+        # 15.1mm -> 15.1
+        # 4312mils -> 4312
+        x = re.sub("[^\d\.,]", "", coord[0])
+        x = float(x)
+        y = re.sub("[^\d\.,]", "", coord[1])
+        y = float(y)
+
+        if coord_unit_mils:
+            return (x / MIL_PER_MM, y / MIL_PER_MM)
         else:
-            # no suffix - assume mm
-            # logger.warning(f"Invalid distance unit(s): {coord[0]}:{coord[1]}")
-            return (float(coord[0]), float(coord[1]))
+            return (x, y)
     except Exception as e:
         logger.warning(f"Conversion error at: {coord[0]}:{coord[1]}")
         return (0, 0)
 
-def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: float) -> list[(str, str, float)]:
+def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: float, coord_unit_mils: bool) -> list[(str, str, float)]:
     # decoded coords cache
     decoded_coords: dict[str, (float, float)] = {}
     parts_checked: dict[str, list[str]] = {}
@@ -194,13 +198,13 @@ def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: 
                 if coord := decoded_coords.get(key_a):
                     coord_a = coord
                 else:
-                    coord_a = __txt_to_mm((pnp_parts[key_a][1], pnp_parts[key_a][2]))
+                    coord_a = __txt_to_mm((pnp_parts[key_a][1], pnp_parts[key_a][2]), coord_unit_mils)
                     decoded_coords[key_a] = coord_a
                 # y
                 if coord := decoded_coords.get(key_b):
                     coord_b = coord
                 else:
-                    coord_b = __txt_to_mm((pnp_parts[key_b][1], pnp_parts[key_b][2]))
+                    coord_b = __txt_to_mm((pnp_parts[key_b][1], pnp_parts[key_b][2]), coord_unit_mils)
                     decoded_coords[key_b] = coord_b
 
                 dist = ((coord_a[0] - coord_b[0])**2.0) + ((coord_a[1] - coord_b[1])**2.0)
@@ -212,7 +216,7 @@ def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: 
 
 def __compare(bom_parts: dict[str, (str, str, str, str)],
               pnp_parts: dict[str, (str, str, str, str)],
-              min_distance: float) -> CrossCheckResult:
+              min_distance: float, coord_unit_mils: bool) -> CrossCheckResult:
     result = CrossCheckResult()
 
     # check for items present in BOM, but missing in the PnP
@@ -237,7 +241,7 @@ def __compare(bom_parts: dict[str, (str, str, str, str)],
 
     # check for conflicting PnP coordinates
     logger.info("Calculate parts center distances...")
-    result.parts_coord_conflicts = __check_distances(pnp_parts, min_distance)
+    result.parts_coord_conflicts = __check_distances(pnp_parts, min_distance, coord_unit_mils)
     result.parts_coord_conflicts = natsort.natsorted(result.parts_coord_conflicts)
 
     #
@@ -245,7 +249,7 @@ def __compare(bom_parts: dict[str, (str, str, str, str)],
 
 # -----------------------------------------------------------------------------
 
-def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid, min_distance: float) -> CrossCheckResult:
+def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid, min_distance: float, coord_unit_mils: bool) -> CrossCheckResult:
     """Performs BOM and PnP cross check"""
 
     if bom is None or bom.text_grid is None:
@@ -255,4 +259,4 @@ def compare(bom: ConfiguredTextGrid, pnp: ConfiguredTextGrid, min_distance: floa
 
     bom_parts = __extract_bom_parts(bom)
     pnp_parts = __extract_pnp_parts(pnp)
-    return __compare(bom_parts, pnp_parts, min_distance)
+    return __compare(bom_parts, pnp_parts, min_distance, coord_unit_mils)

@@ -767,7 +767,8 @@ class PnPConfig(customtkinter.CTkFrame):
                                     comment_default=proj.profile.pnp_comment_col,
                                     coord_x_default=proj.profile.pnp_coord_x_col,
                                     coord_y_default=proj.profile.pnp_coord_y_col,
-                                    layer_default=proj.profile.pnp_layer_col
+                                    layer_default=proj.profile.pnp_layer_col,
+                                    coord_mils_default=proj.profile.pnp_coord_unit_mils,
                                 )
         # self.wnd_column_selector.focusmodel(model="active")
 
@@ -780,6 +781,7 @@ class PnPConfig(customtkinter.CTkFrame):
         proj.profile.pnp_comment_col = result.comment_col
         proj.profile.pnp_coord_x_col = result.coord_x_col
         proj.profile.pnp_coord_y_col = result.coord_y_col
+        proj.profile.pnp_coord_unit_mils = result.coord_unit_mils
         proj.profile.pnp_layer_col = result.layer_col
         self.update_lbl_columns()
         self.btn_save.configure(state=tkinter.NORMAL)
@@ -924,7 +926,7 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.layer_col = proj.profile.pnp_layer_col
 
         try:
-            ccresult = cross_check.compare(bom_cfg, pnp_cfg, proj.get_min_distance())
+            ccresult = cross_check.compare(bom_cfg, pnp_cfg, proj.get_min_distance(), proj.profile.pnp_coord_unit_mils)
             pnps = (proj.pnp_fname, proj.pnp2_fname)
             self.report_html = report_generator.prepare_html_report(proj.get_name(), pnps, proj.get_min_distance(), ccresult)
             self.htmlview.set_html(self.report_html)

@@ -28,6 +28,7 @@ class Profile:
         self.pnp_coord_x_col = "?"
         self.pnp_coord_y_col = "?"
         self.pnp_layer_col = "?"
+        self.pnp_coord_unit_mils = True
         #
         self.__config = cfgparser
 
@@ -58,6 +59,8 @@ class Profile:
                 self.pnp_coord_x_col = section.get("pnp_coord_x_col", "?")
                 self.pnp_coord_y_col = section.get("pnp_coord_y_col", "?")
                 self.pnp_layer_col = section.get("pnp_layer_col", "?")
+                self.pnp_coord_unit_mils = section.get("pnp_coord_unit_mils", "True") == "True"
+
                 if self.pnp_has_column_headers == False:
                     self.pnp_designator_col = int(self.pnp_designator_col)
                     self.pnp_comment_col = int(self.pnp_comment_col)
@@ -85,6 +88,7 @@ class Profile:
             "pnp_comment_col": self.pnp_comment_col,
             "pnp_coord_x_col": self.pnp_coord_x_col,
             "pnp_coord_y_col": self.pnp_coord_y_col,
+            "pnp_coord_unit_mils": self.pnp_coord_unit_mils,
             "pnp_layer_col": self.pnp_layer_col,
         }
         with open(self.CONFIG_FILE_NAME, 'w') as f:
