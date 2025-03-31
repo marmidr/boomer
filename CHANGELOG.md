@@ -2,6 +2,15 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.10.0 - 2025-03-31
+
+* Added
+  * HTML report: popup menu "Copy"
+* Changed
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.9.0 - 2025-01-20
 
 * Added

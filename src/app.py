@@ -13,7 +13,6 @@ import tkinter
 import os
 import sys
 import time
-from tkhtmlview import HTMLScrolledText
 import klembord
 
 import xls_reader
@@ -31,7 +30,7 @@ import logger
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.9.0"
+APP_NAME = "BOM vs PnP Cross Checker v0.10.0"
 APP_DATE = "(c) 2023-2025"
 
 # -----------------------------------------------------------------------------
@@ -185,7 +184,6 @@ class ProjectFrame(customtkinter.CTkFrame):
                                                         variable=self.config_logs.colorlogs_var,
                                                         checkbox_width=18, checkbox_height=18)
         self.config_logs.chx_color_logs.grid(row=1, column=0, pady=5, padx=5, sticky="w")
-
 
     def clear_previews(self):
         self.opt_pnp_var.set("")
@@ -843,7 +841,7 @@ class ReportView(customtkinter.CTkFrame):
             </pre>
             <p> The summary <b>is</b>: None</p>
         """
-        self.htmlview = HTMLScrolledText(self, wrap='none', html=self.report_html)
+        self.htmlview = ui_helpers.HTMLScrolledTextWithPPM(self, wrap='none', html=self.report_html, menuitems="c")
         self.htmlview.grid(row=0, column=0, columnspan=5, padx=10, pady=10, sticky="nsew")
 
         self.grid_columnconfigure(0, weight=1)
