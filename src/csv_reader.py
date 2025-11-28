@@ -1,5 +1,5 @@
 #
-# 2025-01-19
+# 2025-11-28
 #
 
 import csv
@@ -21,7 +21,7 @@ def __read_sp(rows: list[str], tg: TextGrid):
         # split row by any number of following whitespaces
         row_cells = row.split()
         if not __check_row_valid(row_cells):
-            break
+            continue
 
         max_cols = max(max_cols, len(row_cells))
         row_cells_processed = []

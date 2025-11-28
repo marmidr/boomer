@@ -1,5 +1,5 @@
 #
-# 2025-01-20
+# 2025-11-28
 #
 
 import logger
@@ -33,7 +33,7 @@ def read_xls_sheet(path: str) -> TextGrid:
         row_cells = []
         for c_idx in range(sheet.ncols):
             cellobj = sheet.cell(r_idx, c_idx)
-            cell_val = cellobj.value or ""
+            cell_val = "" if (cellobj.value is None) else cellobj.value
 
             # https://xlrd.readthedocs.io/en/latest/api.html#xlrd.sheet.Cell
             if cellobj.ctype in (xlrd.XL_CELL_NUMBER, xlrd.XL_CELL_TEXT):
@@ -59,11 +59,8 @@ def read_xls_sheet(path: str) -> TextGrid:
             # change multiline cells into single-line
             cell_val = cell_val.replace("\n", " ⏎ ")
             row_cells.append(cell_val.strip())
-
-        if not __check_row_valid(row_cells):
-            break
-
-        tg.rows_raw().append(row_cells)
+        if __check_row_valid(row_cells):
+            tg.rows_raw().append(row_cells)
 
     tg.nrows = len(tg.rows_raw())
     tg.ncols = sheet.ncols

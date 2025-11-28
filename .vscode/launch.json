@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: debug app",
+            "name": "Python: debug Boomer",
             "type": "debugpy",
             "request": "launch",
-            "program": "src\\app.py",
+            "program": "${workspaceFolder}\\src\\app.py",
             "console": "integratedTerminal",
             "justMyCode": false,
         },

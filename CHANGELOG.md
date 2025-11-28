@@ -2,6 +2,16 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.11.0 - 2025-11-28
+
+* Added
+* Changed
+  * CSV/ODS/XLS/XLSX readers - on empty row continues reading, instead of stopping
+* Deprecated
+* Removed
+* Fixed
+  * XLSX - when cell type is `datetime`, converts it to a string
+
 ## 0.10.0 - 2025-03-31
 
 * Added
