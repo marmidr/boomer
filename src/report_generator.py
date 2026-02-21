@@ -33,10 +33,10 @@ def __html_span_red(content: str) -> str:
     return f'<span style="color: IndianRed">{content}</span>'
 
 def __html_span_green(content: str) -> str:
-    return f'<span style="color: LimeGreen">{content}</span>'
+    return f'<span style="color: ForestGreen">{content}</span>'
 
 def __html_span_blue(content: str) -> str:
-    return f'<span style="color: DodgerBlue">{content}</span>'
+    return f'<span style="color: RoyalBlue">{content}</span>'
 
 def __html_span_gray(content: str) -> str:
     return f'<span style="color: Gray">{content}</span>'

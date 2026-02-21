@@ -60,6 +60,10 @@ To install required libraries, open the PowerShell and:
 ```ps1
 # .xls reader, .xlsx reader, .ods reader, UI lib, natural sorting, http requests, image formats
 pip install xlrd openpyxl odfpy customtkinter natsort requests pillow
+
+# alternative form, if the pip program cannot be found:
+python -m pip install xlrd openpyxl odfpy customtkinter natsort requests pillow
+
 # using local copy of fixed:
 #   tkhtmlview - HTML widgets,
 #   klembord - clipboard
@@ -70,7 +74,7 @@ pip install xlrd openpyxl odfpy customtkinter natsort requests pillow
 From PowerShell:
 
 ```ps1
-python.exe src/app.py
+python src/app.py
 ```
 
 To get colored logs, use Linux-like terminal, eg. [MSys2](msys2.org/), but still using the Windows installation of the Python:

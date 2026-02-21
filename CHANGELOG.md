@@ -2,6 +2,15 @@
 
 See the [keepachangelog.com description](https://keepachangelog.com/en/1.0.0/).
 
+## 0.12.0 - 2026-02-21
+
+* Added
+* Changed
+  * HTML report diff colors changed to darker
+* Deprecated
+* Removed
+* Fixed
+
 ## 0.11.0 - 2025-11-28
 
 * Added

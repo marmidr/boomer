@@ -5,7 +5,7 @@
 # differences in an electronic parts listed in both files, and additionally
 # verify that the part comments (values) match.
 #
-# (c) 2023-2025 Mariusz Midor
+# (c) 2023-2026 Mariusz Midor
 # https://github.com/marmidr/boomer
 
 import customtkinter
@@ -30,8 +30,8 @@ import logger
 
 # -----------------------------------------------------------------------------
 
-APP_NAME = "BOM vs PnP Cross Checker v0.11.0"
-APP_DATE = "(c) 2023-2025"
+APP_NAME = "BOM vs PnP Cross Checker v0.12.0"
+APP_DATE = "(c) 2023-2026"
 
 # -----------------------------------------------------------------------------
 
