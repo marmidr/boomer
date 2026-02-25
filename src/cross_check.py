@@ -252,14 +252,14 @@ def __compare(bom_parts: dict[str, (str, str, str, str, str)],
 
     # check for items present in BOM, but missing in the PnP
     for designator in bom_parts:
-        if designator not in pnp_parts:
-            result.bom_parst_missing_in_pnp.append((designator, bom_parts[designator][0]))
+        if designator and (designator not in pnp_parts):
+            result.bom_parst_missing_in_pnp.append((designator, bom_parts[designator][0] or "?"))
     # sort naturally: https://pypi.org/project/natsort/
     result.bom_parst_missing_in_pnp = natsort.natsorted(result.bom_parst_missing_in_pnp)
 
     # check for items present in PnP, but missing in the BOM
     for designator in pnp_parts:
-        if designator not in bom_parts:
+        if designator and (designator not in bom_parts):
             result.pnp_parst_missing_in_bom.append((designator, pnp_parts[designator][0]))
     result.pnp_parst_missing_in_bom = natsort.natsorted(result.pnp_parst_missing_in_bom)
 
