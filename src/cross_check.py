@@ -15,16 +15,17 @@ class CrossCheckResult:
         self.pnp_parst_missing_in_bom: list[(str, str)] = []
         """Pairs (part_designator : part_comment)"""
 
-        self.parts_comment_mismatch: list[(str, str, str)] = []
-        """Triplets (part_designator : bom_comment : pnp_comment)"""
+        self.parts_comment_mismatch: list[(str, str, str, str)] = []
+        """Triplets (part_designator : bom_comment : pnp_comment : pnp_footprint)"""
 
         self.parts_coord_conflicts: list[(str, str, float)] = []
         """Triplets (part1_designator : part2_designator : distance_mm)"""
 
 # -----------------------------------------------------------------------------
 
-def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, str, str, str)]:
-    """Returns dictionary: {Designator : (Comment, Coord-X, Coord-Y, Layer)}"""
+def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, str, str, str, str)]:
+    """Returns dictionary: {Designator : (Comment, Coord-X, Coord-Y, Layer, Footprint)}"""
+
     if grid.has_column_headers:
         if type(grid.designator_col) is not str:
             raise ValueError(f"{grid_name} designator column id must be a string")
@@ -48,7 +49,7 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             if type(grid.coord_y_col) is not int:
                 raise ValueError(f"{grid_name} y column id must be an int")
 
-    coord_x_col_idx = coord_y_col_idx = layer_col_idx = -1
+    coord_x_col_idx = coord_y_col_idx = layer_col_idx = footprint_col_idx = -1
 
     if grid.has_column_headers:
         # find the designator column index basing on a column title
@@ -98,6 +99,16 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
                 ),
                 -1,
             )
+            # find the footprint column index basing on a column title
+            if grid.footprint_col: # optional
+                footprint_col_idx = next(
+                    (
+                        i
+                        for i in range(grid.text_grid.ncols)
+                        if grid.text_grid.rows_raw()[grid.first_row][i] == grid.footprint_col
+                    ),
+                    -1,
+                )
 
         if designator_col_idx == -1:
             raise ValueError(f"{grid_name} designator column not found")
@@ -106,6 +117,8 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
 
         logger.debug(f"{grid_name} designator '{grid.designator_col}' found at column {designator_col_idx}")
         logger.debug(f"{grid_name} comment '{grid.comment_col}' found at column {comment_col_idx}")
+        if grid_name == "PnP":
+            logger.debug(f"{grid_name} footprint '{grid.footprint_col}' found at column {footprint_col_idx}")
     else:
         designator_col_idx = grid.designator_col
         comment_col_idx = grid.comment_col
@@ -113,8 +126,10 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             coord_x_col_idx = grid.coord_x_col
             coord_y_col_idx = grid.coord_y_col
             layer_col_idx = -1 # the last one
+            if grid.footprint_col:
+                footprint_col_idx = grid.footprint_col
 
-    output: dict[str, (str, str, str, str)] = {}
+    output: dict[str, (str, str, str, str, str)] = {}
     first_row = grid.first_row + (1 if grid.has_column_headers else 0)
     last_row = grid.text_grid.nrows if grid.last_row == -1 else grid.last_row
 
@@ -137,22 +152,38 @@ def __extract_grid(grid: ConfiguredTextGrid, grid_name: str) -> dict[str, (str, 
             else:
                 # two separate files loaded for Top and Bottom
                 lr = grid.text_grid.rows_raw()[row][-1]
+
+            if footprint_col_idx >= 0:
+                # footprint column specified
+                fp = grid.text_grid.rows_raw()[row][footprint_col_idx]
+            else:
+                fp = ""
         else:
+            # in BOM these columns does not exists
             lr = ""
+            fp = ""
 
         # in BOM, designator column used to have a number of items
         dsgn = dsgn.split(',')
         # logger.debug(f"designators: '{dsgn}'")
         for d in dsgn:
             d = d.strip()
-            output[d] = (cmnt, cx, cy, lr)
+            output[d] = (cmnt, cx, cy, lr, fp)
 
     return output
 
-def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, (str, str, str, str)]:
+def __extract_bom_parts(bom: ConfiguredTextGrid) -> dict[str, (str, str, str, str, str)]:
+    """Extracts BOM parts from the grid.
+    @return A dictionary mapping designators to their properties.
+    @retval (Comment, Coord-X, Coord-Y, Layer, Footprint)
+    """
     return __extract_grid(bom, "BOM")
 
-def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, (str, str, str, str)]:
+def __extract_pnp_parts(pnp: ConfiguredTextGrid) -> dict[str, (str, str, str, str, str)]:
+    """Extracts PnP parts from the grid.
+    @return A dictionary mapping designators to their properties.
+    @retval (Comment, Coord-X, Coord-Y, Layer, Footprint)
+    """
     return __extract_grid(pnp, "PnP")
 
 def __txt_to_mm(coord: tuple[str, str], coord_unit_mils: bool) -> tuple[float, float]:
@@ -174,7 +205,7 @@ def __txt_to_mm(coord: tuple[str, str], coord_unit_mils: bool) -> tuple[float, f
         logger.warning(f"Conversion error at: {coord[0]}:{coord[1]}")
         return (0, 0)
 
-def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: float, coord_unit_mils: bool) -> list[(str, str, float)]:
+def __check_distances(pnp_parts: dict[str, (str, str, str, str, str)], min_distance: float, coord_unit_mils: bool) -> list[(str, str, float)]:
     # decoded coords cache
     decoded_coords: dict[str, (float, float)] = {}
     parts_checked: dict[str, list[str]] = {}
@@ -214,8 +245,8 @@ def __check_distances(pnp_parts: dict[str, (str, str, str, str)], min_distance: 
                     output.append((key_a, key_b, dist))
     return output
 
-def __compare(bom_parts: dict[str, (str, str, str, str)],
-              pnp_parts: dict[str, (str, str, str, str)],
+def __compare(bom_parts: dict[str, (str, str, str, str, str)],
+              pnp_parts: dict[str, (str, str, str, str, str)],
               min_distance: float, coord_unit_mils: bool) -> CrossCheckResult:
     result = CrossCheckResult()
 
@@ -236,7 +267,7 @@ def __compare(bom_parts: dict[str, (str, str, str, str)],
     for designator in bom_parts:
         if designator in pnp_parts:
             if bom_parts[designator][0] != pnp_parts[designator][0]:
-                result.parts_comment_mismatch.append((designator, bom_parts[designator][0], pnp_parts[designator][0]))
+                result.parts_comment_mismatch.append((designator, bom_parts[designator][0], pnp_parts[designator][0], pnp_parts[designator][4]))
     result.parts_comment_mismatch = natsort.natsorted(result.parts_comment_mismatch)
 
     # check for conflicting PnP coordinates

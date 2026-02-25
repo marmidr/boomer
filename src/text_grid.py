@@ -86,3 +86,4 @@ class ConfiguredTextGrid:
         self.coord_x_col = ""
         self.coord_y_col = ""
         self.layer_col = ""
+        self.footprint_col = ""

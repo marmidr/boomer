@@ -41,9 +41,14 @@ def __html_span_blue(content: str) -> str:
 def __html_span_gray(content: str) -> str:
     return f'<span style="color: Gray">{content}</span>'
 
-def __format_comment_diff(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str) -> str:
+def __format_comment_diff(designator: str, designator_w: int, bom_cmnt: str, bom_w: int, pnp_cmnt: str, pnp_footprint: str) -> str:
     bom_comment = ""
     pnp_comment = ""
+
+    # Prepend the PnP footprint to the BOM comment so comparisons include the footprint.
+    # Resulting string is "<footprint>_<bom_comment>", e.g. "C1206_100nF"
+    if pnp_footprint:
+        bom_cmnt = "_".join([pnp_footprint, bom_cmnt])
 
     # https://docs.python.org/3/library/difflib.html
     sm = difflib.SequenceMatcher(None, bom_cmnt, pnp_cmnt)
@@ -149,7 +154,8 @@ def prepare_html_report(bom_name: str, pnp_names: tuple[str, str], min_distance:
     for item in ccresult.parts_comment_mismatch:
         section += __format_comment_diff(item[0], dsgn1_w,
                                     item[1], bom_w,
-                                    item[2])
+                                    item[2],
+                                    item[3])
     section += __html_section_end()
     output += section
 

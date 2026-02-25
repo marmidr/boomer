@@ -14,6 +14,7 @@ class ColumnsSelectorResult:
         self.coord_x_col = ""
         self.coord_y_col = ""
         self.layer_col = ""
+        self.footprint_col = ""
         self.coord_unit_mils = True
         self.has_column_headers = True
 
@@ -50,6 +51,14 @@ class ColumnsSelector(customtkinter.CTkToplevel):
 
         # ----------
 
+        if "footprint_default" in kwargs:
+            footprint_default = kwargs.pop("footprint_default")
+            footprint_default = self.__format_column(has_column_headers, columns, footprint_default)
+        else:
+            footprint_default = ""
+
+        # ----------
+
         # optional, only for PnP
         if "coord_x_default" in kwargs and "coord_y_default" in kwargs and "layer_default" in kwargs:
             coord_x_default = kwargs.pop("coord_x_default")
@@ -74,7 +83,7 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         # ----------
 
         super().__init__(*args, **kwargs)
-        ui_helpers.window_set_centered(app, self, 400, 330)
+        ui_helpers.window_set_centered(app, self, 400, 370)
 
         # prepend column titles with their corresponding index
         columns = [f"{idx+1}. {item}" for (idx,item) in enumerate(columns)]
@@ -110,37 +119,48 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         opt_comment.grid(row=2, column=1, pady=5, padx=5, sticky="we")
 
         #
+        lbl_footprint = customtkinter.CTkLabel(self, text="Footprint column:")
+        lbl_footprint.grid(row=3, column=0, pady=5, padx=5, sticky="w")
+        self.opt_footprint_var = customtkinter.StringVar(value=footprint_default)
+
+        if footprint_default != "":
+            opt_footprint = customtkinter.CTkOptionMenu(self, values=columns,
+                                                    command=self.opt_event,
+                                                    variable=self.opt_footprint_var)
+            opt_footprint.grid(row=3, column=1, pady=5, padx=5, sticky="we")
+
+        #
         lbl_coord_x = customtkinter.CTkLabel(self, text="X-center")
-        lbl_coord_x.grid(row=3, column=0, pady=5, padx=5, sticky="w")
+        lbl_coord_x.grid(row=4, column=0, pady=5, padx=5, sticky="w")
 
         self.opt_coord_x_var = customtkinter.StringVar(value=coord_x_default)
         if self.show_coords:
             opt_coord_x = customtkinter.CTkOptionMenu(self, values=columns,
                                                     command=self.opt_event,
                                                     variable=self.opt_coord_x_var)
-            opt_coord_x.grid(row=3, column=1, pady=5, padx=5, sticky="we")
+            opt_coord_x.grid(row=4, column=1, pady=5, padx=5, sticky="we")
 
         #
         lbl_coord_y = customtkinter.CTkLabel(self, text="Y-center")
-        lbl_coord_y.grid(row=4, column=0, pady=5, padx=5, sticky="w")
+        lbl_coord_y.grid(row=5, column=0, pady=5, padx=5, sticky="w")
 
         self.opt_coord_y_var = customtkinter.StringVar(value=coord_y_default)
         if self.show_coords:
             opt_coord_y = customtkinter.CTkOptionMenu(self, values=columns,
                                                     command=self.opt_event,
                                                     variable=self.opt_coord_y_var)
-            opt_coord_y.grid(row=4, column=1, pady=5, padx=5, sticky="we")
+            opt_coord_y.grid(row=5, column=1, pady=5, padx=5, sticky="we")
 
         #
         lbl_unit = customtkinter.CTkLabel(self, text="Coords unit")
-        lbl_unit.grid(row=5, column=0, pady=5, padx=5, sticky="w")
+        lbl_unit.grid(row=6, column=0, pady=5, padx=5, sticky="w")
 
         self.rb_unit_var = tkinter.IntVar(value=coord_unit_idx)
 
         if self.show_coords:
             #
             self.config_unit = customtkinter.CTkFrame(self)
-            self.config_unit.grid(row=5, column=1, pady=5, padx=5, columnspan=1, sticky="we")
+            self.config_unit.grid(row=6, column=1, pady=5, padx=5, columnspan=1, sticky="we")
             #
             self.rb_unit_mils = customtkinter.CTkRadioButton(self.config_unit, text="mils",
                                                         variable=self.rb_unit_var,
@@ -155,27 +175,27 @@ class ColumnsSelector(customtkinter.CTkToplevel):
 
         #
         lbl_layer = customtkinter.CTkLabel(self, text="Layer")
-        lbl_layer.grid(row=6, column=0, pady=5, padx=5, sticky="w")
+        lbl_layer.grid(row=7, column=0, pady=5, padx=5, sticky="w")
 
         self.opt_layer_var = customtkinter.StringVar(value=layer_default)
         if self.show_coords:
             opt_layer = customtkinter.CTkOptionMenu(self, values=columns,
                                                     command=self.opt_event,
                                                     variable=self.opt_layer_var)
-            opt_layer.grid(row=6, column=1, pady=5, padx=5, sticky="we")
+            opt_layer.grid(row=7, column=1, pady=5, padx=5, sticky="we")
 
         #
         sep_h = tkinter.ttk.Separator(self, orient='horizontal')
-        sep_h.grid(row=7, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
+        sep_h.grid(row=8, column=0, columnspan=2, pady=5, padx=5, sticky="we",)
 
         self.btn_cancel = customtkinter.CTkButton(self, text="Cancel",
                                                    command=self.button_cancel_event)
         #
-        self.btn_cancel.grid(row=8, column=0, pady=5, padx=5, sticky="")
+        self.btn_cancel.grid(row=9, column=0, pady=5, padx=5, sticky="")
 
         self.btn_ok = customtkinter.CTkButton(self, text="OK",
                                                 command=self.button_ok_event)
-        self.btn_ok.grid(row=8, column=1, pady=5, padx=5, sticky="we")
+        self.btn_ok.grid(row=9, column=1, pady=5, padx=5, sticky="we")
         self.btn_ok.configure(state=tkinter.DISABLED)
 
         # enable "always-on-top" for this popup window
@@ -221,10 +241,15 @@ class ColumnsSelector(customtkinter.CTkToplevel):
         result.coord_y_col = self.opt_coord_y_var.get()
         result.coord_unit_mils = self.rb_unit_var.get() == 0
         result.layer_col = self.opt_layer_var.get()
+        result.footprint_col = self.opt_footprint_var.get()
+
         if result.has_column_headers:
             # extract column name
             result.designator_col = result.designator_col.split(sep=". ")[1]
             result.comment_col = result.comment_col.split(sep=". ")[1]
+            if (result.footprint_col):
+                result.footprint_col = result.footprint_col.split(sep=". ")[1]
+
             if self.show_coords:
                 result.coord_x_col = result.coord_x_col.split(sep=". ")[1]
                 result.coord_y_col = result.coord_y_col.split(sep=". ")[1]
@@ -235,6 +260,9 @@ class ColumnsSelector(customtkinter.CTkToplevel):
             result.designator_col -= 1
             result.comment_col = int(result.comment_col.split(sep=". ")[0])
             result.comment_col -= 1
+            if (result.footprint_col):
+                result.footprint_col = int(result.footprint_col.split(sep=". ")[0])
+                result.footprint_col -= 1
             if self.show_coords:
                 result.coord_x_col = int(result.coord_x_col.split(sep=". ")[0])
                 result.coord_x_col -= 1

@@ -719,7 +719,7 @@ class PnPConfig(customtkinter.CTkFrame):
             f"• DSGN: {prepare_id(proj.profile.pnp_designator_col)}\n"\
             f"• CMNT: {prepare_id(proj.profile.pnp_comment_col)}\n"\
             f"• X: {prepare_id(proj.profile.pnp_coord_x_col)} • Y: {prepare_id(proj.profile.pnp_coord_y_col)}\n"\
-            f"• LR: {prepare_id(proj.profile.pnp_layer_col)}")
+            f"• LR: {prepare_id(proj.profile.pnp_layer_col)} • FTPR: {prepare_id(proj.profile.pnp_footprint_col)}")
 
     def opt_separator_event(self, new_sep: str):
         logger.info(f"  PnP separator: {new_sep}")
@@ -763,6 +763,7 @@ class PnPConfig(customtkinter.CTkFrame):
                                     has_column_headers=proj.profile.pnp_has_column_headers,
                                     designator_default=proj.profile.pnp_designator_col,
                                     comment_default=proj.profile.pnp_comment_col,
+                                    footprint_default=proj.profile.pnp_footprint_col,
                                     coord_x_default=proj.profile.pnp_coord_x_col,
                                     coord_y_default=proj.profile.pnp_coord_y_col,
                                     layer_default=proj.profile.pnp_layer_col,
@@ -777,6 +778,7 @@ class PnPConfig(customtkinter.CTkFrame):
         proj.profile.pnp_has_column_headers = result.has_column_headers
         proj.profile.pnp_designator_col = result.designator_col
         proj.profile.pnp_comment_col = result.comment_col
+        proj.profile.pnp_footprint_col = result.footprint_col
         proj.profile.pnp_coord_x_col = result.coord_x_col
         proj.profile.pnp_coord_y_col = result.coord_y_col
         proj.profile.pnp_coord_unit_mils = result.coord_unit_mils
@@ -922,6 +924,7 @@ class ReportView(customtkinter.CTkFrame):
         pnp_cfg.coord_x_col = proj.profile.pnp_coord_x_col
         pnp_cfg.coord_y_col = proj.profile.pnp_coord_y_col
         pnp_cfg.layer_col = proj.profile.pnp_layer_col
+        pnp_cfg.footprint_col = proj.profile.pnp_footprint_col
 
         try:
             ccresult = cross_check.compare(bom_cfg, pnp_cfg, proj.get_min_distance(), proj.profile.pnp_coord_unit_mils)

@@ -18,6 +18,7 @@ class Profile:
         self.bom_separator = "COMMA"
         self.bom_designator_col = "?"
         self.bom_comment_col = "?"
+
         #
         self.pnp_has_column_headers = True
         self.pnp_first_row = 0 # 0-based
@@ -25,6 +26,7 @@ class Profile:
         self.pnp_separator = "COMMA"
         self.pnp_designator_col = "?"
         self.pnp_comment_col = "?"
+        self.pnp_footprint_col = "?"
         self.pnp_coord_x_col = "?"
         self.pnp_coord_y_col = "?"
         self.pnp_layer_col = "?"
@@ -56,6 +58,7 @@ class Profile:
                 self.pnp_separator = section.get("pnp_separator", "COMMA")
                 self.pnp_designator_col = section.get("pnp_designator_col", "?")
                 self.pnp_comment_col = section.get("pnp_comment_col", "?")
+                self.pnp_footprint_col = section.get("pnp_footprint_col", "?")
                 self.pnp_coord_x_col = section.get("pnp_coord_x_col", "?")
                 self.pnp_coord_y_col = section.get("pnp_coord_y_col", "?")
                 self.pnp_layer_col = section.get("pnp_layer_col", "?")
@@ -64,6 +67,7 @@ class Profile:
                 if self.pnp_has_column_headers == False:
                     self.pnp_designator_col = int(self.pnp_designator_col)
                     self.pnp_comment_col = int(self.pnp_comment_col)
+                    self.pnp_footprint_col = int(self.pnp_footprint_col)
                     self.pnp_coord_x_col = int(self.pnp_coord_x_col)
                     self.pnp_coord_y_col = int(self.pnp_coord_y_col)
                     self.pnp_layer_col = int(self.pnp_layer_col)
@@ -86,6 +90,7 @@ class Profile:
             "pnp_separator": self.pnp_separator,
             "pnp_designator_col": self.pnp_designator_col,
             "pnp_comment_col": self.pnp_comment_col,
+            "pnp_footprint_col": self.pnp_footprint_col,
             "pnp_coord_x_col": self.pnp_coord_x_col,
             "pnp_coord_y_col": self.pnp_coord_y_col,
             "pnp_coord_unit_mils": self.pnp_coord_unit_mils,
@@ -110,7 +115,8 @@ class Profile:
         if self.pnp_comment_col == "?": unspecified += "Comment, "
         if self.pnp_coord_x_col == "?": unspecified += "X, "
         if self.pnp_coord_y_col == "?": unspecified += "Y, "
-        if self.pnp_layer_col == "?": unspecified += "Layer"
+        if self.pnp_layer_col == "?": unspecified += "Layer, "
+        # Optional: if self.pnp_footprint_col == "?": unspecified += "Footprint"
 
         if unspecified != "":
             return (False, f"PnP columns: {unspecified}\nare unspecified")
